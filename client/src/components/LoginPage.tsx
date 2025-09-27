@@ -1,16 +1,31 @@
 import React, { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, SuGharLogo, AppleLogo, GoogleLogo, FacebookLogo } from './icons';
 
-interface LoginPageProps {
-    setCurrentPage: (page: string) => void;
-}
-
-export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentPage }) => {
+export const LoginPage: React.FC = () => {
     const [passwordVisible, setPasswordVisible] = useState(false);
+    const [email, setEmail] = useState('ahmed.rahman@example.com');
+    const [password, setPassword] = useState('password123');
+    const [showSignUp, setShowSignUp] = useState(false);
+    
+    const { login, register, loading, error } = useAuth();
 
     const togglePasswordVisibility = () => {
         setPasswordVisible(!passwordVisible);
     };
+
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            await login(email, password);
+        } catch (error) {
+            console.error('Login failed:', error);
+        }
+    };
+
+    if (showSignUp) {
+        return <SignUpForm onBack={() => setShowSignUp(false)} />;
+    }
 
     return (
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -25,13 +40,28 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentPage }) => {
                         
                         <h2 className="text-3xl font-bold font-atkinson text-text-main mb-6">Login to Dashboard</h2>
 
-                        <form onSubmit={(e) => { e.preventDefault(); setCurrentPage('home'); }}>
+                        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 text-blue-700 rounded text-sm">
+                            <strong>Demo Accounts:</strong><br/>
+                            Landlord: ahmed.rahman@example.com<br/>
+                            Tenant: rashida.begum@example.com<br/>
+                            Contractor: abdul.karim@example.com<br/>
+                            Password: password123
+                        </div>
+
+                        <form onSubmit={handleLogin}>
+                            {error && (
+                                <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                                    {error}
+                                </div>
+                            )}
                             <div className="mb-4">
                                 <input 
                                     type="email"
                                     placeholder="Email"
                                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-secondary"
-                                    defaultValue="evans@sughar.com"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    required
                                 />
                             </div>
                             <div className="mb-4 relative">
@@ -39,7 +69,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentPage }) => {
                                     type={passwordVisible ? "text" : "password"}
                                     placeholder="Password"
                                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-secondary"
-                                    defaultValue="password123"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
                                 />
                                 <button type="button" onClick={togglePasswordVisibility} className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-gray-600">
                                     {passwordVisible ? <EyeOff /> : <Eye />}
@@ -54,12 +86,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentPage }) => {
                                 <a href="#" className="font-medium text-accent-secondary hover:underline">Forgot Password?</a>
                             </div>
 
-                            <button type="submit" className="w-full bg-accent-secondary text-white font-bold py-3 rounded-lg hover:bg-purple-600 transition-colors duration-300 shadow-lg shadow-purple-200">
-                                Log in
+                            <button 
+                                type="submit" 
+                                disabled={loading}
+                                className="w-full bg-accent-secondary text-white font-bold py-3 rounded-lg hover:bg-purple-600 transition-colors duration-300 shadow-lg shadow-purple-200 disabled:opacity-50"
+                            >
+                                {loading ? 'Logging in...' : 'Log in'}
                             </button>
 
                             <div className="mt-4 text-center text-sm text-text-secondary">
-                                Don't have an account? <button type="button" onClick={() => setCurrentPage('signup')} className="font-medium text-accent-secondary hover:underline">Sign Up!</button>
+                                Don't have an account? <button type="button" onClick={() => setShowSignUp(true)} className="font-medium text-accent-secondary hover:underline">Sign Up!</button>
                             </div>
                         </form>
 
@@ -99,6 +135,163 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentPage }) => {
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    );
+};
+
+// Simple SignUp Form Component
+const SignUpForm: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+    const [formData, setFormData] = useState({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phoneNumber: '',
+        role: 'tenant',
+        password: '',
+        confirmPassword: ''
+    });
+    
+    const { register, loading, error } = useAuth();
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        if (formData.password !== formData.confirmPassword) {
+            alert('Passwords do not match');
+            return;
+        }
+
+        try {
+            await register(formData);
+        } catch (error) {
+            console.error('Registration failed:', error);
+        }
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        setFormData({
+            ...formData,
+            [e.target.name]: e.target.value
+        });
+    };
+
+    return (
+        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+            <div className="w-full max-w-md mx-auto bg-card-bg p-8 rounded-2xl shadow-2xl">
+                <div className="flex items-center gap-4 mb-8">
+                    <SuGharLogo />
+                    <span className="text-4xl font-bold font-atkinson" style={{color: '#B083F1'}}>SuGhar</span>
+                </div>
+                
+                <h2 className="text-3xl font-bold font-atkinson text-text-main mb-6">Create Account</h2>
+
+                <form onSubmit={handleSubmit}>
+                    {error && (
+                        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                            {error}
+                        </div>
+                    )}
+                    
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                        <input
+                            type="text"
+                            name="firstName"
+                            placeholder="First Name"
+                            className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-secondary"
+                            value={formData.firstName}
+                            onChange={handleChange}
+                            required
+                        />
+                        <input
+                            type="text"
+                            name="lastName"
+                            placeholder="Last Name"
+                            className="px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-secondary"
+                            value={formData.lastName}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+
+                    <div className="mb-4">
+                        <input
+                            type="email"
+                            name="email"
+                            placeholder="Email"
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-secondary"
+                            value={formData.email}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+
+                    <div className="mb-4">
+                        <input
+                            type="tel"
+                            name="phoneNumber"
+                            placeholder="Phone Number"
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-secondary"
+                            value={formData.phoneNumber}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+
+                    <div className="mb-4">
+                        <select
+                            name="role"
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-secondary"
+                            value={formData.role}
+                            onChange={handleChange}
+                            required
+                        >
+                            <option value="tenant">Tenant</option>
+                            <option value="landlord">Landlord</option>
+                            <option value="contractor">Contractor</option>
+                        </select>
+                    </div>
+
+                    <div className="mb-4">
+                        <input
+                            type="password"
+                            name="password"
+                            placeholder="Password"
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-secondary"
+                            value={formData.password}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+
+                    <div className="mb-6">
+                        <input
+                            type="password"
+                            name="confirmPassword"
+                            placeholder="Confirm Password"
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-secondary"
+                            value={formData.confirmPassword}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-accent-secondary text-white font-bold py-3 rounded-lg hover:bg-purple-600 transition-colors duration-300 shadow-lg shadow-purple-200 disabled:opacity-50 mb-4"
+                    >
+                        {loading ? 'Creating Account...' : 'Sign Up'}
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={onBack}
+                        className="w-full text-accent-secondary font-medium hover:underline"
+                    >
+                        Back to Login
+                    </button>
+                </form>
             </div>
         </div>
     );

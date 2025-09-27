@@ -17,6 +17,8 @@ import { TenantApplicationsPage } from './TenantApplicationsPage';
 
 interface TenantsDashboardProps {
   setViewingTenantId: (id: string) => void;
+  onBuildingClick?: (buildingId: string) => void;
+  onUnitClick?: (buildingId: string, unitId: string) => void;
 }
 
 const StatCard: React.FC<{ stat: TenantDashboardStat }> = ({ stat }) => (
@@ -40,8 +42,12 @@ const RentStatusPill: React.FC<{ status: RentStatus }> = ({ status }) => {
     return <span className={`px-3 py-1 text-xs font-medium rounded-full ${styles[status]}`}>{status}</span>;
 };
 
-const TenantTable: React.FC<{ tenants: Tenant[], setViewingTenantId: (id: string) => void }> = ({ tenants, setViewingTenantId }) => (
-    <Card className="!p-0 h-full">
+const TenantTable: React.FC<{ 
+  tenants: Tenant[], 
+  setViewingTenantId: (id: string) => void,
+  onBuildingClick?: (buildingId: string) => void 
+}> = ({ tenants, setViewingTenantId, onBuildingClick }) => (
+    <Card className="!p-0 h-full rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -65,7 +71,18 @@ const TenantTable: React.FC<{ tenants: Tenant[], setViewingTenantId: (id: string
                                     <span className="ml-2 px-2 py-0.5 text-xs font-semibold text-purple-800 bg-purple-100 rounded-full">{tenant.rating}</span>
                                 </button>
                             </td>
-                            <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-500">{tenant.building}</td>
+                            <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-500">
+                                {onBuildingClick ? (
+                                    <button 
+                                        onClick={() => onBuildingClick(tenant.building)}
+                                        className="text-blue-600 hover:underline"
+                                    >
+                                        {tenant.building}
+                                    </button>
+                                ) : (
+                                    tenant.building
+                                )}
+                            </td>
                             <td className="px-5 py-3 whitespace-nowrap">
                                 <div className="w-24 bg-gray-200 rounded-full h-2">
                                     <div className="bg-accent-primary h-2 rounded-full" style={{ width: `${tenant.leaseProgress}%` }}></div>
@@ -100,7 +117,7 @@ const QuickViewCard: React.FC = () => (
     </Card>
 );
 
-export const TenantsDashboard: React.FC<TenantsDashboardProps> = ({ setViewingTenantId }) => {
+export const TenantsDashboard: React.FC<TenantsDashboardProps> = ({ setViewingTenantId, onBuildingClick, onUnitClick }) => {
   const [activeTab, setActiveTab] = useState('Overview');
 
   const renderContent = () => {
@@ -115,7 +132,11 @@ export const TenantsDashboard: React.FC<TenantsDashboardProps> = ({ setViewingTe
             </div>
             <div className="grid grid-cols-12 gap-8">
                 <div className="col-span-12 lg:col-span-6 xl:col-span-7">
-                    <TenantTable tenants={TENANTS_DASHBOARD_TABLE_DATA} setViewingTenantId={setViewingTenantId} />
+                    <TenantTable 
+                        tenants={TENANTS_DASHBOARD_TABLE_DATA} 
+                        setViewingTenantId={setViewingTenantId}
+                        onBuildingClick={onBuildingClick}
+                    />
                 </div>
                 <div className="col-span-12 lg:col-span-6 xl:col-span-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-8">
                     <div className="md:col-span-2 lg:col-span-1 grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -139,9 +160,17 @@ export const TenantsDashboard: React.FC<TenantsDashboardProps> = ({ setViewingTe
           </>
         );
       case 'Current Tenants':
-        return <CurrentTenantsPage setViewingTenantId={setViewingTenantId} />;
+        return <CurrentTenantsPage 
+          setViewingTenantId={setViewingTenantId}
+          onBuildingClick={onBuildingClick}
+          onUnitClick={onUnitClick}
+        />;
       case 'Applications':
-        return <TenantApplicationsPage setViewingTenantId={setViewingTenantId} />;
+        return <TenantApplicationsPage 
+          setViewingTenantId={setViewingTenantId}
+          onBuildingClick={onBuildingClick}
+          onUnitClick={onUnitClick}
+        />;
       default:
         return null;
     }

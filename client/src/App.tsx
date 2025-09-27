@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Layout } from './components/Layout';
 import { FinancialsDashboard } from './components/FinancialsDashboard';
 import { BuildingsPage } from './components/BuildingsUnitsDashboard';
+import { NewBuildingForm } from './components/NewBuildingForm';
+import { NewUnitForm } from './components/NewUnitForm';
+import { SpecificBuildingPage } from './components/SpecificBuildingPage';
 import { ServiceRequestsPage } from './components/ServiceRequestsPage';
 import { TenantsDashboard } from './components/TenantsDashboard';
 import { DocumentsDashboard } from './components/DocumentsDashboard';
@@ -12,16 +16,27 @@ import { AccountOverviewPage } from './components/AccountOverviewPage';
 import { SettingsPage } from './components/SettingsPage';
 import { TenantDetailPage } from './components/TenantDetailPage';
 
-function App() {
-  const [currentPage, setCurrentPage] = useState('login');
+const AppContent = () => {
+  const { user, loading } = useAuth();
+  const [currentPage, setCurrentPage] = useState('home');
   const [viewingTenantId, setViewingTenantId] = useState<string | null>(null);
+  const [viewingBuildingId, setViewingBuildingId] = useState<string | null>(null);
+  const [showNewBuildingForm, setShowNewBuildingForm] = useState(false);
+  const [showNewUnitForm, setShowNewUnitForm] = useState(false);
 
-  if (currentPage === 'login') {
-    return <LoginPage setCurrentPage={setCurrentPage} />;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
-  if (currentPage === 'signup') {
-    return <SignUpPage setCurrentPage={setCurrentPage} />;
+  if (!user) {
+    return <LoginPage />;
   }
 
   return (
@@ -30,22 +45,81 @@ function App() {
         <TenantDetailPage tenantId={viewingTenantId} onBack={() => setViewingTenantId(null)} />
       ) : (
         <>
-          {currentPage === 'home' && <HomeDashboard setViewingTenantId={setViewingTenantId} />}
+          {currentPage === 'home' && <HomeDashboard setViewingTenantId={setViewingTenantId} setCurrentPage={setCurrentPage} />}
           {currentPage === 'financials' && <FinancialsDashboard />}
-          {currentPage === 'buildings' && (
+          {currentPage === 'buildings' && !viewingBuildingId && !showNewBuildingForm && !showNewUnitForm && (
             <BuildingsPage 
-              onBuildingClick={() => {}} 
-              onAddNewBuilding={() => {}} 
+              setViewingTenantId={setViewingTenantId}
+              onBuildingClick={(id: string) => setViewingBuildingId(id)} 
+              onAddNewBuilding={() => setShowNewBuildingForm(true)}
+              onAddNewUnit={() => setShowNewUnitForm(true)} 
             />
           )}
-          {currentPage === 'service-requests' && <ServiceRequestsPage />}
-          {currentPage === 'tenants' && <TenantsDashboard setViewingTenantId={setViewingTenantId} />}
-          {currentPage === 'documents' && <DocumentsDashboard />}
+          {currentPage === 'buildings' && viewingBuildingId && (
+            <SpecificBuildingPage 
+              buildingId={viewingBuildingId}
+              onBack={() => setViewingBuildingId(null)}
+              setViewingTenantId={setViewingTenantId}
+            />
+          )}
+          {currentPage === 'buildings' && showNewBuildingForm && (
+            <NewBuildingForm onBack={() => setShowNewBuildingForm(false)} />
+          )}
+          {currentPage === 'buildings' && showNewUnitForm && (
+            <NewUnitForm onBack={() => setShowNewUnitForm(false)} />
+          )}
+          {currentPage === 'service-requests' && (
+            <ServiceRequestsPage 
+              onBuildingClick={(id: string) => {
+                setViewingBuildingId(id);
+                setCurrentPage('buildings');
+              }}
+              onUnitClick={(buildingId: string, unitId: number) => {
+                setViewingBuildingId(buildingId);
+                setCurrentPage('buildings');
+              }}
+              setViewingTenantId={setViewingTenantId}
+            />
+          )}
+          {currentPage === 'tenants' && (
+            <TenantsDashboard 
+              setViewingTenantId={setViewingTenantId}
+              onBuildingClick={(id: string) => {
+                setViewingBuildingId(id);
+                setCurrentPage('buildings');
+              }}
+              onUnitClick={(buildingId: string, unitId: string) => {
+                setViewingBuildingId(buildingId);
+                setCurrentPage('buildings');
+              }}
+            />
+          )}
+          {currentPage === 'documents' && (
+            <DocumentsDashboard 
+              onBuildingClick={(id: string) => {
+                setViewingBuildingId(id);
+                setCurrentPage('buildings');
+              }}
+              onUnitClick={(buildingId: string, unitId: string) => {
+                setViewingBuildingId(buildingId);
+                setCurrentPage('buildings');
+              }}
+              setViewingTenantId={setViewingTenantId}
+            />
+          )}
           {currentPage === 'account' && <AccountOverviewPage />}
           {currentPage === 'settings' && <SettingsPage />}
         </>
       )}
     </Layout>
+  );
+};
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 

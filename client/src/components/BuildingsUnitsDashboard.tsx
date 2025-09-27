@@ -1,116 +1,122 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from './Card';
-import { BUILDINGS_PAGE_DATA } from '../constants';
-import { BuildingDetail, BuildingCategory } from '../types';
-import { SlidersHorizontal, Plus } from './icons';
+import { Header } from './Header';
+import { BuildingsPage as BuildingsTable } from './BuildingsPage';
+import { UnitsPage } from './UnitsPage';
+import { ApplicationsPage } from './ApplicationsPage';
+import { VacantUnitsChart } from './charts/VacantUnitsChart';
+import { RentCollectionChart } from './charts/RentCollectionChart';
+import { BUILDINGS_PAGE_DATA, UNITS_PAGE_DATA, APPLICATIONS_PAGE_DATA, VACANT_UNITS_BY_BUILDING_DATA, RENT_COLLECTION_DATA } from '../constants';
+import { HomeIcon, Building, Users, Wrench } from './icons';
 
-interface BuildingsPageProps {
+interface BuildingsUnitsDashboardProps {
+    setViewingTenantId: (id: string) => void;
     onBuildingClick: (buildingId: string) => void;
     onAddNewBuilding: () => void;
+    onAddNewUnit: () => void;
 }
 
-const CategoryPill = ({ category }: { category: BuildingCategory }) => {
-    const categoryStyles = {
-        [BuildingCategory.Luxury]: 'bg-yellow-100 text-yellow-800',
-        [BuildingCategory.MidRange]: 'bg-purple-100 text-purple-800',
-        [BuildingCategory.Standard]: 'bg-blue-100 text-blue-800',
+// Calculate overview stats from data
+const calculateOverviewStats = () => {
+    const totalBuildings = BUILDINGS_PAGE_DATA.length;
+    const totalUnits = UNITS_PAGE_DATA.length;
+    const occupiedUnits = UNITS_PAGE_DATA.filter(unit => unit.status === 'Rented').length;
+    const vacantUnits = totalUnits - occupiedUnits;
+    const serviceRequests = UNITS_PAGE_DATA.reduce((sum, unit) => sum + unit.requests, 0);
+    
+    return { totalBuildings, totalUnits, occupiedUnits, vacantUnits, serviceRequests };
+};
+
+const StatCard: React.FC<{ label: string; value: string | number; icon: React.ComponentType<any>; color: string }> = ({ label, value, icon: Icon, color }) => (
+    <Card className="flex items-center p-4">
+        <div className={`p-3 rounded-full bg-opacity-20 ${color.replace('text-', 'bg-')}`}>
+            <Icon className={`w-6 h-6 ${color}`} />
+        </div>
+        <div className="ml-4">
+            <p className="text-sm text-text-secondary">{label}</p>
+            <p className="text-2xl font-bold text-text-main">{value}</p>
+        </div>
+    </Card>
+);
+
+const OverviewTab: React.FC = () => {
+    const stats = calculateOverviewStats();
+
+    return (
+        <>
+            {/* Overview Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
+                <StatCard label="Total Buildings" value={stats.totalBuildings} icon={Building} color="text-blue-500" />
+                <StatCard label="Total Units" value={stats.totalUnits} icon={HomeIcon} color="text-green-500" />
+                <StatCard label="Occupied Units" value={stats.occupiedUnits} icon={Users} color="text-purple-500" />
+                <StatCard label="Vacant Units" value={stats.vacantUnits} icon={HomeIcon} color="text-red-500" />
+                <StatCard label="Service Requests" value={stats.serviceRequests} icon={Wrench} color="text-yellow-500" />
+            </div>
+
+            {/* Charts Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <Card>
+                    <h3 className="font-atkinson text-xl font-bold text-text-main mb-4">Vacant Units by Building</h3>
+                    <div className="h-64">
+                        <VacantUnitsChart data={VACANT_UNITS_BY_BUILDING_DATA} />
+                    </div>
+                </Card>
+                <Card>
+                    <h3 className="font-atkinson text-xl font-bold text-text-main mb-4">Rent Collection</h3>
+                    <div className="h-64">
+                        <RentCollectionChart data={RENT_COLLECTION_DATA} />
+                    </div>
+                </Card>
+            </div>
+        </>
+    );
+};
+
+export const BuildingsUnitsDashboard: React.FC<BuildingsUnitsDashboardProps> = ({ 
+    setViewingTenantId, 
+    onBuildingClick, 
+    onAddNewBuilding, 
+    onAddNewUnit 
+}) => {
+    const [activeTab, setActiveTab] = useState('Overview');
+
+    const renderContent = () => {
+        switch(activeTab) {
+            case 'Overview':
+                return <OverviewTab />;
+            case 'Buildings':
+                return (
+                    <BuildingsTable 
+                        onBuildingClick={onBuildingClick} 
+                        onAddNewBuilding={onAddNewBuilding} 
+                    />
+                );
+            case 'Units':
+                return (
+                    <UnitsPage 
+                        setViewingTenantId={setViewingTenantId} 
+                        onAddNewUnit={onAddNewUnit} 
+                    />
+                );
+            case 'Applications':
+                return <ApplicationsPage setViewingTenantId={setViewingTenantId} />;
+            default:
+                return <OverviewTab />;
+        }
     };
+
     return (
-        <span className={`px-3 py-1 text-xs font-medium rounded-full ${categoryStyles[category]}`}>
-            {category}
-        </span>
+        <div className="container mx-auto">
+            <Header 
+                title="Buildings & Units Dashboard"
+                tabs={['Overview', 'Buildings', 'Units', 'Applications']}
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+            />
+            {renderContent()}
+        </div>
     );
 };
 
-const ProgressCell = ({ value }: { value: number }) => (
-    <div className="flex items-center">
-        <div className="w-20 bg-gray-200 rounded-full h-2 mr-2">
-            <div className="bg-accent-primary h-2 rounded-full" style={{ width: `${value}%` }}></div>
-        </div>
-        <span className="text-sm font-medium text-gray-700">{value}%</span>
-    </div>
-);
-
-const StatusPill = ({ percentage }) => {
-  let colorClasses = '';
-  if (percentage >= 80) {
-    colorClasses = 'bg-status-success text-status-success-text';
-  } else if (percentage >= 60) {
-    colorClasses = 'bg-status-warning text-status-warning-text';
-  } else {
-    colorClasses = 'bg-status-error text-status-error-text';
-  }
-  return <span className={`px-3 py-1 text-xs font-medium rounded-full ${colorClasses}`}>{percentage}%</span>;
-};
-
-const ContactCell = ({ contact }: { contact: { name: string; avatar: string; } }) => (
-    <div className="flex items-center">
-        <img className="h-8 w-8 rounded-full object-cover" src={contact.avatar} alt={contact.name} />
-        <span className="ml-3 font-medium text-gray-900">{contact.name}</span>
-    </div>
-);
-
-// FIX: Changed component definition to a more standard form to resolve type error.
-const SortableHeader: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <th scope="col" className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer">
-        <div className="flex items-center">
-            <span>{children}</span>
-            {/* Add sort icon here if needed */}
-        </div>
-    </th>
-);
-
-
-export const BuildingsPage: React.FC<BuildingsPageProps> = ({ onBuildingClick, onAddNewBuilding }) => {
-    return (
-        <Card className="!p-0">
-             <div className="flex justify-end p-4 gap-4">
-                <button 
-                    onClick={onAddNewBuilding}
-                    className="flex items-center text-sm font-medium text-white bg-accent-secondary rounded-lg px-4 py-2 hover:bg-purple-600 transition-colors"
-                >
-                    <Plus className="w-4 h-4 mr-2" />
-                    New Building
-                </button>
-                <button className="flex items-center text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg px-4 py-2 hover:bg-gray-50">
-                    <SlidersHorizontal className="w-4 h-4 mr-2" />
-                    Advanced filtering
-                </button>
-            </div>
-            <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <SortableHeader>Building</SortableHeader>
-                            <SortableHeader>Category</SortableHeader>
-                            <SortableHeader>Total Units</SortableHeader>
-                            <SortableHeader>Vacant Units</SortableHeader>
-                            <SortableHeader>Requests</SortableHeader>
-                            <SortableHeader>Occupation %</SortableHeader>
-                            <SortableHeader>Rent Collection (%)</SortableHeader>
-                            <SortableHeader>Assigned Contact</SortableHeader>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {BUILDINGS_PAGE_DATA.map((building: BuildingDetail, index) => (
-                            <tr key={`${building.id}-${index}`} className="hover:bg-gray-50">
-                                <td className="px-5 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
-                                    <button onClick={() => onBuildingClick(building.id)} className="text-blue-600 hover:underline">
-                                        {building.id}
-                                    </button>
-                                </td>
-                                <td className="px-5 py-4 whitespace-nowrap"><CategoryPill category={building.category} /></td>
-                                <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-500">{building.totalUnits}</td>
-                                <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-500">{building.vacantUnits}</td>
-                                <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-500">{building.requests}</td>
-                                <td className="px-5 py-4 whitespace-nowrap"><ProgressCell value={building.occupation} /></td>
-                                <td className="px-5 py-4 whitespace-nowrap"><StatusPill percentage={building.rentCollection} /></td>
-                                <td className="px-5 py-4 whitespace-nowrap"><ContactCell contact={building.contact} /></td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </Card>
-    );
-};
+// Export BuildingsPage for backward compatibility (it's the main dashboard now)
+export { BuildingsUnitsDashboard as BuildingsPage };

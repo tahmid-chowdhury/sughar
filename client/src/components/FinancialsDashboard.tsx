@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card } from './Card';
 import { Header } from './Header';
 import { FINANCIAL_STATS, RECENT_EXPENSE_DOCS, RECENT_INCOME_DOCS, EXPENSE_TYPE_DATA, MONTHLY_REVENUE_DATA } from '../constants';
@@ -58,15 +58,10 @@ const DocumentTable = ({ title, documents }: { title: string; documents: Documen
 
 
 export const FinancialsDashboard = () => {
-  const [activeTab, setActiveTab] = useState('Overview');
-
   return (
     <div className="container mx-auto">
       <Header 
         title="Financial Dashboard"
-        tabs={['Overview', 'Units', 'Applications', 'Documents']}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
       />
 
       {/* Stats Grid */}

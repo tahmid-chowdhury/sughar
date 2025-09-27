@@ -7,7 +7,13 @@ import { DocumentTypeDistributionChart } from './charts/DocumentTypeDistribution
 import { DocumentsUploadedChart } from './charts/DocumentsUploadedChart';
 import { MoreHorizontal, Star } from './icons';
 import { AllDocumentsPage } from './AllDocumentsPage';
-import { NewDocumentForm } from './NewDocumentForm';
+import { NewDocumentFormFixed as NewDocumentForm } from './NewDocumentForm';
+
+interface DocumentsDashboardProps {
+  onBuildingClick?: (buildingId: string) => void;
+  onUnitClick?: (buildingId: string, unitId: string) => void;
+  setViewingTenantId?: (tenantId: string) => void;
+}
 
 const StatCard: React.FC<{ stat: DocumentDashboardStat }> = ({ stat }) => (
   <Card className="flex items-center p-4">
@@ -21,7 +27,13 @@ const StatCard: React.FC<{ stat: DocumentDashboardStat }> = ({ stat }) => (
   </Card>
 );
 
-const DocumentTable: React.FC<{ title: string; documents: Document[]; showStar?: boolean }> = ({ title, documents, showStar = false }) => (
+const DocumentTable: React.FC<{ 
+  title: string; 
+  documents: Document[]; 
+  showStar?: boolean;
+  onBuildingClick?: (buildingId: string) => void;
+  onUnitClick?: (buildingId: string, unitId: string) => void;
+}> = ({ title, documents, showStar = false, onBuildingClick, onUnitClick }) => (
     <Card className="flex-1">
         <div className="flex justify-between items-center mb-4">
             <h3 className="font-atkinson text-xl font-bold text-text-main">{title}</h3>
@@ -46,8 +58,30 @@ const DocumentTable: React.FC<{ title: string; documents: Document[]; showStar?:
                         <tr key={doc.id} className={`border-b ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
                             {showStar && <td className="px-4 py-3"><Star className="w-5 h-5 text-yellow-400 fill-current" /></td>}
                             <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">{doc.name}</td>
-                            <td className="px-4 py-3">{doc.building}</td>
-                            <td className="px-4 py-3">{doc.unit}</td>
+                            <td className="px-4 py-3">
+                                {doc.building !== 'N/A' && onBuildingClick ? (
+                                    <button 
+                                        onClick={() => onBuildingClick(doc.building)}
+                                        className="text-blue-600 hover:underline"
+                                    >
+                                        {doc.building}
+                                    </button>
+                                ) : (
+                                    <span className={doc.building === 'N/A' ? 'text-gray-400 italic' : ''}>{doc.building}</span>
+                                )}
+                            </td>
+                            <td className="px-4 py-3">
+                                {doc.unit !== 'N/A' && onUnitClick ? (
+                                    <button 
+                                        onClick={() => onUnitClick(doc.building, doc.unit)}
+                                        className="text-blue-600 hover:underline"
+                                    >
+                                        {doc.unit}
+                                    </button>
+                                ) : (
+                                    <span className={doc.unit === 'N/A' ? 'text-gray-400 italic' : ''}>{doc.unit}</span>
+                                )}
+                            </td>
                             <td className="px-4 py-3">{doc.type}</td>
                             <td className="px-4 py-3">{doc.uploadDate}</td>
                         </tr>
@@ -58,7 +92,10 @@ const DocumentTable: React.FC<{ title: string; documents: Document[]; showStar?:
     </Card>
 );
 
-const OverviewContent: React.FC = () => (
+const OverviewContent: React.FC<{
+  onBuildingClick?: (buildingId: string) => void;
+  onUnitClick?: (buildingId: string, unitId: string) => void;
+}> = ({ onBuildingClick, onUnitClick }) => (
     <>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
             {DOCUMENT_DASHBOARD_STATS.map((stat) => (
@@ -81,14 +118,25 @@ const OverviewContent: React.FC = () => (
                 </Card>
             </div>
              <div className="lg:col-span-3 space-y-8">
-                <DocumentTable title="Most Recent Documents" documents={MOST_RECENT_DOCUMENTS} />
-                <DocumentTable title="Starred Documents" documents={STARRED_DOCUMENTS} showStar />
+                <DocumentTable 
+                    title="Most Recent Documents" 
+                    documents={MOST_RECENT_DOCUMENTS}
+                    onBuildingClick={onBuildingClick}
+                    onUnitClick={onUnitClick}
+                />
+                <DocumentTable 
+                    title="Starred Documents" 
+                    documents={STARRED_DOCUMENTS} 
+                    showStar
+                    onBuildingClick={onBuildingClick}
+                    onUnitClick={onUnitClick}
+                />
             </div>
         </div>
     </>
 );
 
-export const DocumentsDashboard = () => {
+export const DocumentsDashboard: React.FC<DocumentsDashboardProps> = ({ onBuildingClick, onUnitClick, setViewingTenantId }) => {
     const [activeTab, setActiveTab] = useState('Overview');
     const [isCreatingDocument, setIsCreatingDocument] = useState(false);
 
@@ -99,10 +147,22 @@ export const DocumentsDashboard = () => {
     const renderContent = () => {
         switch (activeTab) {
             case 'All Documents':
-                return <AllDocumentsPage onAddNewDocument={() => setIsCreatingDocument(true)} />;
+                return (
+                    <AllDocumentsPage 
+                        onAddNewDocument={() => setIsCreatingDocument(true)}
+                        onBuildingClick={onBuildingClick}
+                        onUnitClick={onUnitClick}
+                        setViewingTenantId={setViewingTenantId}
+                    />
+                );
             case 'Overview':
             default:
-                return <OverviewContent />;
+                return (
+                    <OverviewContent 
+                        onBuildingClick={onBuildingClick}
+                        onUnitClick={onUnitClick}
+                    />
+                );
         }
     };
 

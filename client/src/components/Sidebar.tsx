@@ -1,5 +1,6 @@
 import React from 'react';
 import { HomeIcon, DollarSign, Building, Wrench, Users, FileText, Settings, LogOut } from './icons';
+import { useAuth } from '../contexts/AuthContext';
 
 interface SidebarProps {
   currentPage: string;
@@ -29,6 +30,13 @@ const NavItem: React.FC<{
 );
 
 export const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage }) => {
+  const { logout, user } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    setCurrentPage('login');
+  };
+
   const navItems = [
     { icon: HomeIcon, label: 'Home', page: 'home' },
     { icon: DollarSign, label: 'Financials', page: 'financials' },
@@ -67,7 +75,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage })
               <span>Settings</span>
             </button>
             <button
-              onClick={() => setCurrentPage('login')}
+              onClick={handleLogout}
               className="flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900"
             >
               <LogOut className="w-5 h-5 mr-3" />
@@ -85,9 +93,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage })
                 alt="User Avatar"
                 className="w-10 h-10 rounded-full"
             />
-            <div className="ml-3">
-                <p className="text-sm font-semibold text-text-main">Evans</p>
-                <p className="text-xs text-text-secondary">evans@sughar.com</p>
+            <div className="ml-3 min-w-0 flex-1">
+                <p className="text-sm font-semibold text-text-main truncate">
+                  {user ? `${user.firstName} ${user.lastName}` : 'User'}
+                </p>
+                <p className="text-xs text-text-secondary truncate">
+                  {user ? user.email : 'user@example.com'}
+                </p>
             </div>
         </button>
       </div>

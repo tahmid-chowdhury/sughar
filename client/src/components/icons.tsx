@@ -140,6 +140,14 @@ export const SlidersHorizontal: React.FC<React.SVGProps<SVGSVGElement>> = (props
     <Icon {...props}><line x1="21" y1="10" x2="3" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="21" y1="18" x2="3" y2="18"></line></Icon>
 );
 
+export const Filter: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <Icon {...props}><polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46 22,3"></polygon></Icon>
+);
+
+export const Upload: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <Icon {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7,10 12,15 17,10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></Icon>
+);
+
 export const Plus: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <Icon {...props}><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></Icon>
 );

@@ -1,14 +1,16 @@
-const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+import mongoose from 'mongoose';
+const { Schema } = mongoose;
 
 const serviceRequestSchema = new Schema({
-    requestID: { type: String, required: true, unique: true },
-    unit: { type: Schema.Types.ObjectId, ref: 'Unit' },
+    userID: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    unitID: { type: Schema.Types.ObjectId, ref: 'Unit', required: true },
+    assignedContractorID: { type: Schema.Types.ObjectId, ref: 'User' },
     description: { type: String, required: true },
     status: { type: String, enum: ['new', 'in progress', 'completed'], default: 'new' },
-    priority: { type: String, enum: ['low', 'medium', 'high'], default: 'medium' },
     requestDate: { type: Date, default: Date.now },
-    assignedContractor: { type: Schema.Types.ObjectId, ref: 'User' }
+    priority: { type: String, enum: ['low', 'medium', 'high'], default: 'medium' }
+}, {
+    timestamps: true
 });
 
-module.exports = mongoose.model('ServiceRequest', serviceRequestSchema);
+export default mongoose.model('ServiceRequest', serviceRequestSchema);

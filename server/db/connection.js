@@ -1,27 +1,40 @@
 import dotenv from "dotenv";
 dotenv.config({ path: "./config.env" });
 
-import { MongoClient, ServerApiVersion } from "mongodb";
+import mongoose from "mongoose";
 
 const uri = process.env.ATLAS_URI || "";
-const client = new MongoClient(uri, {
-    serverApi: {
-        version: ServerApiVersion.v1,
-        strict: true,
-        deprecationErrors: true,
-    },
+
+// Mongoose connection
+mongoose.connect(uri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+})
+.then(() => {
+    console.log("Successfully connected to MongoDB Atlas!");
+})
+.catch((error) => {
+    console.error("MongoDB connection error:", error);
 });
 
-try {
-    // Connect the client to the server
-    await client.connect();
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-} catch (e) {
-    console.error(e);
-}
+// Handle connection events
+mongoose.connection.on('connected', () => {
+    console.log('Mongoose connected to MongoDB Atlas');
+});
 
-let db = client.db("employees");
+mongoose.connection.on('error', (err) => {
+    console.error('Mongoose connection error:', err);
+});
 
-export default db;
+mongoose.connection.on('disconnected', () => {
+    console.log('Mongoose disconnected');
+});
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+    await mongoose.connection.close();
+    console.log('MongoDB connection closed through app termination');
+    process.exit(0);
+});
+
+export default mongoose.connection;
