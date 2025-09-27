@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Dashboard API</title>
+</head>
+<body>
+    <h1>Dashboard API Debug Tool</h1>
+    
+    <div id="results">
+        <h2>Results will appear here...</h2>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_BASE_URL = '/api';
+        
+        async function testLogin() {
+            console.log('Testing login...');
+            const loginData = {
+                email: "monir@ashaproperties.com",
+                password: "password123"
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(loginData)
+                });
+                
+                console.log('Login response status:', response.status);
+                const data = await response.json();
+                console.log('Login response data:', data);
+                
+                if (data.token) {
+                    localStorage.setItem('authToken', data.token);
+                    document.getElementById('results').innerHTML += `
+                        <h3>✅ Login Successful</h3>
+                        <p>Token: ${data.token.substring(0, 20)}...</p>
+                        <p>User: ${data.user.firstName} ${data.user.lastName}</p>
+                    `;
+                    
+                    // Now test dashboard API
+                    setTimeout(testDashboard, 1000);
+                } else {
+                    document.getElementById('results').innerHTML += `
+                        <h3>❌ Login Failed</h3>
+                        <p>Response: ${JSON.stringify(data)}</p>
+                    `;
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                document.getElementById('results').innerHTML += `
+                    <h3>❌ Login Error</h3>
+                    <p>Error: ${error.message}</p>
+                `;
+            }
+        }
+        
+        async function testDashboard() {
+            console.log('Testing dashboard API...');
+            const token = localStorage.getItem('authToken');
+            
+            if (!token) {
+                document.getElementById('results').innerHTML += `
+                    <h3>❌ No Auth Token</h3>
+                    <p>Please login first</p>
+                `;
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/dashboard/stats`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                console.log('Dashboard response status:', response.status);
+                const data = await response.json();
+                console.log('Dashboard response data:', data);
+                
+                if (response.ok) {
+                    document.getElementById('results').innerHTML += `
+                        <h3>✅ Dashboard API Success</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    document.getElementById('results').innerHTML += `
+                        <h3>❌ Dashboard API Failed</h3>
+                        <p>Status: ${response.status}</p>
+                        <p>Response: ${JSON.stringify(data)}</p>
+                    `;
+                }
+            } catch (error) {
+                console.error('Dashboard error:', error);
+                document.getElementById('results').innerHTML += `
+                    <h3>❌ Dashboard Error</h3>
+                    <p>Error: ${error.message}</p>
+                `;
+            }
+        }
+        
+        // Test login when page loads
+        testLogin();
+    </script>
+</body>
+</html>

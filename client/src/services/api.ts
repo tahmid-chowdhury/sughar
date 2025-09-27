@@ -34,6 +34,8 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
     const response = await fetch(url, config);
     
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('API Error:', response.status, errorText);
       throw new Error(`API Error: ${response.status} ${response.statusText}`);
     }
 
@@ -129,18 +131,18 @@ export const rentalApplicationsAPI = {
 
 // Lease Agreements API
 export const leaseAgreementsAPI = {
-  getAll: () => apiRequest('/api/lease-agreements'),
+  getAll: () => apiRequest('/lease-agreements'),
 };
 
 // Payments API
 export const paymentsAPI = {
-  getAll: () => apiRequest('/api/payments'),
+  getAll: () => apiRequest('/payments'),
 };
 
 // Dashboard API - custom endpoints for dashboard data
 export const dashboardAPI = {
   // Get comprehensive dashboard statistics
-  getStats: () => apiRequest('/api/dashboard/stats'),
+  getStats: () => apiRequest('/dashboard/stats'),
 
   // Get financial stats for dashboard
   getFinancialStats: async () => {

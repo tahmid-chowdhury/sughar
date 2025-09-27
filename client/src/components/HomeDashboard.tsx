@@ -71,11 +71,16 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({ setViewingTenantId
 
   useEffect(() => {
     const fetchDashboardData = async () => {
-      if (!user) return;
+      if (!user) {
+        console.log('No user logged in, skipping dashboard fetch');
+        return;
+      }
 
       try {
+        console.log('Fetching dashboard stats for user:', user.email);
         // Fetch comprehensive dashboard statistics
         const dashboardStats = await api.dashboardAPI.getStats();
+        console.log('Dashboard stats loaded successfully');
         setStats(dashboardStats);
 
         // Generate recent activities from service requests

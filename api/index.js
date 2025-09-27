@@ -219,13 +219,15 @@ async function handleAuth(req, res, urlParts) {
     return await handleLogin(req, res);
   } else if (method === 'GET' && endpoint === 'verify') {
     return await handleVerify(req, res);
+  } else if (method === 'GET' && endpoint === 'profile') {
+    return await handleProfile(req, res);
   } else {
     return res.status(404).json({ 
       error: 'Auth route not found',
       debug: {
         endpoint: endpoint,
         method: method,
-        expectedEndpoints: ['test', 'test-db', 'register', 'login', 'verify']
+        expectedEndpoints: ['test', 'test-db', 'register', 'login', 'verify', 'profile']
       }
     });
   }
@@ -375,6 +377,51 @@ async function handleLogin(req, res) {
       error: 'Login failed', 
       details: error.message,
       type: error.name
+    });
+  }
+}
+
+async function handleProfile(req, res) {
+  try {
+    // Use the authentication middleware logic
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    
+    if (!token) {
+      return res.status(401).json({ error: 'Access token required' });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    console.log('Profile request - decoded token:', decoded);
+    
+    // Find user by ID from token
+    const user = await User.findById(decoded.userId).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.status(200).json({
+      user: {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('Profile fetch error:', error);
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Token expired' });
+    }
+    res.status(500).json({ 
+      error: 'Failed to fetch profile', 
+      details: error.message 
     });
   }
 }

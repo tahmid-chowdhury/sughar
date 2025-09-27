@@ -73,6 +73,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       setAuthToken(response.token);
       setUser(response.user);
+      console.log('User logged in successfully:', response.user.email);
     } catch (error: any) {
       console.error('Login failed:', error);
       setError(error.message || 'Login failed. Please try again.');
