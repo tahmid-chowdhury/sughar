@@ -51,11 +51,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const fetchUserProfile = async () => {
     try {
       setLoading(true);
+      console.log('Fetching user profile...');
       const response = await authAPI.getProfile();
+      console.log('Profile response received:', response);
       setUser(response.user);
       setError(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch user profile:', error);
+      console.error('Profile fetch error details:', {
+        message: error.message,
+        status: error.status
+      });
       clearAuthToken();
       setUser(null);
       setError('Session expired. Please login again.');

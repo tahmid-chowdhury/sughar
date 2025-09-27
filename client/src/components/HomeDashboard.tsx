@@ -71,8 +71,15 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({ setViewingTenantId
 
   useEffect(() => {
     const fetchDashboardData = async () => {
+      console.log('Dashboard useEffect - User state:', {
+        user: user,
+        email: user?.email,
+        hasToken: !!localStorage.getItem('authToken')
+      });
+      
       if (!user) {
         console.log('No user logged in, skipping dashboard fetch');
+        setLoading(false);
         return;
       }
 
@@ -181,7 +188,17 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({ setViewingTenantId
           <h1 className="text-3xl font-bold font-atkinson text-text-main">
             Welcome back, {user?.firstName || 'User'}!
           </h1>
-          <p className="text-text-secondary mt-2">Unable to load dashboard data.</p>
+          <p className="text-text-secondary mt-2">
+            {!user ? 'Please log in to view dashboard data.' : 'Unable to load dashboard data.'}
+          </p>
+          {!user && (
+            <button 
+              onClick={() => window.location.href = '/login'} 
+              className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              Go to Login
+            </button>
+          )}
         </div>
       </div>
     );
