@@ -127,8 +127,21 @@ export const rentalApplicationsAPI = {
   }),
 };
 
+// Lease Agreements API
+export const leaseAgreementsAPI = {
+  getAll: () => apiRequest('/api/lease-agreements'),
+};
+
+// Payments API
+export const paymentsAPI = {
+  getAll: () => apiRequest('/api/payments'),
+};
+
 // Dashboard API - custom endpoints for dashboard data
 export const dashboardAPI = {
+  // Get comprehensive dashboard statistics
+  getStats: () => apiRequest('/api/dashboard/stats'),
+
   // Get financial stats for dashboard
   getFinancialStats: async () => {
     try {
@@ -148,6 +161,16 @@ export const dashboardAPI = {
 
   // Get building stats
   getBuildingStats: async () => {
+    const properties = await propertiesAPI.getAll();
+    return calculateBuildingStats(properties);
+  },
+
+  // Get tenant stats
+  getTenantStats: async () => {
+    const applications = await rentalApplicationsAPI.getAll();
+    return calculateTenantStats(applications);
+  },
+};
     const properties = await propertiesAPI.getAll();
     return calculateBuildingStats(properties);
   },
@@ -198,5 +221,7 @@ export default {
   unitsAPI,
   serviceRequestsAPI,
   rentalApplicationsAPI,
+  leaseAgreementsAPI,
+  paymentsAPI,
   dashboardAPI,
 };
