@@ -4,6 +4,7 @@ let isConnected = false;
 
 export async function connectToDatabase() {
   if (isConnected) {
+    console.log('Using existing database connection');
     return;
   }
 
@@ -13,15 +14,21 @@ export async function connectToDatabase() {
       throw new Error('ATLAS_URI environment variable is not set');
     }
 
+    console.log('Connecting to MongoDB Atlas...', uri.substring(0, 20) + '...');
+
     await mongoose.connect(uri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
 
     isConnected = true;
-    console.log('Connected to MongoDB Atlas');
+    console.log('Successfully connected to MongoDB Atlas');
   } catch (error) {
-    console.error('Database connection error:', error);
+    console.error('Database connection error:', {
+      message: error.message,
+      stack: error.stack,
+      hasUri: !!process.env.ATLAS_URI
+    });
     throw error;
   }
 }

@@ -81,8 +81,22 @@ export default async function handler(req, res) {
       return await handleAPI(req, res, urlParts);
     }
   } catch (error) {
-    console.error('API Error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error('API Error Details:', {
+      message: error.message,
+      stack: error.stack,
+      url: req.url,
+      method: req.method,
+      resource: resource,
+      env: {
+        hasAtlasUri: !!process.env.ATLAS_URI,
+        hasJwtSecret: !!process.env.JWT_SECRET
+      }
+    });
+    return res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message,
+      timestamp: new Date().toISOString()
+    });
   }
 }
 
@@ -91,7 +105,17 @@ async function handleAuth(req, res, urlParts) {
   const endpoint = urlParts[1];
   const { method } = req;
 
-  if (method === 'POST' && endpoint === 'register') {
+  if (method === 'GET' && endpoint === 'test') {
+    return res.status(200).json({ 
+      message: 'API is working',
+      env: {
+        hasAtlasUri: !!process.env.ATLAS_URI,
+        hasJwtSecret: !!process.env.JWT_SECRET,
+        atlasUriPrefix: process.env.ATLAS_URI ? process.env.ATLAS_URI.substring(0, 20) + '...' : 'NOT SET'
+      },
+      timestamp: new Date().toISOString()
+    });
+  } else if (method === 'POST' && endpoint === 'register') {
     return await handleRegister(req, res);
   } else if (method === 'POST' && endpoint === 'login') {
     return await handleLogin(req, res);
@@ -167,39 +191,63 @@ async function handleRegister(req, res) {
 }
 
 async function handleLogin(req, res) {
-  const { email, password } = req.body;
-  
-  const user = await User.findOne({ email });
-  if (!user) {
-    return res.status(401).json({ error: 'Invalid email or password' });
-  }
-  
-  const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-  if (!isPasswordValid) {
-    return res.status(401).json({ error: 'Invalid email or password' });
-  }
-  
-  const token = jwt.sign(
-    { 
-      userId: user._id, 
-      email: user.email,
-      role: user.role 
-    }, 
-    JWT_SECRET, 
-    { expiresIn: '24h' }
-  );
-  
-  res.status(200).json({
-    message: 'Login successful',
-    token,
-    user: {
-      id: user._id,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      role: user.role
+  try {
+    console.log('Login attempt:', { email: req.body.email, hasPassword: !!req.body.password });
+    
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
     }
-  });
+    
+    const user = await User.findOne({ email });
+    console.log('User found:', !!user);
+    
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+    
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    console.log('Password valid:', isPasswordValid);
+    
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+    
+    const token = jwt.sign(
+      { 
+        userId: user._id, 
+        email: user.email,
+        role: user.role 
+      }, 
+      JWT_SECRET, 
+      { expiresIn: '24h' }
+    );
+    
+    console.log('Login successful for user:', user.email);
+    
+    res.status(200).json({
+      message: 'Login successful',
+      token,
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('Login error:', {
+      message: error.message,
+      stack: error.stack,
+      body: req.body
+    });
+    res.status(500).json({ 
+      error: 'Login failed', 
+      details: error.message 
+    });
+  }
 }
 
 async function handleVerify(req, res) {
