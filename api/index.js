@@ -2,7 +2,6 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { MongoClient, ObjectId } from 'mongodb';
 import { connectToDatabase } from './_utils/db.js';
-import { corsHeaders } from './_utils/auth.js';
 
 // Import models
 import User from '../server/models/User.js';
@@ -58,7 +57,16 @@ async function connectToMongoDB() {
 
 export default async function handler(req, res) {
   // Set CORS headers
-  res.set(corsHeaders());
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+  
+  // Set headers properly for Vercel
+  Object.entries(corsHeaders).forEach(([key, value]) => {
+    res.setHeader(key, value);
+  });
   
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
