@@ -149,6 +149,21 @@ async function handleAuth(req, res, urlParts) {
       },
       timestamp: new Date().toISOString()
     });
+  } else if (method === 'GET' && endpoint === 'test-db') {
+    try {
+      await connectToDatabase();
+      const userCount = await User.countDocuments();
+      return res.status(200).json({
+        message: 'Database connection working',
+        userCount: userCount,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      return res.status(500).json({
+        error: 'Database connection failed',
+        details: error.message
+      });
+    }
   } else if (method === 'POST' && endpoint === 'register') {
     return await handleRegister(req, res);
   } else if ((method === 'POST' || method === 'GET') && endpoint === 'login') {
@@ -172,7 +187,7 @@ async function handleAuth(req, res, urlParts) {
       debug: {
         endpoint: endpoint,
         method: method,
-        expectedEndpoints: ['test', 'register', 'login', 'verify']
+        expectedEndpoints: ['test', 'test-db', 'register', 'login', 'verify']
       }
     });
   }
@@ -244,28 +259,42 @@ async function handleRegister(req, res) {
 
 async function handleLogin(req, res) {
   try {
-    console.log('Login attempt:', { email: req.body.email, hasPassword: !!req.body.password });
+    console.log('Login attempt started');
+    console.log('Request method:', req.method);
+    console.log('Request headers:', req.headers);
+    console.log('Raw body:', req.body);
     
-    const { email, password } = req.body;
+    const { email, password } = req.body || {};
+    
+    console.log('Parsed credentials:', { email: email, hasPassword: !!password });
     
     if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
+      console.log('Missing credentials');
+      return res.status(400).json({ 
+        error: 'Email and password are required',
+        received: { email: !!email, password: !!password }
+      });
     }
     
+    console.log('Searching for user with email:', email);
     const user = await User.findOne({ email });
     console.log('User found:', !!user);
     
     if (!user) {
+      console.log('User not found');
       return res.status(401).json({ error: 'Invalid email or password' });
     }
     
+    console.log('Comparing password...');
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
     console.log('Password valid:', isPasswordValid);
     
     if (!isPasswordValid) {
+      console.log('Invalid password');
       return res.status(401).json({ error: 'Invalid email or password' });
     }
     
+    console.log('Creating JWT token...');
     const token = jwt.sign(
       { 
         userId: user._id, 
@@ -290,14 +319,17 @@ async function handleLogin(req, res) {
       }
     });
   } catch (error) {
-    console.error('Login error:', {
+    console.error('Login error details:', {
       message: error.message,
       stack: error.stack,
-      body: req.body
+      name: error.name,
+      body: req.body,
+      headers: req.headers
     });
     res.status(500).json({ 
       error: 'Login failed', 
-      details: error.message 
+      details: error.message,
+      type: error.name
     });
   }
 }
