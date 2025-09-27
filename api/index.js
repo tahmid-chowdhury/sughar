@@ -76,17 +76,36 @@ export default async function handler(req, res) {
   const urlParts = req.url.split('/').filter(part => part && part !== 'api');
   const resource = urlParts[0];
 
+  console.log('Request details:', {
+    url: req.url,
+    method: method,
+    urlParts: urlParts,
+    resource: resource
+  });
+
   try {
     // Route to appropriate handler
+    console.log('Routing to:', resource);
+    
     if (resource === 'auth') {
       await connectToDatabase();
       return await handleAuth(req, res, urlParts);
     } else if (resource === 'record') {
       const db = await connectToMongoDB();
       return await handleRecord(req, res, urlParts, db);
-    } else {
+    } else if (resource && (resource === 'properties' || resource === 'units' || resource === 'service-requests' || resource === 'rental-applications')) {
       await connectToDatabase();
       return await handleAPI(req, res, urlParts);
+    } else {
+      console.log('No route found for resource:', resource);
+      return res.status(404).json({ 
+        error: 'Route not found', 
+        debug: {
+          url: req.url,
+          resource: resource,
+          urlParts: urlParts
+        }
+      });
     }
   } catch (error) {
     console.error('API Error Details:', {
@@ -113,6 +132,13 @@ async function handleAuth(req, res, urlParts) {
   const endpoint = urlParts[1];
   const { method } = req;
 
+  console.log('Auth handler:', {
+    endpoint: endpoint,
+    method: method,
+    urlParts: urlParts,
+    fullUrl: req.url
+  });
+
   if (method === 'GET' && endpoint === 'test') {
     return res.status(200).json({ 
       message: 'API is working',
@@ -130,7 +156,14 @@ async function handleAuth(req, res, urlParts) {
   } else if (method === 'GET' && endpoint === 'verify') {
     return await handleVerify(req, res);
   } else {
-    return res.status(404).json({ error: 'Route not found' });
+    return res.status(404).json({ 
+      error: 'Auth route not found',
+      debug: {
+        endpoint: endpoint,
+        method: method,
+        expectedEndpoints: ['test', 'register', 'login', 'verify']
+      }
+    });
   }
 }
 
