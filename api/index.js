@@ -4,17 +4,14 @@ import { MongoClient, ObjectId } from 'mongodb';
 import mongoose from 'mongoose';
 import { connectToDatabase } from './_utils/db.js';
 
-// Import models
-import User from '../server/models/User.js';
-import Contractor from '../server/models/Contractor.js';
-import Property from '../server/models/Property.js';
-import Unit from '../server/models/Unit.js';
-import RentalApplication from '../server/models/RentalApplication.js';
-import ServiceRequest from '../server/models/ServiceRequest.js';
-import LeaseAgreement from '../server/models/LeaseAgreement.js';
-import Payment from '../server/models/Payment.js';
-import Rating from '../server/models/Rating.js';
-import Document from '../server/models/Document.js';
+// Import models from local directory
+import User from './models/User.js';
+import Property from './models/Property.js';
+import Unit from './models/Unit.js';
+import ServiceRequest from './models/ServiceRequest.js';
+import LeaseAgreement from './models/LeaseAgreement.js';
+import RentalApplication from './models/RentalApplication.js';
+import Payment from './models/Payment.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
