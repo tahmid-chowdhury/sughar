@@ -154,30 +154,52 @@ async function handleAuth(req, res, urlParts) {
     try {
       console.log('Testing database connection...');
       await connectToDatabase();
-      console.log('Database connected, testing User model...');
+      console.log('Database connected, connection state:', mongoose.connection.readyState);
       
-      // Test with a timeout
-      const userCount = await Promise.race([
-        User.countDocuments(),
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Database query timeout')), 8000)
-        )
-      ]);
+      // First test: Simple ping
+      console.log('Testing database ping...');
+      await mongoose.connection.db.admin().ping();
+      console.log('Database ping successful');
       
-      console.log('User count retrieved:', userCount);
+      // Second test: List collections
+      console.log('Testing collection access...');
+      const collections = await mongoose.connection.db.listCollections().toArray();
+      console.log('Collections found:', collections.length);
+      
+      // Third test: Check if users collection exists and try a simple query
+      console.log('Testing User model...');
+      const userExists = collections.some(col => col.name === 'users');
+      console.log('Users collection exists:', userExists);
+      
+      let userCount = 0;
+      if (userExists) {
+        // Use native MongoDB driver for more reliable query
+        const usersCollection = mongoose.connection.db.collection('users');
+        userCount = await Promise.race([
+          usersCollection.countDocuments(),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('User count timeout')), 3000)
+          )
+        ]);
+        console.log('User count retrieved:', userCount);
+      }
       
       return res.status(200).json({
         message: 'Database connection working',
-        userCount: userCount,
         connectionState: mongoose.connection.readyState,
+        collections: collections.map(c => c.name),
+        userCount: userCount,
         timestamp: new Date().toISOString()
       });
     } catch (error) {
       console.error('Database test error:', error);
       return res.status(500).json({
-        error: 'Database connection failed',
+        error: 'Database test failed',
         details: error.message,
-        connectionState: mongoose.connection.readyState
+        connectionState: mongoose.connection.readyState,
+        step: error.message.includes('ping') ? 'ping' : 
+              error.message.includes('collections') ? 'collections' :
+              error.message.includes('count') ? 'count' : 'unknown'
       });
     }
   } else if (method === 'POST' && endpoint === 'register') {
@@ -277,7 +299,6 @@ async function handleLogin(req, res) {
   try {
     console.log('Login attempt started');
     console.log('Request method:', req.method);
-    console.log('Request headers:', req.headers);
     console.log('Raw body:', req.body);
     
     const { email, password } = req.body || {};
@@ -293,7 +314,16 @@ async function handleLogin(req, res) {
     }
     
     console.log('Searching for user with email:', email);
-    const user = await User.findOne({ email });
+    
+    // Try using native MongoDB driver first to avoid Mongoose issues
+    const usersCollection = mongoose.connection.db.collection('users');
+    const user = await Promise.race([
+      usersCollection.findOne({ email: email }),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('User lookup timeout')), 5000)
+      )
+    ]);
+    
     console.log('User found:', !!user);
     
     if (!user) {
@@ -339,8 +369,7 @@ async function handleLogin(req, res) {
       message: error.message,
       stack: error.stack,
       name: error.name,
-      body: req.body,
-      headers: req.headers
+      body: req.body
     });
     res.status(500).json({ 
       error: 'Login failed', 
