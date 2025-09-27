@@ -1087,12 +1087,20 @@ async function getDashboardStats(req, res) {
   authenticateToken(req, res, async () => {
     try {
       const userId = req.user.userId;
-      console.log('Getting dashboard stats for user:', userId);
+      console.log('Getting dashboard stats for user ID:', userId);
+      console.log('User ID type:', typeof userId);
       
       // Get user's properties
       const properties = await Property.find({ landlord: userId });
       console.log('Found properties:', properties.length);
+      console.log('Properties query result:', properties.map(p => ({
+        _id: p._id,
+        name: p.name,
+        landlord: p.landlord
+      })));
+      
       const propertyIds = properties.map(p => p._id);
+      console.log('Property IDs:', propertyIds);
       
       // Get units for user's properties  
       const units = await Unit.find({ property: { $in: propertyIds } })

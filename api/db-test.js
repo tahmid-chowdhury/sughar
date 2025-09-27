@@ -2,6 +2,8 @@
 import { connectToDatabase } from './_utils/db.js';
 import mongoose from 'mongoose';
 import User from './models/User.js';
+import Property from './models/Property.js';
+import Unit from './models/Unit.js';
 
 export default async function handler(req, res) {
   // Set CORS headers
@@ -27,6 +29,27 @@ export default async function handler(req, res) {
     // Test specific user lookup
     const testUser = await User.findOne({ email: 'monir@ashaproperties.com' });
     console.log('Test user found:', !!testUser);
+    console.log('Test user ID:', testUser?._id);
+    
+    // Check properties
+    const propertyCount = await Property.countDocuments();
+    console.log('Property count:', propertyCount);
+    
+    const allProperties = await Property.find();
+    console.log('All properties:', allProperties.map(p => ({
+      _id: p._id,
+      name: p.name,
+      landlord: p.landlord,
+      landlordType: typeof p.landlord
+    })));
+    
+    // Check properties for Monir
+    const monirProperties = await Property.find({ landlord: testUser?._id });
+    console.log('Monir properties:', monirProperties.length);
+    
+    // Check units
+    const unitCount = await Unit.countDocuments();
+    console.log('Unit count:', unitCount);
     
     res.status(200).json({
       status: 'OK',
@@ -35,7 +58,16 @@ export default async function handler(req, res) {
         connected: mongoose.connection.readyState === 1,
         userCount: userCount,
         testUserExists: !!testUser,
-        testUserEmail: testUser ? testUser.email : null
+        testUserEmail: testUser?.email,
+        testUserId: testUser?._id,
+        propertyCount: propertyCount,
+        monirPropertyCount: monirProperties.length,
+        unitCount: unitCount,
+        allProperties: allProperties.map(p => ({
+          _id: p._id,
+          name: p.name,
+          landlord: p.landlord
+        }))
       },
       environment: {
         hasAtlasUri: !!process.env.ATLAS_URI,
