@@ -4,7 +4,7 @@ import { Eye, EyeOff, SuGharLogo, AppleLogo, GoogleLogo, FacebookLogo } from './
 
 export const LoginPage: React.FC = () => {
     const [passwordVisible, setPasswordVisible] = useState(false);
-    const [email, setEmail] = useState('ahmed.rahman@example.com');
+    const [email, setEmail] = useState('monir@ashaproperties.com');
     const [password, setPassword] = useState('password123');
     const [showSignUp, setShowSignUp] = useState(false);
     
@@ -41,10 +41,9 @@ export const LoginPage: React.FC = () => {
                         <h2 className="text-3xl font-bold font-atkinson text-text-main mb-6">Login to Dashboard</h2>
 
                         <div className="mb-4 p-3 bg-blue-50 border border-blue-200 text-blue-700 rounded text-sm">
-                            <strong>Demo Accounts:</strong><br/>
-                            Landlord: ahmed.rahman@example.com<br/>
-                            Tenant: rashida.begum@example.com<br/>
-                            Contractor: abdul.karim@example.com<br/>
+                            <strong>Asha Properties Demo Accounts:</strong><br/>
+                            Landlord: monir@ashaproperties.com<br/>
+                            Tenant: farzana.akhter@example.com<br/>
                             Password: password123
                         </div>
 
