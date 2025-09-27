@@ -1087,100 +1087,77 @@ async function getDashboardStats(req, res) {
   authenticateToken(req, res, async () => {
     try {
       const userId = req.user.userId;
+      console.log('Getting dashboard stats for user:', userId);
       
       // Get user's properties
-      const properties = await Property.find({ userID: userId });
+      const properties = await Property.find({ landlord: userId });
+      console.log('Found properties:', properties.length);
       const propertyIds = properties.map(p => p._id);
       
-      // Get units for user's properties
-      const units = await Unit.find({ propertyID: { $in: propertyIds } })
-        .populate('propertyID', 'address');
+      // Get units for user's properties  
+      const units = await Unit.find({ property: { $in: propertyIds } })
+        .populate('property', 'address');
+      console.log('Found units:', units.length);
       
       // Get service requests for user's properties
-      const serviceRequests = await ServiceRequest.find()
-        .populate({
-          path: 'unitID',
-          match: { propertyID: { $in: propertyIds } },
-          populate: {
-            path: 'propertyID',
-            select: 'address'
-          }
-        })
-        .populate('userID', 'firstName lastName');
+      const serviceRequests = await ServiceRequest.find({ property: { $in: propertyIds } })
+        .populate('property', 'address')
+        .populate('tenant', 'firstName lastName');
+      console.log('Found service requests:', serviceRequests.length);
       
       // Filter out service requests with null unitID (means unit doesn't belong to user)
       const userServiceRequests = serviceRequests.filter(sr => sr.unitID != null);
       
       // Get rental applications for user's properties
-      const applications = await RentalApplication.find()
-        .populate({
-          path: 'unitID',
-          match: { propertyID: { $in: propertyIds } },
-          populate: {
-            path: 'propertyID',
-            select: 'address'
-          }
-        })
-        .populate('userID', 'firstName lastName');
-      
-      // Filter applications for user's properties
-      const userApplications = applications.filter(app => app.unitID != null);
+      const applications = await RentalApplication.find({ property: { $in: propertyIds } })
+        .populate('property', 'address')
+        .populate('unit', 'unitNumber')
+        .populate('applicant', 'firstName lastName');
+      console.log('Found applications:', applications.length);
       
       // Get lease agreements for user's properties
-      const leases = await LeaseAgreement.find()
-        .populate({
-          path: 'unitID',
-          match: { propertyID: { $in: propertyIds } },
-          populate: {
-            path: 'propertyID',
-            select: 'address'
-          }
-        })
-        .populate('userID', 'firstName lastName');
-      
-      const userLeases = leases.filter(lease => lease.unitID != null);
+      const leases = await LeaseAgreement.find({ landlord: userId })
+        .populate('property', 'address') 
+        .populate('unit', 'unitNumber')
+        .populate('tenant', 'firstName lastName');
+      console.log('Found leases:', leases.length);
       
       // Calculate statistics
       const totalProperties = properties.length;
       const totalUnits = units.length;
-      const occupiedUnits = units.filter(unit => unit.status === 'occupied').length;
+      const occupiedUnits = units.filter(unit => unit.isOccupied).length;
       const vacantUnits = totalUnits - occupiedUnits;
       const occupancyRate = totalUnits > 0 ? Math.round((occupiedUnits / totalUnits) * 100) : 0;
       
       // Service request stats
-      const activeServiceRequests = userServiceRequests.filter(sr => sr.status === 'new' || sr.status === 'in progress').length;
-      const completedServiceRequests = userServiceRequests.filter(sr => sr.status === 'completed').length;
+      const activeServiceRequests = serviceRequests.filter(sr => 
+        sr.status === 'open' || sr.status === 'in-progress').length;
+      const completedServiceRequests = serviceRequests.filter(sr => 
+        sr.status === 'completed').length;
       
       // Application stats
-      const pendingApplications = userApplications.filter(app => app.status === 'pending').length;
+      const pendingApplications = applications.filter(app => app.status === 'pending').length;
       
       // Lease stats - leases ending soon (next 30 days)
       const today = new Date();
       const thirtyDaysFromNow = new Date();
       thirtyDaysFromNow.setDate(today.getDate() + 30);
       
-      const leasesEndingSoon = userLeases.filter(lease => {
+      const leasesEndingSoon = leases.filter(lease => {
         const endDate = new Date(lease.endDate);
         return endDate >= today && endDate <= thirtyDaysFromNow;
       });
       
-      // Leases ending today
-      const leasesEndingToday = userLeases.filter(lease => {
-        const endDate = new Date(lease.endDate);
-        const todayStr = today.toDateString();
-        return endDate.toDateString() === todayStr;
-      });
-      
-      // Calculate total revenue
+      // Calculate total revenue from occupied units
       const totalRevenue = units
-        .filter(unit => unit.status === 'occupied')
+        .filter(unit => unit.isOccupied)
         .reduce((sum, unit) => sum + (unit.monthlyRent || 0), 0);
       
       // Prepare response
       const stats = {
         properties: {
           total: totalProperties,
-          addresses: properties.map(p => p.address)
+          addresses: properties.map(p => `${p.address.street}, ${p.address.city}, ${p.address.state}`)
         },
         units: {
           total: totalUnits,
@@ -1191,52 +1168,47 @@ async function getDashboardStats(req, res) {
           details: units.map(unit => ({
             _id: unit._id,
             unitNumber: unit.unitNumber,
-            status: unit.status,
+            isOccupied: unit.isOccupied,
             monthlyRent: unit.monthlyRent,
-            property: unit.propertyID?.address
+            property: unit.property?.address ? 
+              `${unit.property.address.street}, ${unit.property.address.city}` : 'Unknown'
           }))
         },
         serviceRequests: {
-          total: userServiceRequests.length,
+          total: serviceRequests.length,
           active: activeServiceRequests,
           completed: completedServiceRequests,
-          completedToday: userServiceRequests.filter(sr => {
+          completedToday: serviceRequests.filter(sr => {
             if (sr.status !== 'completed') return false;
             const updatedDate = new Date(sr.updatedAt || sr.createdAt);
             return updatedDate.toDateString() === today.toDateString();
           }).length,
-          recent: userServiceRequests.slice(0, 5).map(sr => ({
+          recent: serviceRequests.slice(0, 5).map(sr => ({
             _id: sr._id,
+            title: sr.title,
             description: sr.description,
             status: sr.status,
-            tenant: sr.userID ? `${sr.userID.firstName} ${sr.userID.lastName}` : 'Unknown',
-            unit: sr.unitID?.unitNumber,
-            property: sr.unitID?.propertyID?.address,
-            requestDate: sr.requestDate
+            tenant: sr.tenant ? `${sr.tenant.firstName} ${sr.tenant.lastName}` : 'Unknown',
+            property: sr.property?.address ? 
+              `${sr.property.address.street}, ${sr.property.address.city}` : 'Unknown',
+            createdAt: sr.createdAt
           }))
         },
         applications: {
-          total: userApplications.length,
+          total: applications.length,
           pending: pendingApplications,
-          approved: userApplications.filter(app => app.status === 'approved').length,
-          rejected: userApplications.filter(app => app.status === 'rejected').length
+          approved: applications.filter(app => app.status === 'approved').length,
+          rejected: applications.filter(app => app.status === 'rejected').length
         },
         leases: {
-          total: userLeases.length,
+          total: leases.length,
           endingSoon: leasesEndingSoon.length,
-          endingToday: leasesEndingToday.length,
           endingSoonDetails: leasesEndingSoon.map(lease => ({
             _id: lease._id,
-            tenant: `${lease.userID.firstName} ${lease.userID.lastName}`,
-            unit: lease.unitID.unitNumber,
-            property: lease.unitID.propertyID.address,
-            endDate: lease.endDate
-          })),
-          endingTodayDetails: leasesEndingToday.map(lease => ({
-            _id: lease._id,
-            tenant: `${lease.userID.firstName} ${lease.userID.lastName}`,
-            unit: lease.unitID.unitNumber,
-            property: lease.unitID.propertyID.address,
+            tenant: lease.tenant ? `${lease.tenant.firstName} ${lease.tenant.lastName}` : 'Unknown',
+            unit: lease.unit?.unitNumber || 'Unknown',
+            property: lease.property?.address ? 
+              `${lease.property.address.street}, ${lease.property.address.city}` : 'Unknown',
             endDate: lease.endDate
           }))
         }
