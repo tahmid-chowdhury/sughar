@@ -36,16 +36,20 @@ export default async function handler(req, res) {
     console.log('Property count:', propertyCount);
     
     const allProperties = await Property.find();
-    console.log('All properties:', allProperties.map(p => ({
+    console.log('All properties with full data:', allProperties.map(p => ({
       _id: p._id,
       name: p.name,
       landlord: p.landlord,
-      landlordType: typeof p.landlord
+      address: p.address
     })));
     
     // Check properties for Monir
     const monirProperties = await Property.find({ landlord: testUser?._id });
     console.log('Monir properties:', monirProperties.length);
+    
+    // Also try to find properties with any landlord set
+    const propertiesWithLandlord = await Property.find({ landlord: { $exists: true, $ne: null } });
+    console.log('Properties with landlord set:', propertiesWithLandlord.length);
     
     // Check units
     const unitCount = await Unit.countDocuments();
@@ -66,8 +70,11 @@ export default async function handler(req, res) {
         allProperties: allProperties.map(p => ({
           _id: p._id,
           name: p.name,
-          landlord: p.landlord
-        }))
+          landlord: p.landlord,
+          hasLandlord: !!p.landlord,
+          address: p.address?.street || 'No address'
+        })),
+        propertiesWithLandlord: propertiesWithLandlord.length
       },
       environment: {
         hasAtlasUri: !!process.env.ATLAS_URI,
