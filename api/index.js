@@ -151,7 +151,18 @@ async function handleAuth(req, res, urlParts) {
     });
   } else if (method === 'POST' && endpoint === 'register') {
     return await handleRegister(req, res);
-  } else if (method === 'POST' && endpoint === 'login') {
+  } else if ((method === 'POST' || method === 'GET') && endpoint === 'login') {
+    if (method === 'GET') {
+      return res.status(200).json({
+        message: 'Login endpoint is working',
+        method: 'POST',
+        expectedBody: {
+          email: 'user@example.com',
+          password: 'yourpassword'
+        },
+        note: 'Send a POST request with email and password in the request body'
+      });
+    }
     return await handleLogin(req, res);
   } else if (method === 'GET' && endpoint === 'verify') {
     return await handleVerify(req, res);
