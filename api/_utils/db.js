@@ -1,5 +1,8 @@
 import mongoose from 'mongoose';
 
+// Disable buffering globally for serverless environments
+mongoose.set('bufferCommands', false);
+
 let isConnected = false;
 
 export async function connectToDatabase() {
@@ -22,13 +25,12 @@ export async function connectToDatabase() {
     }
 
     await mongoose.connect(uri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
       socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-      bufferCommands: false, // Disable mongoose buffering
-      bufferMaxEntries: 0, // Disable mongoose buffering
       maxPoolSize: 10, // Maintain up to 10 socket connections
+      minPoolSize: 0, // Minimum number of connections
+      maxIdleTimeMS: 30000, // Close connections after 30 seconds of inactivity
+      waitQueueTimeoutMS: 5000, // How long to wait for connection from pool
       family: 4 // Use IPv4, skip trying IPv6
     });
 
