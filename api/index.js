@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { MongoClient, ObjectId } from 'mongodb';
+import mongoose from 'mongoose';
 import { connectToDatabase } from './_utils/db.js';
 
 // Import models
@@ -151,17 +152,32 @@ async function handleAuth(req, res, urlParts) {
     });
   } else if (method === 'GET' && endpoint === 'test-db') {
     try {
+      console.log('Testing database connection...');
       await connectToDatabase();
-      const userCount = await User.countDocuments();
+      console.log('Database connected, testing User model...');
+      
+      // Test with a timeout
+      const userCount = await Promise.race([
+        User.countDocuments(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Database query timeout')), 8000)
+        )
+      ]);
+      
+      console.log('User count retrieved:', userCount);
+      
       return res.status(200).json({
         message: 'Database connection working',
         userCount: userCount,
+        connectionState: mongoose.connection.readyState,
         timestamp: new Date().toISOString()
       });
     } catch (error) {
+      console.error('Database test error:', error);
       return res.status(500).json({
         error: 'Database connection failed',
-        details: error.message
+        details: error.message,
+        connectionState: mongoose.connection.readyState
       });
     }
   } else if (method === 'POST' && endpoint === 'register') {
