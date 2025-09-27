@@ -171,16 +171,6 @@ export const dashboardAPI = {
     return calculateTenantStats(applications);
   },
 };
-    const properties = await propertiesAPI.getAll();
-    return calculateBuildingStats(properties);
-  },
-
-  // Get tenant stats
-  getTenantStats: async () => {
-    const applications = await rentalApplicationsAPI.getAll();
-    return calculateTenantStats(applications);
-  },
-};
 
 // Helper functions to calculate dashboard stats
 const calculateFinancialStats = (properties: any[], serviceRequests: any[]) => {
