@@ -29,9 +29,9 @@ function authenticateToken(req, res, next) {
       console.error('JWT verification error:', err);
       return res.status(403).json({ error: 'Invalid or expired token' });
     }
-    console.log('JWT decoded user:', user);
-    console.log('User ID from token:', user.userId);
-    console.log('User ID type:', typeof user.userId);
+//   console.log('JWT decoded user:', user);
+//   console.log('User ID from token:', user.userId);
+//   console.log('User ID type:', typeof user.userId);
     req.user = user;
     next();
   });
@@ -1113,39 +1113,12 @@ async function getDashboardStats(req, res) {
     try {
       const userId = req.user.userId;
       console.log('Getting dashboard stats for user ID:', userId);
-      console.log('User ID type:', typeof userId);
+      // console.log('User ID type:', typeof userId);
       
-      // Get user's properties
+            // Get user's properties
       const properties = await Property.find({ landlord: userId });
       console.log('Found properties:', properties.length);
-      console.log('Properties query result:', properties.map(p => ({
-        _id: p._id,
-        name: p.name,
-        landlord: p.landlord,
-        landlordString: p.landlord.toString(),
-        userIdString: userId.toString(),
-        match: p.landlord.toString() === userId.toString()
-      })));
-      
-      // Also try with ObjectId conversion
-      const mongoose = require('mongoose');
-      const ObjectId = mongoose.Types.ObjectId;
-      
-      let userObjectId;
-      try {
-        userObjectId = new ObjectId(userId);
-        console.log('Converted to ObjectId:', userObjectId);
-      } catch (e) {
-        console.log('User ID is already ObjectId or conversion failed');
-        userObjectId = userId;
-      }
-      
-      // Try alternative query
-      const propertiesAlt = await Property.find({ landlord: userObjectId });
-      console.log('Alternative query results:', propertiesAlt.length);
-      
       const propertyIds = properties.map(p => p._id);
-      console.log('Property IDs:', propertyIds);
       
       // Get units for user's properties  
       const units = await Unit.find({ property: { $in: propertyIds } })
@@ -1158,14 +1131,8 @@ async function getDashboardStats(req, res) {
         .populate('tenant', 'firstName lastName');
       console.log('Found service requests:', serviceRequests.length);
       
-      // Filter out service requests with null unitID (means unit doesn't belong to user)
-      const userServiceRequests = serviceRequests.filter(sr => sr.unitID != null);
-      
       // Get rental applications for user's properties
-      const applications = await RentalApplication.find({ property: { $in: propertyIds } })
-        .populate('property', 'address')
-        .populate('unit', 'unitNumber')
-        .populate('applicant', 'firstName lastName');
+      const applications = await RentalApplication.find({ property: { $in: propertyIds } });
       console.log('Found applications:', applications.length);
       
       // Get lease agreements for user's properties
