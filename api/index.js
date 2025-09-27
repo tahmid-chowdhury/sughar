@@ -1,21 +1,24 @@
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { connectToDatabase } from '../_utils/db.js';
-import { corsHeaders } from '../_utils/auth.js';
+import { MongoClient, ObjectId } from 'mongodb';
+import { connectToDatabase } from './_utils/db.js';
+import { corsHeaders } from './_utils/auth.js';
 
 // Import models
-import Property from '../models/Property.js';
-import Unit from '../models/Unit.js';
-import RentalApplication from '../models/RentalApplication.js';
-import ServiceRequest from '../models/ServiceRequest.js';
-import LeaseAgreement from '../models/LeaseAgreement.js';
-import Payment from '../models/Payment.js';
-import Rating from '../models/Rating.js';
-import Document from '../models/Document.js';
-import User from '../models/User.js';
-import Contractor from '../models/Contractor.js';
+import User from '../server/models/User.js';
+import Contractor from '../server/models/Contractor.js';
+import Property from '../server/models/Property.js';
+import Unit from '../server/models/Unit.js';
+import RentalApplication from '../server/models/RentalApplication.js';
+import ServiceRequest from '../server/models/ServiceRequest.js';
+import LeaseAgreement from '../server/models/LeaseAgreement.js';
+import Payment from '../server/models/Payment.js';
+import Rating from '../server/models/Rating.js';
+import Document from '../server/models/Document.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
+// Authentication middleware
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -33,6 +36,26 @@ function authenticateToken(req, res, next) {
   });
 }
 
+// MongoDB connection for records
+const uri = process.env.ATLAS_URI;
+let cachedDb = null;
+
+async function connectToMongoDB() {
+  if (cachedDb) {
+    return cachedDb;
+  }
+
+  const client = new MongoClient(uri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+
+  await client.connect();
+  const db = client.db();
+  cachedDb = db;
+  return db;
+}
+
 export default async function handler(req, res) {
   // Set CORS headers
   res.set(corsHeaders());
@@ -41,67 +64,21 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  await connectToDatabase();
-
   const { method } = req;
   const urlParts = req.url.split('/').filter(part => part && part !== 'api');
   const resource = urlParts[0];
-  const id = urlParts[1];
-  const subResource = urlParts[2];
 
   try {
-    // Properties routes
-    if (resource === 'properties') {
-      if (method === 'GET' && !id) {
-        return await getProperties(req, res);
-      } else if (method === 'POST' && !id) {
-        return await createProperty(req, res);
-      } else if (method === 'GET' && id && !subResource) {
-        return await getProperty(req, res, id);
-      } else if (method === 'PUT' && id && !subResource) {
-        return await updateProperty(req, res, id);
-      } else if (method === 'DELETE' && id && !subResource) {
-        return await deleteProperty(req, res, id);
-      } else if (method === 'GET' && id && subResource === 'units') {
-        return await getPropertyUnits(req, res, id);
-      } else if (method === 'POST' && id && subResource === 'units') {
-        return await createUnit(req, res, id);
-      }
-    }
-    
-    // Units routes
-    else if (resource === 'units') {
-      if (method === 'GET' && !id) {
-        return await getUnits(req, res);
-      } else if (method === 'PUT' && id) {
-        return await updateUnit(req, res, id);
-      }
-    }
-    
-    // Service requests routes
-    else if (resource === 'service-requests') {
-      if (method === 'GET' && !id) {
-        return await getServiceRequests(req, res);
-      } else if (method === 'POST' && !id) {
-        return await createServiceRequest(req, res);
-      } else if (method === 'PUT' && id) {
-        return await updateServiceRequest(req, res, id);
-      }
-    }
-    
-    // Rental applications routes
-    else if (resource === 'rental-applications') {
-      if (method === 'GET' && !id) {
-        return await getRentalApplications(req, res);
-      } else if (method === 'POST' && !id) {
-        return await createRentalApplication(req, res);
-      } else if (method === 'PUT' && id) {
-        return await updateRentalApplication(req, res, id);
-      }
-    }
-    
-    else {
-      return res.status(404).json({ error: 'Route not found' });
+    // Route to appropriate handler
+    if (resource === 'auth') {
+      await connectToDatabase();
+      return await handleAuth(req, res, urlParts);
+    } else if (resource === 'record') {
+      const db = await connectToMongoDB();
+      return await handleRecord(req, res, urlParts, db);
+    } else {
+      await connectToDatabase();
+      return await handleAPI(req, res, urlParts);
     }
   } catch (error) {
     console.error('API Error:', error);
@@ -109,7 +86,264 @@ export default async function handler(req, res) {
   }
 }
 
-// Properties handlers
+// Auth handlers
+async function handleAuth(req, res, urlParts) {
+  const endpoint = urlParts[1];
+  const { method } = req;
+
+  if (method === 'POST' && endpoint === 'register') {
+    return await handleRegister(req, res);
+  } else if (method === 'POST' && endpoint === 'login') {
+    return await handleLogin(req, res);
+  } else if (method === 'GET' && endpoint === 'verify') {
+    return await handleVerify(req, res);
+  } else {
+    return res.status(404).json({ error: 'Route not found' });
+  }
+}
+
+async function handleRegister(req, res) {
+  const { firstName, lastName, email, phoneNumber, role, password } = req.body;
+  
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    return res.status(400).json({ error: 'User already exists with this email' });
+  }
+  
+  const saltRounds = 10;
+  const passwordHash = await bcrypt.hash(password, saltRounds);
+  
+  const newUser = new User({
+    firstName,
+    lastName,
+    email,
+    phoneNumber,
+    role,
+    passwordHash
+  });
+  
+  const savedUser = await newUser.save();
+  
+  if (role === 'contractor') {
+    const { companyName, serviceSpecialty, licenseNumber, description, website, businessAddress } = req.body;
+    
+    const newContractor = new Contractor({
+      userID: savedUser._id,
+      companyName,
+      serviceSpecialty,
+      licenseNumber,
+      description,
+      website,
+      businessAddress,
+      status: 'pending',
+      rating: 0,
+      completedJobs: 0
+    });
+    
+    await newContractor.save();
+  }
+  
+  const token = jwt.sign(
+    { 
+      userId: savedUser._id, 
+      email: savedUser.email,
+      role: savedUser.role 
+    }, 
+    JWT_SECRET, 
+    { expiresIn: '24h' }
+  );
+  
+  res.status(201).json({
+    message: 'User created successfully',
+    token,
+    user: {
+      id: savedUser._id,
+      firstName: savedUser.firstName,
+      lastName: savedUser.lastName,
+      email: savedUser.email,
+      role: savedUser.role
+    }
+  });
+}
+
+async function handleLogin(req, res) {
+  const { email, password } = req.body;
+  
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(401).json({ error: 'Invalid email or password' });
+  }
+  
+  const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+  if (!isPasswordValid) {
+    return res.status(401).json({ error: 'Invalid email or password' });
+  }
+  
+  const token = jwt.sign(
+    { 
+      userId: user._id, 
+      email: user.email,
+      role: user.role 
+    }, 
+    JWT_SECRET, 
+    { expiresIn: '24h' }
+  );
+  
+  res.status(200).json({
+    message: 'Login successful',
+    token,
+    user: {
+      id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role
+    }
+  });
+}
+
+async function handleVerify(req, res) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  if (!token) {
+    return res.status(401).json({ error: 'Access token required' });
+  }
+  
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(decoded.userId).select('-passwordHash');
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.status(200).json({
+      valid: true,
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    return res.status(403).json({ error: 'Invalid or expired token' });
+  }
+}
+
+// Record handlers
+async function handleRecord(req, res, urlParts, db) {
+  const { method } = req;
+  const id = urlParts[1];
+  const collection = db.collection("records");
+
+  if (method === 'GET' && !id) {
+    const results = await collection.find({}).toArray();
+    return res.status(200).json(results);
+  } 
+  else if (method === 'GET' && id) {
+    const query = { _id: new ObjectId(id) };
+    const result = await collection.findOne(query);
+    
+    if (!result) {
+      return res.status(404).json({ error: "Record not found" });
+    }
+    return res.status(200).json(result);
+  }
+  else if (method === 'POST') {
+    const newDocument = {
+      name: req.body.name,
+      position: req.body.position,
+      level: req.body.level,
+    };
+    
+    const result = await collection.insertOne(newDocument);
+    return res.status(201).json(result);
+  }
+  else if (method === 'PATCH' && id) {
+    const query = { _id: new ObjectId(id) };
+    const updates = {
+      $set: {
+        name: req.body.name,
+        position: req.body.position,
+        level: req.body.level,
+      }
+    };
+    
+    const result = await collection.updateOne(query, updates);
+    return res.status(200).json(result);
+  }
+  else if (method === 'DELETE' && id) {
+    const query = { _id: new ObjectId(id) };
+    const result = await collection.deleteOne(query);
+    return res.status(200).json(result);
+  }
+  else {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+}
+
+// Main API handlers
+async function handleAPI(req, res, urlParts) {
+  const { method } = req;
+  const resource = urlParts[0];
+  const id = urlParts[1];
+  const subResource = urlParts[2];
+
+  // Properties routes
+  if (resource === 'properties') {
+    if (method === 'GET' && !id) {
+      return await getProperties(req, res);
+    } else if (method === 'POST' && !id) {
+      return await createProperty(req, res);
+    } else if (method === 'GET' && id && !subResource) {
+      return await getProperty(req, res, id);
+    } else if (method === 'PUT' && id && !subResource) {
+      return await updateProperty(req, res, id);
+    } else if (method === 'DELETE' && id && !subResource) {
+      return await deleteProperty(req, res, id);
+    } else if (method === 'GET' && id && subResource === 'units') {
+      return await getPropertyUnits(req, res, id);
+    } else if (method === 'POST' && id && subResource === 'units') {
+      return await createUnit(req, res, id);
+    }
+  }
+  // Units routes
+  else if (resource === 'units') {
+    if (method === 'GET' && !id) {
+      return await getUnits(req, res);
+    } else if (method === 'PUT' && id) {
+      return await updateUnit(req, res, id);
+    }
+  }
+  // Service requests routes
+  else if (resource === 'service-requests') {
+    if (method === 'GET' && !id) {
+      return await getServiceRequests(req, res);
+    } else if (method === 'POST' && !id) {
+      return await createServiceRequest(req, res);
+    } else if (method === 'PUT' && id) {
+      return await updateServiceRequest(req, res, id);
+    }
+  }
+  // Rental applications routes
+  else if (resource === 'rental-applications') {
+    if (method === 'GET' && !id) {
+      return await getRentalApplications(req, res);
+    } else if (method === 'POST' && !id) {
+      return await createRentalApplication(req, res);
+    } else if (method === 'PUT' && id) {
+      return await updateRentalApplication(req, res, id);
+    }
+  }
+  else {
+    return res.status(404).json({ error: 'Route not found' });
+  }
+}
+
+// Property handlers
 async function getProperties(req, res) {
   authenticateToken(req, res, async () => {
     try {
@@ -211,7 +445,6 @@ async function deleteProperty(req, res, id) {
 async function getPropertyUnits(req, res, propertyId) {
   authenticateToken(req, res, async () => {
     try {
-      // Verify property ownership
       const property = await Property.findOne({
         _id: propertyId,
         userID: req.user.userId
@@ -232,7 +465,7 @@ async function getPropertyUnits(req, res, propertyId) {
   });
 }
 
-// Units handlers
+// Unit handlers
 async function getUnits(req, res) {
   authenticateToken(req, res, async () => {
     try {
@@ -253,7 +486,6 @@ async function getUnits(req, res) {
 async function createUnit(req, res, propertyId) {
   authenticateToken(req, res, async () => {
     try {
-      // Verify property ownership
       const property = await Property.findOne({
         _id: propertyId,
         userID: req.user.userId
@@ -292,7 +524,6 @@ async function updateUnit(req, res, id) {
     try {
       const updateData = req.body;
       
-      // Verify unit ownership through property
       const unit = await Unit.findById(id).populate('propertyID');
       if (!unit || unit.propertyID.userID.toString() !== req.user.userId) {
         return res.status(404).json({ error: 'Unit not found' });
@@ -312,7 +543,7 @@ async function updateUnit(req, res, id) {
   });
 }
 
-// Service requests handlers
+// Service request handlers
 async function getServiceRequests(req, res) {
   authenticateToken(req, res, async () => {
     try {
@@ -343,7 +574,6 @@ async function getServiceRequests(req, res) {
           .populate('tenantID', 'firstName lastName')
           .sort({ dateCreated: -1 });
       } else {
-        // Landlord - get service requests for their properties
         const userProperties = await Property.find({ userID: req.user.userId });
         const propertyIds = userProperties.map(p => p._id);
         const userUnits = await Unit.find({ propertyID: { $in: propertyIds } });
@@ -437,7 +667,7 @@ async function updateServiceRequest(req, res, id) {
   });
 }
 
-// Rental applications handlers
+// Rental application handlers
 async function getRentalApplications(req, res) {
   authenticateToken(req, res, async () => {
     try {
@@ -454,7 +684,6 @@ async function getRentalApplications(req, res) {
             }
           });
       } else {
-        // Landlord
         const userProperties = await Property.find({ userID: req.user.userId });
         const propertyIds = userProperties.map(p => p._id);
         const userUnits = await Unit.find({ propertyID: { $in: propertyIds } });
