@@ -142,10 +142,10 @@ export const paymentsAPI = {
 // Dashboard API - custom endpoints for dashboard data
 export const dashboardAPI = {
   // Get comprehensive dashboard statistics
-  getStats: () => apiRequest('/dashboard/stats'),
+  getStats: () => apiRequest('/api/dashboard/stats'),
 
   // Get financial stats for dashboard
-  getFinancialStats: () => apiRequest('/dashboard/financial-stats'),
+  getFinancialStats: () => apiRequest('/api/dashboard/financial-stats'),
 
   // Get building stats
   getBuildingStats: async () => {

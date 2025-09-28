@@ -624,24 +624,29 @@ router.get('/dashboard/stats', authenticateToken, async (req, res) => {
 // Get financial dashboard stats
 router.get('/dashboard/financial-stats', authenticateToken, async (req, res) => {
     try {
+        console.log('Financial stats endpoint called by user:', req.user.userId);
         const userId = req.user.userId;
         
         // Get user's properties
         const properties = await Property.find({ userID: userId });
+        console.log('Found properties:', properties.length);
         const propertyIds = properties.map(p => p._id);
         
         // Get units for user's properties
         const units = await Unit.find({ propertyID: { $in: propertyIds } });
+        console.log('Found units:', units.length);
         const unitIds = units.map(u => u._id);
         
         // Get lease agreements for user's units
         const leases = await LeaseAgreement.find({ unitID: { $in: unitIds } })
             .populate('unitID', 'monthlyRent');
+        console.log('Found leases:', leases.length);
         
         // Get current month's date range
         const now = new Date();
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+        console.log('Date range:', startOfMonth, 'to', endOfMonth);
         
         // Get payments for this month
         const thisMonthPayments = await Payment.find({
@@ -649,6 +654,7 @@ router.get('/dashboard/financial-stats', authenticateToken, async (req, res) => 
             paymentDate: { $gte: startOfMonth, $lte: endOfMonth },
             status: 'completed'
         });
+        console.log('Found payments this month:', thisMonthPayments.length);
         
         // Calculate revenue this month
         const revenueThisMonth = thisMonthPayments.reduce((sum, payment) => {
@@ -657,6 +663,7 @@ router.get('/dashboard/financial-stats', authenticateToken, async (req, res) => 
         
         // Calculate incoming rent (expected monthly rent from all occupied units)
         const occupiedUnits = units.filter(unit => unit.status === 'occupied');
+        console.log('Occupied units:', occupiedUnits.length);
         const incomingRent = occupiedUnits.reduce((sum, unit) => {
             return sum + parseFloat(unit.monthlyRent.toString());
         }, 0);
@@ -667,6 +674,7 @@ router.get('/dashboard/financial-stats', authenticateToken, async (req, res) => 
         const activeLeases = leases.filter(lease => 
             new Date(lease.startDate) <= currentDate && new Date(lease.endDate) >= currentDate
         );
+        console.log('Active leases:', activeLeases.length);
         
         // Calculate expected rent vs actual payments for overdue calculation
         let overdueRent = 0;
@@ -696,6 +704,7 @@ router.get('/dashboard/financial-stats', authenticateToken, async (req, res) => 
             unitID: { $in: unitIds },
             createdAt: { $gte: startOfMonth, $lte: endOfMonth }
         });
+        console.log('Service requests this month:', serviceRequests.length);
         
         // Estimate service costs (this could be enhanced with actual cost data)
         const serviceCosts = serviceRequests.length * 500; // Average $500 per service request
@@ -711,10 +720,14 @@ router.get('/dashboard/financial-stats', authenticateToken, async (req, res) => 
             utilitiesCosts: utilitiesCosts
         };
         
+        console.log('Calculated financial stats:', financialStats);
         res.json(financialStats);
     } catch (error) {
         console.error('Error fetching financial stats:', error);
-        res.status(500).json({ error: 'Error fetching financial stats' });
+        res.status(500).json({ 
+            error: 'Error fetching financial stats', 
+            details: error.message 
+        });
     }
 });
 

@@ -67,7 +67,9 @@ export const FinancialsDashboard = () => {
     const fetchFinancialStats = async () => {
       try {
         setIsLoading(true);
+        console.log('Fetching financial stats...');
         const data: FinancialStatsResponse = await dashboardAPI.getFinancialStats();
+        console.log('Financial stats received:', data);
         
         // Transform the raw data into FinancialStat format
         const stats: FinancialStat[] = [
@@ -107,7 +109,7 @@ export const FinancialsDashboard = () => {
         setError(null);
       } catch (err) {
         console.error('Failed to fetch financial stats:', err);
-        setError('Failed to load financial data');
+        setError(`Failed to load financial data: ${err instanceof Error ? err.message : 'Unknown error'}`);
         
         // Fallback to static data
         const fallbackStats: FinancialStat[] = [
