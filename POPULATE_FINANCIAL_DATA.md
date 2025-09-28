@@ -6,9 +6,9 @@ You currently have zeros on your financial dashboard because there's missing fin
 
 ### Option 1: Run the Financial Data Script (Recommended)
 
-1. **Navigate to your project root:**
+1. **Navigate to your server directory:**
 ```bash
-cd /path/to/your/sughar-project
+cd /path/to/your/sughar-project/server
 ```
 
 2. **Run the financial data population script:**
@@ -17,7 +17,7 @@ node add-financial-data.js
 ```
 
 This will:
-- ✅ Set 15 units to "occupied" status with realistic rent amounts ($45,000-$52,000)
+- ✅ Set up to 15 units to "occupied" status with realistic rent amounts ($45,000-$52,000)
 - ✅ Create lease agreements for occupied units
 - ✅ Add September 2025 rent payments (current month)
 - ✅ Add 5 service requests for cost calculations
