@@ -1264,10 +1264,62 @@ async function getDashboardFinancialStats(req, res) {
       const userId = decoded.userId;
       
       console.log('Financial stats endpoint called by user:', userId);
+      console.log('User ID type:', typeof userId);
+      console.log('User ID string representation:', userId.toString());
       
-      // Get user's properties
-      const properties = await Property.find({ userID: userId });
-      console.log('Found properties:', properties.length);
+      // Debug: Check what users and properties exist in the database
+      const currentUser = await User.findById(userId);
+      console.log('Current user:', currentUser ? {id: currentUser._id.toString(), email: currentUser.email} : 'not found');
+      
+      const allProperties = await Property.find({}).select('_id userID name');
+      console.log('All properties in database:', allProperties.map(p => ({
+        id: p._id.toString(), 
+        userID: p.userID.toString(), 
+        name: p.name,
+        userIdMatch: p.userID.toString() === userId.toString()
+      })));
+      
+      // Get user's properties - convert both to strings for reliable comparison
+      let properties = [];
+      try {
+        // First try exact ObjectId match
+        properties = await Property.find({ userID: userId });
+        console.log('Properties found with ObjectId:', properties.length);
+        
+        if (properties.length === 0) {
+          // Try string match
+          properties = await Property.find({ userID: userId.toString() });
+          console.log('Properties found with string:', properties.length);
+        }
+        
+        if (properties.length === 0) {
+          // Try creating new ObjectId from string
+          try {
+            properties = await Property.find({ userID: new ObjectId(userId.toString()) });
+            console.log('Properties found with new ObjectId:', properties.length);
+          } catch (e) {
+            console.log('ObjectId conversion failed:', e.message);
+          }
+        }
+        
+        // If still no properties, try to find any properties with userID matching any format
+        if (properties.length === 0) {
+          const allProps = await Property.find({});
+          console.log('Total properties in database:', allProps.length);
+          const matchingProps = allProps.filter(p => {
+            const pUserId = p.userID ? p.userID.toString() : '';
+            const currentUserId = userId ? userId.toString() : '';
+            return pUserId === currentUserId;
+          });
+          properties = matchingProps;
+          console.log('Properties found with manual filter:', properties.length);
+        }
+        
+      } catch (error) {
+        console.error('Error finding properties:', error);
+      }
+      
+      console.log('Final properties count:', properties.length);
       
       // If no properties found, return zero values
       if (properties.length === 0) {
@@ -1280,21 +1332,53 @@ async function getDashboardFinancialStats(req, res) {
           utilitiesCosts: 0
         };
         
-        console.log('Calculated financial stats (no data):', financialStats);
+        console.log('Calculated financial stats (no properties):', financialStats);
         return res.json(financialStats);
       }
       
+      console.log('Properties found:', properties.map(p => ({id: p._id.toString(), name: p.name, userID: p.userID.toString()})));
+      
       const propertyIds = properties.map(p => p._id);
+      console.log('Property IDs for unit search:', propertyIds.map(id => id.toString()));
       
       // Get units for user's properties
       const units = await Unit.find({ propertyID: { $in: propertyIds } });
       console.log('Found units:', units.length);
+      
+      if (units.length === 0) {
+        console.log('No units found for properties, returning zero values');
+        const financialStats = {
+          revenueThisMonth: 0,
+          incomingRent: 0,
+          overdueRent: 0,
+          serviceCosts: 0,
+          utilitiesCosts: 0
+        };
+        return res.json(financialStats);
+      }
+      
       const unitIds = units.map(u => u._id);
+      console.log('Unit IDs for lease search:', unitIds.map(id => id.toString()));
+      console.log('Unit details:', units.map(u => ({id: u._id.toString(), propertyID: u.propertyID.toString(), status: u.status, rent: u.monthlyRent})));
       
       // Get lease agreements for user's units
       const leases = await LeaseAgreement.find({ unitID: { $in: unitIds } })
         .populate('unitID', 'monthlyRent');
       console.log('Found leases:', leases.length);
+      
+      if (leases.length === 0) {
+        console.log('No leases found for units, returning zero values');
+        const financialStats = {
+          revenueThisMonth: 0,
+          incomingRent: 0,
+          overdueRent: 0,
+          serviceCosts: 0,
+          utilitiesCosts: 0
+        };
+        return res.json(financialStats);
+      }
+      
+      console.log('Lease details:', leases.map(l => ({id: l._id.toString(), unitID: l.unitID._id.toString(), status: l.status, startDate: l.startDate})));
       
       // Get current month's date range
       const now = new Date();
