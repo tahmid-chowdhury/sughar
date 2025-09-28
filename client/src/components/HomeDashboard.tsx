@@ -213,74 +213,41 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({ setViewingTenantId
         <p className="text-text-secondary mt-2">
           Here's what's happening with your properties today.
         </p>
-        
-        {/* Asha Properties Summary */}
-        <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <h2 className="text-lg font-semibold text-blue-900 mb-2">Asha Properties Portfolio Overview</h2>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
-            <div>
-              <p className="text-blue-600 font-medium">Properties</p>
-              <p className="text-blue-900 text-lg font-bold">{stats.properties.total}</p>
-            </div>
-            <div>
-              <p className="text-blue-600 font-medium">Units</p>
-              <p className="text-blue-900 text-lg font-bold">{stats.units.total} total</p>
-            </div>
-            <div>
-              <p className="text-blue-600 font-medium">Occupancy</p>
-              <p className="text-blue-900 text-lg font-bold">{stats.units.occupied}/{stats.units.total} = {stats.units.occupancyRate}%</p>
-            </div>
-            <div>
-              <p className="text-blue-600 font-medium">Vacancies</p>
-              <p className="text-blue-900 text-lg font-bold">{stats.units.vacant}</p>
-            </div>
-            <div>
-              <p className="text-blue-600 font-medium">Rental Applications</p>
-              <p className="text-blue-900 text-lg font-bold">{stats.applications.pending} pending</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm mt-3 pt-3 border-t border-blue-200">
-            <div>
-              <p className="text-blue-600 font-medium">Active SRs</p>
-              <p className="text-blue-900 text-lg font-bold">{stats.serviceRequests.active} 
-                {stats.serviceRequests.completedToday > 0 && (
-                  <span className="text-xs text-green-600 ml-1">({stats.serviceRequests.completedToday} completed today)</span>
-                )}
-              </p>
-            </div>
-            <div>
-              <p className="text-blue-600 font-medium">Leases Ending Soon</p>
-              <p className="text-blue-900 text-lg font-bold">{stats.leases.endingSoon}
-                {stats.leases.endingToday > 0 && (
-                  <span className="text-xs text-red-600 ml-1">({stats.leases.endingToday} today!)</span>
-                )}
-              </p>
-            </div>
-            <div>
-              <p className="text-blue-600 font-medium">Monthly Revenue Potential</p>
-              <p className="text-blue-900 text-lg font-bold">৳{stats.units.totalRevenue.toLocaleString()}</p>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
         <Card>
           <button 
-            onClick={() => setCurrentPage('service-requests')}
+            onClick={() => setCurrentPage('buildings')}
             className="w-full text-left transition-colors duration-200 rounded-lg p-1 -m-1 cursor-pointer"
           >
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-text-secondary">Active Service Requests</p>
-                <p className="text-3xl font-bold text-text-main mt-1">{stats.serviceRequests.active}</p>
-                {stats.serviceRequests.completedToday > 0 && (
-                  <p className="text-xs text-green-600 mt-1">{stats.serviceRequests.completedToday} completed today</p>
-                )}
+                <p className="text-sm text-text-secondary">Properties</p>
+                <p className="text-3xl font-bold text-text-main mt-1">{stats.properties.total}</p>
+                <p className="text-xs text-gray-500 mt-1">total buildings</p>
               </div>
-              <div className="p-3 rounded-lg bg-orange-100 text-orange-600 group-hover:bg-orange-200 transition-colors">
-                <Wrench className="w-6 h-6" />
+              <div className="p-3 rounded-lg bg-blue-100 text-blue-600 group-hover:bg-blue-200 transition-colors">
+                <HomeIcon className="w-6 h-6" />
+              </div>
+            </div>
+          </button>
+        </Card>
+
+        <Card>
+          <button 
+            onClick={() => setCurrentPage('buildings')}
+            className="w-full text-left transition-colors duration-200 rounded-lg p-1 -m-1 cursor-pointer"
+          >
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-text-secondary">Occupancy Rate</p>
+                <p className="text-3xl font-bold text-text-main mt-1">{stats.units.occupancyRate}%</p>
+                <p className="text-xs text-gray-500 mt-1">{stats.units.occupied}/{stats.units.total} units</p>
+              </div>
+              <div className="p-3 rounded-lg bg-green-100 text-green-600 group-hover:bg-green-200 transition-colors">
+                <TrendingUp className="w-6 h-6" />
               </div>
             </div>
           </button>
@@ -299,6 +266,26 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({ setViewingTenantId
               </div>
               <div className="p-3 rounded-lg bg-red-100 text-red-600 group-hover:bg-red-200 transition-colors">
                 <HomeIcon className="w-6 h-6" />
+              </div>
+            </div>
+          </button>
+        </Card>
+
+        <Card>
+          <button 
+            onClick={() => setCurrentPage('service-requests')}
+            className="w-full text-left transition-colors duration-200 rounded-lg p-1 -m-1 cursor-pointer"
+          >
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-text-secondary">Active Service Requests</p>
+                <p className="text-3xl font-bold text-text-main mt-1">{stats.serviceRequests.active}</p>
+                {stats.serviceRequests.completedToday > 0 && (
+                  <p className="text-xs text-green-600 mt-1">{stats.serviceRequests.completedToday} completed today</p>
+                )}
+              </div>
+              <div className="p-3 rounded-lg bg-orange-100 text-orange-600 group-hover:bg-orange-200 transition-colors">
+                <Wrench className="w-6 h-6" />
               </div>
             </div>
           </button>
@@ -335,11 +322,27 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({ setViewingTenantId
                 <p className="text-3xl font-bold text-text-main mt-1">{stats.applications.pending}</p>
                 <p className="text-xs text-gray-500 mt-1">out of {stats.applications.total} total</p>
               </div>
-              <div className="p-3 rounded-lg bg-green-100 text-green-600 group-hover:bg-green-200 transition-colors">
+              <div className="p-3 rounded-lg bg-indigo-100 text-indigo-600 group-hover:bg-indigo-200 transition-colors">
                 <Users className="w-6 h-6" />
               </div>
             </div>
           </button>
+        </Card>
+      </div>
+
+      {/* Additional Stats Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm text-text-secondary">Monthly Revenue Potential</p>
+              <p className="text-3xl font-bold text-text-main mt-1">৳{stats.units.totalRevenue.toLocaleString()}</p>
+              <p className="text-xs text-gray-500 mt-1">from all units</p>
+            </div>
+            <div className="p-3 rounded-lg bg-purple-100 text-purple-600">
+              <DollarSign className="w-6 h-6" />
+            </div>
+          </div>
         </Card>
       </div>
 
