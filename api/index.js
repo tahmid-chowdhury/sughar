@@ -1396,7 +1396,8 @@ async function getDashboardFinancialStats(req, res) {
         id: l._id ? l._id.toString() : 'undefined', 
         unitID: l.unitID && l.unitID._id ? l.unitID._id.toString() : 'undefined', 
         status: l.status || 'unknown', 
-        startDate: l.startDate || 'unknown'
+        startDate: l.startDate || 'unknown',
+        unitRent: l.unitID && l.unitID.monthlyRent ? l.unitID.monthlyRent : 'no rent data'
       })));
       
       // Get current month's date range
@@ -1439,14 +1440,34 @@ async function getDashboardFinancialStats(req, res) {
       // Calculate expected rent vs actual payments for overdue calculation
       let overdueRent = 0;
       for (const lease of activeLeases) {
-        if (!lease.startDate || !lease.unitID || !lease.unitID.monthlyRent) {
-          console.log('Skipping lease due to missing data:', lease._id);
+        if (!lease.startDate) {
+          console.log('Skipping lease due to missing start date:', lease._id);
+          continue;
+        }
+        
+        // Get monthly rent from the populated unit or from the lease itself
+        let monthlyRent = 0;
+        if (lease.unitID && lease.unitID.monthlyRent) {
+          monthlyRent = lease.unitID.monthlyRent;
+        } else if (lease.monthlyRent) {
+          monthlyRent = lease.monthlyRent;
+        } else {
+          // Find the rent from the units array
+          const correspondingUnit = units.find(unit => 
+            unit._id.toString() === (lease.unitID._id ? lease.unitID._id.toString() : lease.unitID.toString())
+          );
+          if (correspondingUnit && correspondingUnit.monthlyRent) {
+            monthlyRent = correspondingUnit.monthlyRent;
+          }
+        }
+        
+        if (!monthlyRent) {
+          console.log('Skipping lease due to missing rent data:', lease._id);
           continue;
         }
         
         const leaseStartDate = new Date(lease.startDate);
         const monthsSinceStart = Math.floor((currentDate - leaseStartDate) / (1000 * 60 * 60 * 24 * 30)) + 1;
-        const monthlyRent = lease.unitID.monthlyRent || 0;
         const expectedTotalPayments = monthsSinceStart * parseFloat(monthlyRent.toString());
         
         // Get all completed payments for this lease
