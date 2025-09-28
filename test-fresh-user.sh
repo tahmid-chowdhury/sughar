@@ -1,29 +1,33 @@
 #!/bin/bash
 
-echo "Testing financial API endpoint..."
+echo "Testing financial API endpoint with fresh user..."
 
-# Try to register first (in case user doesn't exist)
-echo "Step 0: Try to register user..."
+# Create a unique test user
+TEST_EMAIL="test$(date +%s)@example.com"
+TEST_PASSWORD="TestPassword123!"
+
+echo "Step 1: Register test user..."
 REGISTER_RESPONSE=$(curl -s -X POST https://sughar.vercel.app/api/register \
   -H "Content-Type: application/json" \
-  -d '{
-    "firstName": "Monir",
-    "lastName": "Asha",
-    "email": "monir@ashaproperties.com",
-    "password": "MonirAsha2025!",
-    "role": "landlord"
-  }')
+  -d "{
+    \"firstName\": \"Test\",
+    \"lastName\": \"User\",
+    \"email\": \"$TEST_EMAIL\",
+    \"password\": \"$TEST_PASSWORD\",
+    \"phoneNumber\": \"555-123-4567\",
+    \"role\": \"landlord\"
+  }")
 
 echo "Register response: $REGISTER_RESPONSE"
 
-# First login to get token
-echo "Step 1: Login..."
+# Login with test user
+echo "Step 2: Login with test user..."
 LOGIN_RESPONSE=$(curl -s -X POST https://sughar.vercel.app/api/login \
   -H "Content-Type: application/json" \
-  -d '{
-    "email": "monir@ashaproperties.com",
-    "password": "MonirAsha2025!"
-  }')
+  -d "{
+    \"email\": \"$TEST_EMAIL\",
+    \"password\": \"$TEST_PASSWORD\"
+  }")
 
 echo "Login response: $LOGIN_RESPONSE"
 
@@ -38,7 +42,7 @@ fi
 echo "Token extracted: ${TOKEN:0:50}..."
 
 # Test financial stats endpoint
-echo "Step 2: Get financial stats..."
+echo "Step 3: Get financial stats..."
 STATS_RESPONSE=$(curl -s -X GET https://sughar.vercel.app/api/dashboard/financial-stats \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json")
