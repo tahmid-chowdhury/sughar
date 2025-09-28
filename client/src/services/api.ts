@@ -145,21 +145,7 @@ export const dashboardAPI = {
   getStats: () => apiRequest('/dashboard/stats'),
 
   // Get financial stats for dashboard
-  getFinancialStats: async () => {
-    try {
-      // This will aggregate data from multiple endpoints
-      const [properties, serviceRequests] = await Promise.all([
-        propertiesAPI.getAll(),
-        serviceRequestsAPI.getAll(),
-      ]);
-
-      // Calculate stats from the data
-      return calculateFinancialStats(properties, serviceRequests);
-    } catch (error) {
-      console.error('Error fetching financial stats:', error);
-      throw error;
-    }
-  },
+  getFinancialStats: () => apiRequest('/dashboard/financial-stats'),
 
   // Get building stats
   getBuildingStats: async () => {
@@ -175,17 +161,6 @@ export const dashboardAPI = {
 };
 
 // Helper functions to calculate dashboard stats
-const calculateFinancialStats = (properties: any[], serviceRequests: any[]) => {
-  // Mock calculation - you can implement real logic here
-  return [
-    { label: 'Revenue This Month', value: '$715,000', icon: 'DollarSign', color: 'text-green-500' },
-    { label: 'Incoming Rent', value: '$63,000', icon: 'ArrowUp', color: 'text-blue-500' },
-    { label: 'Overdue Rent', value: '$85,000', icon: 'ArrowDown', color: 'text-red-500' },
-    { label: 'Utilities/Misc Expenses', value: '$16,000', icon: 'Settings', color: 'text-yellow-500' },
-    { label: 'Service Costs', value: '$21,000', icon: 'Wrench', color: 'text-purple-500' },
-  ];
-};
-
 const calculateBuildingStats = (properties: any[]) => {
   return properties.map((property, index) => ({
     id: property._id,

@@ -7,6 +7,14 @@ export interface FinancialStat {
   color: string;
 }
 
+export interface FinancialStatsResponse {
+  revenueThisMonth: number;
+  incomingRent: number;
+  overdueRent: number;
+  serviceCosts: number;
+  utilitiesCosts: number;
+}
+
 export enum DocumentType {
   Lease = "Lease",
   Utilities = "Utilities / Bills",

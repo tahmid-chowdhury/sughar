@@ -621,4 +621,101 @@ router.get('/dashboard/stats', authenticateToken, async (req, res) => {
     }
 });
 
+// Get financial dashboard stats
+router.get('/dashboard/financial-stats', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        
+        // Get user's properties
+        const properties = await Property.find({ userID: userId });
+        const propertyIds = properties.map(p => p._id);
+        
+        // Get units for user's properties
+        const units = await Unit.find({ propertyID: { $in: propertyIds } });
+        const unitIds = units.map(u => u._id);
+        
+        // Get lease agreements for user's units
+        const leases = await LeaseAgreement.find({ unitID: { $in: unitIds } })
+            .populate('unitID', 'monthlyRent');
+        
+        // Get current month's date range
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+        
+        // Get payments for this month
+        const thisMonthPayments = await Payment.find({
+            leaseID: { $in: leases.map(l => l._id) },
+            paymentDate: { $gte: startOfMonth, $lte: endOfMonth },
+            status: 'completed'
+        });
+        
+        // Calculate revenue this month
+        const revenueThisMonth = thisMonthPayments.reduce((sum, payment) => {
+            return sum + parseFloat(payment.amount.toString());
+        }, 0);
+        
+        // Calculate incoming rent (expected monthly rent from all occupied units)
+        const occupiedUnits = units.filter(unit => unit.status === 'occupied');
+        const incomingRent = occupiedUnits.reduce((sum, unit) => {
+            return sum + parseFloat(unit.monthlyRent.toString());
+        }, 0);
+        
+        // Calculate overdue rent
+        // Get all payments made for current active leases
+        const currentDate = new Date();
+        const activeLeases = leases.filter(lease => 
+            new Date(lease.startDate) <= currentDate && new Date(lease.endDate) >= currentDate
+        );
+        
+        // Calculate expected rent vs actual payments for overdue calculation
+        let overdueRent = 0;
+        for (const lease of activeLeases) {
+            const leaseStartDate = new Date(lease.startDate);
+            const monthsSinceStart = Math.floor((currentDate - leaseStartDate) / (1000 * 60 * 60 * 24 * 30)) + 1;
+            const expectedTotalPayments = monthsSinceStart * parseFloat(lease.unitID.monthlyRent.toString());
+            
+            // Get all completed payments for this lease
+            const leasePayments = await Payment.find({
+                leaseID: lease._id,
+                status: 'completed'
+            });
+            
+            const totalPaid = leasePayments.reduce((sum, payment) => {
+                return sum + parseFloat(payment.amount.toString());
+            }, 0);
+            
+            const overdue = expectedTotalPayments - totalPaid;
+            if (overdue > 0) {
+                overdueRent += overdue;
+            }
+        }
+        
+        // Get service requests for cost calculation
+        const serviceRequests = await ServiceRequest.find({
+            unitID: { $in: unitIds },
+            createdAt: { $gte: startOfMonth, $lte: endOfMonth }
+        });
+        
+        // Estimate service costs (this could be enhanced with actual cost data)
+        const serviceCosts = serviceRequests.length * 500; // Average $500 per service request
+        
+        // Calculate utilities/misc expenses (mock calculation)
+        const utilitiesCosts = occupiedUnits.length * 200; // Average $200 per occupied unit
+        
+        const financialStats = {
+            revenueThisMonth: revenueThisMonth,
+            incomingRent: incomingRent,
+            overdueRent: overdueRent,
+            serviceCosts: serviceCosts,
+            utilitiesCosts: utilitiesCosts
+        };
+        
+        res.json(financialStats);
+    } catch (error) {
+        console.error('Error fetching financial stats:', error);
+        res.status(500).json({ error: 'Error fetching financial stats' });
+    }
+});
+
 export default router;

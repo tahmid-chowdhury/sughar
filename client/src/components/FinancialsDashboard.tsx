@@ -1,12 +1,13 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from './Card';
 import { Header } from './Header';
-import { FINANCIAL_STATS, RECENT_EXPENSE_DOCS, RECENT_INCOME_DOCS, EXPENSE_TYPE_DATA, MONTHLY_REVENUE_DATA } from '../constants';
+import { RECENT_EXPENSE_DOCS, RECENT_INCOME_DOCS, EXPENSE_TYPE_DATA, MONTHLY_REVENUE_DATA } from '../constants';
 import { ExpenseDistributionChart } from './charts/ExpenseDistributionChart';
 import { MonthlyRevenueChart } from './charts/MonthlyRevenueChart';
-import { Document, FinancialStat } from '../types';
-import { MoreHorizontal } from './icons';
+import { Document, FinancialStat, FinancialStatsResponse } from '../types';
+import { MoreHorizontal, DollarSign, ArrowUp, ArrowDown, Settings, Wrench } from './icons';
+import { dashboardAPI } from '../services/api';
 
 // FIX: Changed component to use React.FC to properly type props and resolve key assignment error.
 const StatCard: React.FC<{ stat: FinancialStat }> = ({ stat }) => (
@@ -58,15 +59,99 @@ const DocumentTable = ({ title, documents }: { title: string; documents: Documen
 
 
 export const FinancialsDashboard = () => {
+  const [financialStats, setFinancialStats] = useState<FinancialStat[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchFinancialStats = async () => {
+      try {
+        setIsLoading(true);
+        const data: FinancialStatsResponse = await dashboardAPI.getFinancialStats();
+        
+        // Transform the raw data into FinancialStat format
+        const stats: FinancialStat[] = [
+          { 
+            label: 'Revenue This Month', 
+            value: `$${data.revenueThisMonth.toLocaleString()}`, 
+            icon: DollarSign, 
+            color: 'text-green-500' 
+          },
+          { 
+            label: 'Incoming Rent', 
+            value: `$${data.incomingRent.toLocaleString()}`, 
+            icon: ArrowUp, 
+            color: 'text-blue-500' 
+          },
+          { 
+            label: 'Overdue Rent', 
+            value: `$${data.overdueRent.toLocaleString()}`, 
+            icon: ArrowDown, 
+            color: 'text-red-500' 
+          },
+          { 
+            label: 'Utilities/Misc Expenses', 
+            value: `$${data.utilitiesCosts.toLocaleString()}`, 
+            icon: Settings, 
+            color: 'text-yellow-500' 
+          },
+          { 
+            label: 'Service Costs', 
+            value: `$${data.serviceCosts.toLocaleString()}`, 
+            icon: Wrench, 
+            color: 'text-purple-500' 
+          },
+        ];
+        
+        setFinancialStats(stats);
+        setError(null);
+      } catch (err) {
+        console.error('Failed to fetch financial stats:', err);
+        setError('Failed to load financial data');
+        
+        // Fallback to static data
+        const fallbackStats: FinancialStat[] = [
+          { label: 'Revenue This Month', value: 'N/A', icon: DollarSign, color: 'text-green-500' },
+          { label: 'Incoming Rent', value: 'N/A', icon: ArrowUp, color: 'text-blue-500' },
+          { label: 'Overdue Rent', value: 'N/A', icon: ArrowDown, color: 'text-red-500' },
+          { label: 'Utilities/Misc Expenses', value: 'N/A', icon: Settings, color: 'text-yellow-500' },
+          { label: 'Service Costs', value: 'N/A', icon: Wrench, color: 'text-purple-500' },
+        ];
+        setFinancialStats(fallbackStats);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFinancialStats();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto">
+        <Header title="Financial Dashboard" />
+        <div className="flex justify-center items-center py-16">
+          <div className="text-text-secondary">Loading financial data...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto">
       <Header 
         title="Financial Dashboard"
       />
 
+      {error && (
+        <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+          {error}
+        </div>
+      )}
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
-        {FINANCIAL_STATS.map((stat) => (
+        {financialStats.map((stat) => (
           <StatCard key={stat.label} stat={stat} />
         ))}
       </div>
