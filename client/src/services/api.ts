@@ -54,17 +54,17 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
 
 // Auth API
 export const authAPI = {
-  register: (userData: any) => apiRequest('/auth/register', {
+  register: (userData: any) => apiRequest('/api/register', {
     method: 'POST',
     body: JSON.stringify(userData),
   }),
 
-  login: (credentials: { email: string; password: string }) => apiRequest('/auth/login', {
+  login: (credentials: { email: string; password: string }) => apiRequest('/api/login', {
     method: 'POST',
     body: JSON.stringify(credentials),
   }),
 
-  getProfile: () => apiRequest('/auth/profile'),
+  getProfile: () => apiRequest('/api/profile'),
 };
 
 // Properties API

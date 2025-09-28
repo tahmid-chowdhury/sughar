@@ -601,6 +601,9 @@ async function handleAPI(req, res, urlParts) {
     if (method === 'GET' && id === 'stats') {
       return await getDashboardStats(req, res);
     }
+    if (method === 'GET' && id === 'financial-stats') {
+      return await getDashboardFinancialStats(req, res);
+    }
   }
   else {
     return res.status(404).json({ error: 'Route not found' });
@@ -1238,6 +1241,143 @@ async function getDashboardStats(req, res) {
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
       res.status(500).json({ error: 'Error fetching dashboard stats' });
+    }
+  });
+}
+
+// Get financial dashboard stats
+async function getDashboardFinancialStats(req, res) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const authHeader = req.headers['authorization'];
+      const token = authHeader && authHeader.split(' ')[1];
+      
+      if (!token) {
+        return res.status(401).json({ error: 'Access token required' });
+      }
+      
+      const decoded = jwt.verify(token, JWT_SECRET);
+      const userId = decoded.userId;
+      
+      console.log('Financial stats endpoint called by user:', userId);
+      
+      // Get user's properties
+      const properties = await Property.find({ userID: userId });
+      console.log('Found properties:', properties.length);
+      
+      // If no properties found, return zero values
+      if (properties.length === 0) {
+        console.log('No properties found for user, returning zero values');
+        const financialStats = {
+          revenueThisMonth: 0,
+          incomingRent: 0,
+          overdueRent: 0,
+          serviceCosts: 0,
+          utilitiesCosts: 0
+        };
+        
+        console.log('Calculated financial stats (no data):', financialStats);
+        return res.json(financialStats);
+      }
+      
+      const propertyIds = properties.map(p => p._id);
+      
+      // Get units for user's properties
+      const units = await Unit.find({ propertyID: { $in: propertyIds } });
+      console.log('Found units:', units.length);
+      const unitIds = units.map(u => u._id);
+      
+      // Get lease agreements for user's units
+      const leases = await LeaseAgreement.find({ unitID: { $in: unitIds } })
+        .populate('unitID', 'monthlyRent');
+      console.log('Found leases:', leases.length);
+      
+      // Get current month's date range
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+      console.log('Date range:', startOfMonth, 'to', endOfMonth);
+      
+      // Get payments for this month
+      const thisMonthPayments = await Payment.find({
+        leaseID: { $in: leases.map(l => l._id) },
+        paymentDate: { $gte: startOfMonth, $lte: endOfMonth },
+        status: 'completed'
+      });
+      console.log('Found payments this month:', thisMonthPayments.length);
+      
+      // Calculate revenue this month
+      const revenueThisMonth = thisMonthPayments.reduce((sum, payment) => {
+        return sum + parseFloat(payment.amount.toString());
+      }, 0);
+      
+      // Calculate incoming rent (expected monthly rent from all occupied units)
+      const occupiedUnits = units.filter(unit => unit.status === 'occupied');
+      console.log('Occupied units:', occupiedUnits.length);
+      const incomingRent = occupiedUnits.reduce((sum, unit) => {
+        return sum + parseFloat(unit.monthlyRent.toString());
+      }, 0);
+      
+      // Calculate overdue rent
+      // Get all payments made for current active leases
+      const currentDate = new Date();
+      const activeLeases = leases.filter(lease => 
+        new Date(lease.startDate) <= currentDate && new Date(lease.endDate) >= currentDate
+      );
+      console.log('Active leases:', activeLeases.length);
+      
+      // Calculate expected rent vs actual payments for overdue calculation
+      let overdueRent = 0;
+      for (const lease of activeLeases) {
+        const leaseStartDate = new Date(lease.startDate);
+        const monthsSinceStart = Math.floor((currentDate - leaseStartDate) / (1000 * 60 * 60 * 24 * 30)) + 1;
+        const expectedTotalPayments = monthsSinceStart * parseFloat(lease.unitID.monthlyRent.toString());
+        
+        // Get all completed payments for this lease
+        const leasePayments = await Payment.find({
+          leaseID: lease._id,
+          status: 'completed'
+        });
+        
+        const totalPaid = leasePayments.reduce((sum, payment) => {
+          return sum + parseFloat(payment.amount.toString());
+        }, 0);
+        
+        const overdue = expectedTotalPayments - totalPaid;
+        if (overdue > 0) {
+          overdueRent += overdue;
+        }
+      }
+      
+      // Get service requests for cost calculation
+      const serviceRequests = await ServiceRequest.find({
+        unitID: { $in: unitIds },
+        createdAt: { $gte: startOfMonth, $lte: endOfMonth }
+      });
+      console.log('Service requests this month:', serviceRequests.length);
+      
+      // Estimate service costs (this could be enhanced with actual cost data)
+      const serviceCosts = serviceRequests.length * 500; // Average $500 per service request
+      
+      // Calculate utilities/misc expenses (mock calculation)
+      const utilitiesCosts = occupiedUnits.length * 200; // Average $200 per occupied unit
+      
+      const financialStats = {
+        revenueThisMonth: revenueThisMonth,
+        incomingRent: incomingRent,
+        overdueRent: overdueRent,
+        serviceCosts: serviceCosts,
+        utilitiesCosts: utilitiesCosts
+      };
+      
+      console.log('Calculated financial stats:', financialStats);
+      res.json(financialStats);
+    } catch (error) {
+      console.error('Error fetching financial stats:', error);
+      res.status(500).json({ 
+        error: 'Error fetching financial stats', 
+        details: error.message 
+      });
     }
   });
 }
