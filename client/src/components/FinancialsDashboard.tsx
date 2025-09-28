@@ -69,14 +69,6 @@ export const FinancialsDashboard = () => {
         setIsLoading(true);
         console.log('Fetching financial stats...');
         
-        // Test basic connectivity first
-        try {
-          const testResponse = await fetch('/api/dashboard/stats');
-          console.log('Test API connectivity - status:', testResponse.status);
-        } catch (testError) {
-          console.error('Basic API connectivity test failed:', testError);
-        }
-        
         const data: FinancialStatsResponse = await dashboardAPI.getFinancialStats();
         console.log('Financial stats received:', data);
         

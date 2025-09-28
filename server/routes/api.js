@@ -621,12 +621,10 @@ router.get('/dashboard/stats', authenticateToken, async (req, res) => {
     }
 });
 
-// Get financial dashboard stats (TEMPORARY: Auth bypass for debugging)
-router.get('/dashboard/financial-stats', async (req, res) => {
+// Get financial dashboard stats
+router.get('/dashboard/financial-stats', authenticateToken, async (req, res) => {
     try {
-        // TEMPORARY: Bypass authentication for debugging
-        // TODO: Restore authenticateToken middleware once auth issues are resolved
-        const userId = req.user?.userId || '507f1f77bcf86cd799439011'; // Fallback test userId
+        const userId = req.user.userId;
         
         console.log('Financial stats endpoint called by user:', userId);
         
