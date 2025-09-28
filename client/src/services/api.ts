@@ -20,6 +20,8 @@ export const getAuthToken = () => authToken;
 // Generic API request function
 const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
+  console.log('Making API request to:', url);
+  console.log('Auth token available:', !!authToken);
   
   const config: RequestInit = {
     headers: {
@@ -31,7 +33,9 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
   };
 
   try {
+    console.log('Fetch config:', config);
     const response = await fetch(url, config);
+    console.log('Response status:', response.status);
     
     if (!response.ok) {
       const errorText = await response.text();
@@ -39,7 +43,9 @@ const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
       throw new Error(`API Error: ${response.status} ${response.statusText}`);
     }
 
-    return await response.json();
+    const data = await response.json();
+    console.log('Response data:', data);
+    return data;
   } catch (error) {
     console.error('API Request failed:', error);
     throw error;
