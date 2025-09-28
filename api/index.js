@@ -116,6 +116,10 @@ export default async function handler(req, res) {
     } else if (resource === 'record') {
       const db = await connectToMongoDB();
       return await handleRecord(req, res, urlParts, db);
+    } else if (resource && (resource === 'login' || resource === 'register' || resource === 'profile' || resource === 'verify' || resource === 'test' || resource === 'test-db')) {
+      // Handle direct auth endpoints
+      await connectToDatabase();
+      return await handleAuth(req, res, [null, resource]); // Pass resource as endpoint
     } else if (resource && (resource === 'properties' || resource === 'units' || resource === 'service-requests' || resource === 'rental-applications' || resource === 'lease-agreements' || resource === 'payments' || resource === 'dashboard')) {
       await connectToDatabase();
       return await handleAPI(req, res, urlParts);
