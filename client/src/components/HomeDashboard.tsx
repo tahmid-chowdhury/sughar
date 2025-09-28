@@ -62,6 +62,18 @@ interface ActionCenterItem {
   onClick?: () => void;
 }
 
+// Helper function to format large numbers with abbreviations
+const formatRevenue = (amount: number): string => {
+  if (amount >= 10000000) { // 1 crore = 10,000,000
+    return `৳${(amount / 10000000).toFixed(1)}Cr`;
+  } else if (amount >= 100000) { // 1 lakh = 100,000
+    return `৳${(amount / 100000).toFixed(1)}L`;
+  } else if (amount >= 1000) {
+    return `৳${(amount / 1000).toFixed(1)}K`;
+  }
+  return `৳${amount.toLocaleString()}`;
+};
+
 export const HomeDashboard: React.FC<HomeDashboardProps> = ({ setViewingTenantId, setCurrentPage }) => {
   const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -216,7 +228,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({ setViewingTenantId
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-6">
         <Card>
           <button 
             onClick={() => setCurrentPage('buildings')}
@@ -278,7 +290,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({ setViewingTenantId
           >
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-text-secondary">Active Service Requests</p>
+                <p className="text-sm text-text-secondary">Service Requests</p>
                 <p className="text-3xl font-bold text-text-main mt-1">{stats.serviceRequests.active}</p>
                 {stats.serviceRequests.completedToday > 0 && (
                   <p className="text-xs text-green-600 mt-1">{stats.serviceRequests.completedToday} completed today</p>
@@ -298,7 +310,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({ setViewingTenantId
           >
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-text-secondary">Leases Ending Soon</p>
+                <p className="text-sm text-text-secondary">Leases Ending</p>
                 <p className="text-3xl font-bold text-text-main mt-1">{stats.leases.endingSoon}</p>
                 {stats.leases.endingToday > 0 && (
                   <p className="text-xs text-red-600 mt-1">{stats.leases.endingToday} ending today!</p>
@@ -318,7 +330,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({ setViewingTenantId
           >
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-text-secondary">Pending Applications</p>
+                <p className="text-sm text-text-secondary">Applications</p>
                 <p className="text-3xl font-bold text-text-main mt-1">{stats.applications.pending}</p>
                 <p className="text-xs text-gray-500 mt-1">out of {stats.applications.total} total</p>
               </div>
@@ -328,16 +340,13 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({ setViewingTenantId
             </div>
           </button>
         </Card>
-      </div>
 
-      {/* Additional Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm text-text-secondary">Monthly Revenue Potential</p>
-              <p className="text-3xl font-bold text-text-main mt-1">৳{stats.units.totalRevenue.toLocaleString()}</p>
-              <p className="text-xs text-gray-500 mt-1">from all units</p>
+              <p className="text-sm text-text-secondary">Revenue Potential</p>
+              <p className="text-3xl font-bold text-text-main mt-1">{formatRevenue(stats.units.totalRevenue)}</p>
+              <p className="text-xs text-gray-500 mt-1">monthly</p>
             </div>
             <div className="p-3 rounded-lg bg-purple-100 text-purple-600">
               <DollarSign className="w-6 h-6" />
