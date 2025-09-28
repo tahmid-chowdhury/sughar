@@ -1265,7 +1265,11 @@ async function getDashboardFinancialStats(req, res) {
       
       console.log('Financial stats endpoint called by user:', userId);
       console.log('User ID type:', typeof userId);
-      console.log('User ID string representation:', userId.toString());
+      console.log('User ID string representation:', userId ? userId.toString() : 'undefined');
+      
+      if (!userId) {
+        return res.status(400).json({ error: 'Invalid user ID from token' });
+      }
       
       // Debug: Check what users and properties exist in the database
       const currentUser = await User.findById(userId);
@@ -1273,10 +1277,10 @@ async function getDashboardFinancialStats(req, res) {
       
       const allProperties = await Property.find({}).select('_id userID name');
       console.log('All properties in database:', allProperties.map(p => ({
-        id: p._id.toString(), 
-        userID: p.userID.toString(), 
-        name: p.name,
-        userIdMatch: p.userID.toString() === userId.toString()
+        id: p._id ? p._id.toString() : 'undefined', 
+        userID: p.userID ? p.userID.toString() : 'undefined', 
+        name: p.name || 'unnamed',
+        userIdMatch: (p.userID && userId) ? p.userID.toString() === userId.toString() : false
       })));
       
       // Get user's properties - convert both to strings for reliable comparison
@@ -1307,8 +1311,9 @@ async function getDashboardFinancialStats(req, res) {
           const allProps = await Property.find({});
           console.log('Total properties in database:', allProps.length);
           const matchingProps = allProps.filter(p => {
-            const pUserId = p.userID ? p.userID.toString() : '';
-            const currentUserId = userId ? userId.toString() : '';
+            if (!p.userID || !userId) return false;
+            const pUserId = p.userID.toString();
+            const currentUserId = userId.toString();
             return pUserId === currentUserId;
           });
           properties = matchingProps;
@@ -1336,9 +1341,13 @@ async function getDashboardFinancialStats(req, res) {
         return res.json(financialStats);
       }
       
-      console.log('Properties found:', properties.map(p => ({id: p._id.toString(), name: p.name, userID: p.userID.toString()})));
+      console.log('Properties found:', properties.map(p => ({
+        id: p._id ? p._id.toString() : 'undefined', 
+        name: p.name || 'unnamed', 
+        userID: p.userID ? p.userID.toString() : 'undefined'
+      })));
       
-      const propertyIds = properties.map(p => p._id);
+      const propertyIds = properties.map(p => p._id).filter(id => id);
       console.log('Property IDs for unit search:', propertyIds.map(id => id.toString()));
       
       // Get units for user's properties
@@ -1357,9 +1366,14 @@ async function getDashboardFinancialStats(req, res) {
         return res.json(financialStats);
       }
       
-      const unitIds = units.map(u => u._id);
+      const unitIds = units.map(u => u._id).filter(id => id);
       console.log('Unit IDs for lease search:', unitIds.map(id => id.toString()));
-      console.log('Unit details:', units.map(u => ({id: u._id.toString(), propertyID: u.propertyID.toString(), status: u.status, rent: u.monthlyRent})));
+      console.log('Unit details:', units.map(u => ({
+        id: u._id ? u._id.toString() : 'undefined', 
+        propertyID: u.propertyID ? u.propertyID.toString() : 'undefined', 
+        status: u.status || 'unknown', 
+        rent: u.monthlyRent || 0
+      })));
       
       // Get lease agreements for user's units
       const leases = await LeaseAgreement.find({ unitID: { $in: unitIds } })
@@ -1378,7 +1392,12 @@ async function getDashboardFinancialStats(req, res) {
         return res.json(financialStats);
       }
       
-      console.log('Lease details:', leases.map(l => ({id: l._id.toString(), unitID: l.unitID._id.toString(), status: l.status, startDate: l.startDate})));
+      console.log('Lease details:', leases.map(l => ({
+        id: l._id ? l._id.toString() : 'undefined', 
+        unitID: l.unitID && l.unitID._id ? l.unitID._id.toString() : 'undefined', 
+        status: l.status || 'unknown', 
+        startDate: l.startDate || 'unknown'
+      })));
       
       // Get current month's date range
       const now = new Date();
@@ -1396,20 +1415,23 @@ async function getDashboardFinancialStats(req, res) {
       
       // Calculate revenue this month
       const revenueThisMonth = thisMonthPayments.reduce((sum, payment) => {
-        return sum + parseFloat(payment.amount.toString());
+        const amount = payment.amount || 0;
+        return sum + parseFloat(amount.toString());
       }, 0);
       
       // Calculate incoming rent (expected monthly rent from all occupied units)
       const occupiedUnits = units.filter(unit => unit.status === 'occupied');
       console.log('Occupied units:', occupiedUnits.length);
       const incomingRent = occupiedUnits.reduce((sum, unit) => {
-        return sum + parseFloat(unit.monthlyRent.toString());
+        const rent = unit.monthlyRent || 0;
+        return sum + parseFloat(rent.toString());
       }, 0);
       
       // Calculate overdue rent
       // Get all payments made for current active leases
       const currentDate = new Date();
       const activeLeases = leases.filter(lease => 
+        lease.startDate && lease.endDate &&
         new Date(lease.startDate) <= currentDate && new Date(lease.endDate) >= currentDate
       );
       console.log('Active leases:', activeLeases.length);
@@ -1417,9 +1439,15 @@ async function getDashboardFinancialStats(req, res) {
       // Calculate expected rent vs actual payments for overdue calculation
       let overdueRent = 0;
       for (const lease of activeLeases) {
+        if (!lease.startDate || !lease.unitID || !lease.unitID.monthlyRent) {
+          console.log('Skipping lease due to missing data:', lease._id);
+          continue;
+        }
+        
         const leaseStartDate = new Date(lease.startDate);
         const monthsSinceStart = Math.floor((currentDate - leaseStartDate) / (1000 * 60 * 60 * 24 * 30)) + 1;
-        const expectedTotalPayments = monthsSinceStart * parseFloat(lease.unitID.monthlyRent.toString());
+        const monthlyRent = lease.unitID.monthlyRent || 0;
+        const expectedTotalPayments = monthsSinceStart * parseFloat(monthlyRent.toString());
         
         // Get all completed payments for this lease
         const leasePayments = await Payment.find({
@@ -1428,7 +1456,8 @@ async function getDashboardFinancialStats(req, res) {
         });
         
         const totalPaid = leasePayments.reduce((sum, payment) => {
-          return sum + parseFloat(payment.amount.toString());
+          const amount = payment.amount || 0;
+          return sum + parseFloat(amount.toString());
         }, 0);
         
         const overdue = expectedTotalPayments - totalPaid;
