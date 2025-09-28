@@ -148,10 +148,10 @@ export const paymentsAPI = {
 // Dashboard API - custom endpoints for dashboard data
 export const dashboardAPI = {
   // Get comprehensive dashboard statistics
-  getStats: () => apiRequest('/api/dashboard/stats'),
+  getStats: (): Promise<any> => apiRequest('/api/dashboard/stats'),
 
   // Get financial stats for dashboard
-  getFinancialStats: () => apiRequest('/api/dashboard/financial-stats'),
+  getFinancialStats: (): Promise<any> => apiRequest('/api/dashboard/financial-stats'),
 
   // Get building stats
   getBuildingStats: async () => {
@@ -164,6 +164,9 @@ export const dashboardAPI = {
     const applications = await rentalApplicationsAPI.getAll();
     return calculateTenantStats(applications);
   },
+
+  // Get building overview stats for Buildings & Units Dashboard
+  getBuildingsOverview: (): Promise<any> => apiRequest('/api/dashboard/stats'),
 };
 
 // Helper functions to calculate dashboard stats

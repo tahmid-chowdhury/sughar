@@ -74,6 +74,54 @@ export interface RentCollection {
     rent: number;
 }
 
+// Dashboard Stats API Response Types
+export interface DashboardStats {
+  properties: {
+    total: number;
+    addresses: string[];
+  };
+  units: {
+    total: number;
+    occupied: number;
+    vacant: number;
+    occupancyRate: number;
+    totalRevenue: number;
+    details: {
+      _id: string;
+      unitNumber: string;
+      status: 'occupied' | 'vacant';
+      monthlyRent: number;
+      property: string;
+    }[];
+  };
+  serviceRequests: {
+    total: number;
+    active: number;
+    completed: number;
+    completedToday: number;
+    recent: {
+      _id: string;
+      description: string;
+      status: string;
+      tenant: string;
+      unit: string;
+      property: string;
+      requestDate: string;
+    }[];
+  };
+  applications: {
+    total: number;
+    pending: number;
+    approved: number;
+    rejected: number;
+  };
+  leases: {
+    total: number;
+    endingSoon: number;
+    endingToday: number;
+  };
+}
+
 // New Types for Buildings, Units, Applications
 
 export enum BuildingCategory {
