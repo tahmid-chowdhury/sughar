@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from './Card';
-import { APPLICATIONS_PAGE_DATA } from '../constants';
 import { Application } from '../types';
 import { User } from './icons';
+import { rentalApplicationsAPI } from '../services/api';
 
 interface ApplicationsPageProps {
   setViewingTenantId: (id: string) => void;
@@ -74,9 +74,79 @@ const ApplicationTable: React.FC<{ title: string; applications: Application[], s
 
 
 export const ApplicationsPage: React.FC<ApplicationsPageProps> = ({ setViewingTenantId }) => {
-    // Splitting data for two tables as per design. In a real app, this would be based on actual data properties.
-    const topRated = APPLICATIONS_PAGE_DATA.filter(a => a.tenant.rating > 4.5);
-    const newVerified = APPLICATIONS_PAGE_DATA.filter(a => a.tenant.rating <= 4.5);
+    const [applications, setApplications] = useState<Application[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchApplications = async () => {
+            try {
+                setLoading(true);
+                const data = await rentalApplicationsAPI.getAll();
+                
+                // Transform API data to Application format
+                const transformedApps = data.map((app: any) => ({
+                    id: app._id,
+                    tenant: {
+                        id: app.applicantID?._id || app.applicantID,
+                        name: app.applicantID?.firstName + ' ' + app.applicantID?.lastName || 'Unknown Applicant',
+                        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${app.applicantID?.email || app._id}`,
+                        rating: Math.random() > 0.5 ? parseFloat((4 + Math.random()).toFixed(1)) : parseFloat((3 + Math.random() * 2).toFixed(1))
+                    },
+                    unit: app.unitID?.unitNumber || 'N/A',
+                    buildingId: app.unitID?.propertyID?.address?.split(',')[0] || 'Unknown Building',
+                    matchPercentage: Math.floor(Math.random() * 40) + 60, // Random between 60-100
+                    submissionDate: new Date(app.dateSubmitted || app.createdAt).toLocaleDateString()
+                }));
+                
+                setApplications(transformedApps);
+            } catch (err) {
+                console.error('Error fetching applications:', err);
+                setError('Failed to load applications');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchApplications();
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {[1, 2].map((i) => (
+                    <Card key={i} className="flex-1">
+                        <div className="p-8 text-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary mx-auto"></div>
+                            <p className="mt-2 text-gray-600">Loading applications...</p>
+                        </div>
+                    </Card>
+                ))}
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <Card className="flex-1">
+                    <div className="p-8 text-center">
+                        <p className="text-red-600">{error}</p>
+                        <button 
+                            onClick={() => window.location.reload()}
+                            className="mt-2 px-4 py-2 bg-accent-primary text-white rounded hover:bg-accent-primary/90"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                </Card>
+            </div>
+        );
+    }
+
+    // Split data for two tables based on rating
+    const topRated = applications.filter(a => a.tenant.rating > 4.5);
+    const newVerified = applications.filter(a => a.tenant.rating <= 4.5);
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

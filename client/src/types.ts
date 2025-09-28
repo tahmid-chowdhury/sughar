@@ -76,13 +76,15 @@ export enum BuildingCategory {
 
 export interface BuildingDetail {
   id: string;
+  name: string;
+  address: string;
   category: BuildingCategory;
   totalUnits: number;
   vacantUnits: number;
   requests: number;
-  occupation: number;
-  rentCollection: number;
-  contact: {
+  occupationPercentage: number;
+  rentCollectionPercentage: number;
+  assignedContact: {
     name: string;
     avatar: string;
   };
@@ -100,9 +102,14 @@ export enum RentStatus {
 }
 
 export interface UnitDetail {
+    id: string;
     buildingId: string;
     unitNumber: string;
     category: BuildingCategory;
+    bedrooms: number;
+    bathrooms: number;
+    sqft: number;
+    rent: number;
     monthlyRent: number;
     status: UnitStatus;
     tenant: {

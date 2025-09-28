@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card } from './Card';
 import { Header } from './Header';
-import { SERVICE_REQUESTS_DATA } from '../constants';
 import { ServiceRequest, RequestStatus } from '../types';
 import { SlidersHorizontal, ArrowDown, ArrowUp, Search, X } from './icons';
 import { SpecificServiceRequestPage } from './SpecificServiceRequestPage';
+import { serviceRequestsAPI } from '../services/api';
 
 interface ServiceRequestsPageProps {
     onBuildingClick?: (buildingId: string) => void;
@@ -82,9 +82,10 @@ const FilterPanel: React.FC<{
     filters: FilterState;
     onFilterChange: (filters: FilterState) => void;
     onClose: () => void;
-}> = ({ filters, onFilterChange, onClose }) => {
-    const uniqueBuildings = [...new Set(SERVICE_REQUESTS_DATA.map(req => req.building))].sort();
-    const uniqueContacts = [...new Set(SERVICE_REQUESTS_DATA.map(req => req.assignedContact.name))].sort();
+    serviceRequests: ServiceRequest[];
+}> = ({ filters, onFilterChange, onClose, serviceRequests }) => {
+    const uniqueBuildings = [...new Set(serviceRequests.map((req: ServiceRequest) => req.building))].sort();
+    const uniqueContacts = [...new Set(serviceRequests.map((req: ServiceRequest) => req.assignedContact.name))].sort();
 
     const handleFilterUpdate = (field: keyof FilterState, value: any) => {
         onFilterChange({ ...filters, [field]: value });
@@ -122,7 +123,7 @@ const FilterPanel: React.FC<{
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                         <option value="">All Buildings</option>
-                        {uniqueBuildings.map(building => (
+                        {uniqueBuildings.map((building: string) => (
                             <option key={building} value={building}>{building}</option>
                         ))}
                     </select>
@@ -136,7 +137,7 @@ const FilterPanel: React.FC<{
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                         <option value="">All Contacts</option>
-                        {uniqueContacts.map(contact => (
+                        {uniqueContacts.map((contact: string) => (
                             <option key={contact} value={contact}>{contact}</option>
                         ))}
                     </select>
@@ -165,6 +166,9 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
     onUnitClick, 
     setViewingTenantId 
 }) => {
+    const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
     const [showFilters, setShowFilters] = useState(false);
     const [sortConfig, setSortConfig] = useState<{ field: SortField; direction: SortDirection }>({ 
@@ -179,6 +183,57 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
         searchTerm: ''
     });
 
+    useEffect(() => {
+        const fetchServiceRequests = async () => {
+            try {
+                setLoading(true);
+                const data = await serviceRequestsAPI.getAll();
+                
+                // Transform API data to match ServiceRequest interface
+                const transformedData = data.map((sr: any) => ({
+                    id: sr._id,
+                    building: sr.unitID?.propertyID?.address?.split(',')[0] || 'Unknown Building',
+                    unit: sr.unitID?.unitNumber || 'Unknown Unit',
+                    requestDate: new Date(sr.dateCreated || sr.createdAt).toLocaleDateString(),
+                    assignedContact: {
+                        name: sr.contractorID?.companyName || sr.tenantID?.firstName + ' ' + sr.tenantID?.lastName || 'Unassigned',
+                        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${sr.tenantID?.email || 'default'}`
+                    },
+                    status: mapApiStatusToRequestStatus(sr.status),
+                    description: sr.description || 'No description',
+                    category: sr.category || 'General',
+                    priority: sr.priority || 'medium'
+                }));
+                
+                setServiceRequests(transformedData);
+            } catch (err) {
+                console.error('Error fetching service requests:', err);
+                setError('Failed to load service requests');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchServiceRequests();
+    }, []);
+
+    // Helper function to map API status to RequestStatus enum
+    const mapApiStatusToRequestStatus = (apiStatus: string): RequestStatus => {
+        switch (apiStatus?.toLowerCase()) {
+            case 'completed':
+            case 'complete':
+                return RequestStatus.Complete;
+            case 'in-progress':
+            case 'in_progress':
+            case 'assigned':
+                return RequestStatus.InProgress;
+            case 'pending':
+            case 'open':
+            default:
+                return RequestStatus.Pending;
+        }
+    };
+
     const handleSort = (field: SortField) => {
         setSortConfig(prev => ({
             field,
@@ -187,7 +242,7 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
     };
 
     const filteredAndSortedData = useMemo(() => {
-        let filtered = SERVICE_REQUESTS_DATA.filter(request => {
+        let filtered = serviceRequests.filter((request: ServiceRequest) => {
             // Status filter
             if (filters.status !== 'all' && request.status !== filters.status) return false;
             
@@ -209,7 +264,7 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
         });
 
         // Sort the filtered data
-        filtered.sort((a, b) => {
+        filtered.sort((a: ServiceRequest, b: ServiceRequest) => {
             const { field, direction } = sortConfig;
             let aValue: any = a[field];
             let bValue: any = b[field];
@@ -231,7 +286,7 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
         });
 
         return filtered;
-    }, [sortConfig, filters]);
+    }, [serviceRequests, sortConfig, filters]);
 
     const handleRequestClick = (id: string) => {
         setSelectedRequestId(id);
@@ -245,6 +300,35 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
         return <SpecificServiceRequestPage serviceRequestId={selectedRequestId} onBack={handleBack} />;
     }
 
+    if (loading) {
+        return (
+            <div className="container mx-auto">
+                <Header title="Service Requests" />
+                <Card className="p-8 text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary mx-auto"></div>
+                    <p className="mt-2 text-gray-600">Loading service requests...</p>
+                </Card>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="container mx-auto">
+                <Header title="Service Requests" />
+                <Card className="p-8 text-center">
+                    <p className="text-red-600">{error}</p>
+                    <button 
+                        onClick={() => window.location.reload()}
+                        className="mt-2 px-4 py-2 bg-accent-primary text-white rounded hover:bg-accent-primary/90"
+                    >
+                        Retry
+                    </button>
+                </Card>
+            </div>
+        );
+    }
+
     return (
         <div className="container mx-auto">
             <Header title="Service Requests" />
@@ -254,13 +338,14 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
                     filters={filters}
                     onFilterChange={setFilters}
                     onClose={() => setShowFilters(false)}
+                    serviceRequests={serviceRequests}
                 />
             )}
             
             <Card className="!p-0">
                 <div className="flex justify-between items-center p-4">
                     <div className="text-sm text-gray-600">
-                        Showing {filteredAndSortedData.length} of {SERVICE_REQUESTS_DATA.length} requests
+                        Showing {filteredAndSortedData.length} of {serviceRequests.length} requests
                     </div>
                     <button 
                         onClick={() => setShowFilters(!showFilters)}

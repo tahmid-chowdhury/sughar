@@ -131,12 +131,12 @@ export const rentalApplicationsAPI = {
 
 // Lease Agreements API
 export const leaseAgreementsAPI = {
-  getAll: () => apiRequest('/lease-agreements'),
+  getAll: () => apiRequest('/api/lease-agreements'),
 };
 
 // Payments API
 export const paymentsAPI = {
-  getAll: () => apiRequest('/payments'),
+  getAll: () => apiRequest('/api/payments'),
 };
 
 // Dashboard API - custom endpoints for dashboard data

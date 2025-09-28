@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from './Card';
-import { BUILDINGS_PAGE_DATA } from '../constants';
 import { BuildingDetail, BuildingCategory } from '../types';
 import { SlidersHorizontal, Plus } from './icons';
+import { propertiesAPI, unitsAPI } from '../services/api';
 
 interface BuildingsPageProps {
     onBuildingClick: (buildingId: string) => void;
@@ -31,7 +31,7 @@ const ProgressCell = ({ value }: { value: number }) => (
     </div>
 );
 
-const StatusPill = ({ percentage }) => {
+const StatusPill = ({ percentage }: { percentage: number }) => {
   let colorClasses = '';
   if (percentage >= 80) {
     colorClasses = 'bg-status-success text-status-success-text';
@@ -62,6 +62,86 @@ const SortableHeader: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
 
 export const BuildingsPage: React.FC<BuildingsPageProps> = ({ onBuildingClick, onAddNewBuilding }) => {
+    const [buildings, setBuildings] = useState<BuildingDetail[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchBuildingsData = async () => {
+            try {
+                setLoading(true);
+                const [properties, allUnits] = await Promise.all([
+                    propertiesAPI.getAll(),
+                    unitsAPI.getAll()
+                ]);
+
+                // Transform API data to BuildingDetail format
+                const buildingsData = properties.map((property: any) => {
+                    const propertyUnits = allUnits.filter((unit: any) => 
+                        unit.propertyID?._id === property._id || unit.propertyID === property._id
+                    );
+                    
+                    const totalUnits = propertyUnits.length;
+                    const vacantUnits = propertyUnits.filter((unit: any) => !unit.isOccupied).length;
+                    const occupiedUnits = totalUnits - vacantUnits;
+                    const occupationPercentage = totalUnits > 0 ? Math.round((occupiedUnits / totalUnits) * 100) : 0;
+                    
+                    return {
+                        id: property._id,
+                        name: property.address.split(',')[0] || 'Unknown Building',
+                        category: BuildingCategory.Standard, // Default category - you may want to add this to your Property model
+                        totalUnits,
+                        vacantUnits,
+                        requests: Math.floor(Math.random() * 10), // Placeholder - replace with actual service request count
+                        occupationPercentage,
+                        rentCollectionPercentage: Math.floor(Math.random() * 30) + 70, // Placeholder - replace with actual rent collection data
+                        assignedContact: {
+                            name: property.userID?.firstName + ' ' + property.userID?.lastName || 'Unassigned',
+                            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${property.userID?.email || 'default'}`
+                        },
+                        address: property.address
+                    };
+                });
+
+                setBuildings(buildingsData);
+            } catch (err) {
+                console.error('Error fetching buildings data:', err);
+                setError('Failed to load buildings data');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchBuildingsData();
+    }, []);
+
+    if (loading) {
+        return (
+            <Card className="!p-0">
+                <div className="p-8 text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary mx-auto"></div>
+                    <p className="mt-2 text-gray-600">Loading buildings...</p>
+                </div>
+            </Card>
+        );
+    }
+
+    if (error) {
+        return (
+            <Card className="!p-0">
+                <div className="p-8 text-center">
+                    <p className="text-red-600">{error}</p>
+                    <button 
+                        onClick={() => window.location.reload()}
+                        className="mt-2 px-4 py-2 bg-accent-primary text-white rounded hover:bg-accent-primary/90"
+                    >
+                        Retry
+                    </button>
+                </div>
+            </Card>
+        );
+    }
+
     return (
         <Card className="!p-0">
              <div className="flex justify-end p-4 gap-4">
@@ -92,22 +172,31 @@ export const BuildingsPage: React.FC<BuildingsPageProps> = ({ onBuildingClick, o
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {BUILDINGS_PAGE_DATA.map((building: BuildingDetail, index) => (
-                            <tr key={`${building.id}-${index}`} className="hover:bg-gray-50">
-                                <td className="px-5 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
-                                    <button onClick={() => onBuildingClick(building.id)} className="text-blue-600 hover:underline">
-                                        {building.id}
-                                    </button>
+                        {buildings.length === 0 ? (
+                            <tr>
+                                <td colSpan={8} className="px-5 py-8 text-center text-gray-500">
+                                    No buildings found. Click "New Building" to add your first building.
+                                </td>
+                            </tr>
+                        ) : (
+                            buildings.map((building: BuildingDetail, index) => (
+                                <tr key={`${building.id}-${index}`} className="hover:bg-gray-50">
+                                    <td className="px-5 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
+                                        <button onClick={() => onBuildingClick(building.id)} className="text-blue-600 hover:underline">
+                                            {building.name}
+                                        </button>
+                                        <div className="text-xs text-gray-500 mt-1">{building.address}</div>
                                 </td>
                                 <td className="px-5 py-4 whitespace-nowrap"><CategoryPill category={building.category} /></td>
                                 <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-500">{building.totalUnits}</td>
                                 <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-500">{building.vacantUnits}</td>
                                 <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-500">{building.requests}</td>
-                                <td className="px-5 py-4 whitespace-nowrap"><ProgressCell value={building.occupation} /></td>
-                                <td className="px-5 py-4 whitespace-nowrap"><StatusPill percentage={building.rentCollection} /></td>
-                                <td className="px-5 py-4 whitespace-nowrap"><ContactCell contact={building.contact} /></td>
+                                <td className="px-5 py-4 whitespace-nowrap"><StatusPill percentage={building.occupationPercentage} /></td>
+                                <td className="px-5 py-4 whitespace-nowrap"><ProgressCell value={building.rentCollectionPercentage} /></td>
+                                <td className="px-5 py-4 whitespace-nowrap"><ContactCell contact={building.assignedContact} /></td>
                             </tr>
-                        ))}
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>
