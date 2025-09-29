@@ -33,6 +33,35 @@ const TenantApplicationsPage: React.FC<TenantApplicationsPageProps> = ({
   const [applications, setApplications] = useState<TenantApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [populating, setPopulating] = useState(false);
+
+  const populateTestData = async () => {
+    try {
+      setPopulating(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/populate-test-data', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Test data populated:', result);
+        // Refresh the applications after populating
+        window.location.reload();
+      } else {
+        throw new Error('Failed to populate test data');
+      }
+    } catch (err) {
+      console.error('Error populating test data:', err);
+      setError('Failed to populate test data');
+    } finally {
+      setPopulating(false);
+    }
+  };
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -269,7 +298,17 @@ const TenantApplicationsPage: React.FC<TenantApplicationsPageProps> = ({
           <div className="text-center">
             <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-500 text-lg mb-2">No applications found</p>
-            <p className="text-gray-400">Applications will appear here when tenants apply for your units.</p>
+            <p className="text-gray-400 mb-6">Applications will appear here when tenants apply for your units.</p>
+            <button
+              onClick={populateTestData}
+              disabled={populating}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+            >
+              {populating ? 'Creating Test Data...' : 'Create Sample Data'}
+            </button>
+            <p className="text-gray-400 text-sm mt-2">
+              Click to populate with Asha Properties sample data (4 buildings, 28 units, 90% occupancy)
+            </p>
           </div>
         </Card>
       )}
