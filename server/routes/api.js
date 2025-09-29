@@ -401,26 +401,119 @@ router.put('/rental-applications/:id', authenticateToken, async (req, res) => {
 // Get all lease agreements
 router.get('/lease-agreements', authenticateToken, async (req, res) => {
     try {
-        const leases = await LeaseAgreement.find()
-            .populate('userID', 'firstName lastName email phoneNumber')
-            .populate({
-                path: 'unitID',
-                select: 'unitNumber monthlyRent propertyID',
-                populate: {
-                    path: 'propertyID',
-                    select: 'address userID'
+        console.log('Fetching lease agreements for user:', req.user.userId);
+        
+        // First, get all lease agreements with basic population
+        let leases;
+        try {
+            leases = await LeaseAgreement.find()
+                .populate('userID', 'firstName lastName email phoneNumber')
+                .populate('unitID', 'unitNumber monthlyRent propertyID');
+            console.log('Found leases with basic population:', leases.length);
+        } catch (populateError) {
+            console.error('Error with basic population:', populateError);
+            // Fallback: get without population
+            leases = await LeaseAgreement.find();
+            console.log('Fallback: Found raw leases:', leases.length);
+        }
+        
+        // If we have leases, try to populate properties
+        const leasesWithProperties = [];
+        for (const lease of leases) {
+            let enhancedLease = lease.toObject ? lease.toObject() : lease;
+            
+            // Try to get property info if unitID exists and is populated
+            if (lease.unitID && lease.unitID.propertyID) {
+                try {
+                    const property = await Property.findById(lease.unitID.propertyID);
+                    if (property) {
+                        enhancedLease.unitID.propertyID = property;
+                    }
+                } catch (propError) {
+                    console.warn('Could not populate property for unit:', lease.unitID._id);
                 }
-            });
+            }
             
+            leasesWithProperties.push(enhancedLease);
+        }
+        
         // Filter leases for properties owned by the authenticated user
-        const userLeases = leases.filter(lease => 
-            lease.unitID?.propertyID?.userID?.toString() === req.user.userId
-        );
-            
+        // Also filter out leases with missing references
+        const userLeases = leasesWithProperties.filter(lease => {
+            if (!lease.unitID) {
+                console.warn('Lease missing unitID:', lease._id);
+                return false;
+            }
+            if (!lease.unitID.propertyID) {
+                console.warn('Unit missing propertyID:', lease.unitID._id || lease.unitID);
+                return false;
+            }
+            if (!lease.unitID.propertyID.userID) {
+                console.warn('Property missing userID:', lease.unitID.propertyID._id || lease.unitID.propertyID);
+                return false;
+            }
+            return lease.unitID.propertyID.userID.toString() === req.user.userId;
+        });
+        
+        console.log('Filtered user leases:', userLeases.length);
         res.json(userLeases);
     } catch (error) {
         console.error('Error fetching lease agreements:', error);
-        res.status(500).json({ error: 'Error fetching lease agreements' });
+        res.status(500).json({ 
+            error: 'Error fetching lease agreements',
+            details: error.message 
+        });
+    }
+});
+
+// DEBUG ENDPOINT - Remove in production
+router.get('/debug/lease-agreements', authenticateToken, async (req, res) => {
+    try {
+        console.log('DEBUG: Starting lease agreements debug check');
+        console.log('DEBUG: User ID:', req.user.userId);
+        
+        // Check collections exist and have data
+        const leaseCount = await LeaseAgreement.countDocuments();
+        const unitCount = await Unit.countDocuments();
+        const propertyCount = await Property.countDocuments();
+        const userCount = await User.countDocuments();
+        
+        console.log('DEBUG: Collection counts:', {
+            leases: leaseCount,
+            units: unitCount,
+            properties: propertyCount,
+            users: userCount
+        });
+        
+        // Get all leases without population first
+        const rawLeases = await LeaseAgreement.find();
+        console.log('DEBUG: Raw leases found:', rawLeases.length);
+        console.log('DEBUG: First raw lease:', rawLeases[0]);
+        
+        // Try population step by step
+        try {
+            const leasesWithUsers = await LeaseAgreement.find().populate('userID', 'firstName lastName email phoneNumber');
+            console.log('DEBUG: Leases with users populated:', leasesWithUsers.length);
+        } catch (err) {
+            console.log('DEBUG: Error populating users:', err.message);
+        }
+        
+        try {
+            const leasesWithUnits = await LeaseAgreement.find().populate('unitID', 'unitNumber monthlyRent propertyID');
+            console.log('DEBUG: Leases with units populated:', leasesWithUnits.length);
+        } catch (err) {
+            console.log('DEBUG: Error populating units:', err.message);
+        }
+        
+        res.json({
+            message: 'Debug info logged to console',
+            counts: { leases: leaseCount, units: unitCount, properties: propertyCount, users: userCount },
+            userId: req.user.userId
+        });
+        
+    } catch (error) {
+        console.error('DEBUG: Error in debug endpoint:', error);
+        res.status(500).json({ error: error.message });
     }
 });
 
@@ -752,12 +845,28 @@ router.get('/dashboard/financial-stats', authenticateToken, async (req, res) => 
 // Get current tenants with lease and payment information
 router.get('/current-tenants', authenticateToken, async (req, res) => {
     try {
+        console.log('Fetching current tenants for user:', req.user.userId);
+        
         // Get user's properties
         const properties = await Property.find({ userID: req.user.userId });
+        console.log('Found properties:', properties.length);
+        
+        if (properties.length === 0) {
+            console.log('No properties found for user, returning empty array');
+            return res.json([]);
+        }
+        
         const propertyIds = properties.map(prop => prop._id);
         
         // Get units for these properties
         const units = await Unit.find({ propertyID: { $in: propertyIds } });
+        console.log('Found units:', units.length);
+        
+        if (units.length === 0) {
+            console.log('No units found for properties, returning empty array');
+            return res.json([]);
+        }
+        
         const unitIds = units.map(unit => unit._id);
         
         // Get active lease agreements for these units
@@ -777,26 +886,56 @@ router.get('/current-tenants', authenticateToken, async (req, res) => {
             }
         });
         
+        console.log('Found active leases:', leases.length);
+        
+        if (leases.length === 0) {
+            console.log('No active leases found, returning empty array');
+            return res.json([]);
+        }
+        
         // Get recent payments for rent status calculation
         const payments = await Payment.find({
             leaseID: { $in: leases.map(lease => lease._id) }
         }).sort({ paymentDate: -1 });
+        
+        console.log('Found payments:', payments.length);
         
         // Get service requests counts for each user
         const serviceRequests = await ServiceRequest.find({
             unitID: { $in: unitIds }
         }).populate('userID', '_id');
         
+        console.log('Found service requests:', serviceRequests.length);
+        
         // Get ratings for tenants (if available)
         const ratings = await Rating.find({
-            userID: { $in: leases.map(lease => lease.userID._id) }
+            userID: { $in: leases.map(lease => lease.userID?._id).filter(id => id) }
         });
         
+        console.log('Found ratings:', ratings.length);
+        
         // Transform data to match frontend CurrentTenant interface
-        const currentTenants = leases.map(lease => {
-            const tenant = lease.userID;
-            const unit = lease.unitID;
-            const property = unit.propertyID;
+        const currentTenants = leases
+            .filter(lease => {
+                // Filter out leases with missing required data
+                if (!lease.userID) {
+                    console.warn('Lease missing tenant (userID):', lease._id);
+                    return false;
+                }
+                if (!lease.unitID) {
+                    console.warn('Lease missing unit (unitID):', lease._id);
+                    return false;
+                }
+                if (!lease.unitID.propertyID) {
+                    console.warn('Unit missing property (propertyID):', lease.unitID._id);
+                    return false;
+                }
+                return true;
+            })
+            .map(lease => {
+                const tenant = lease.userID;
+                const unit = lease.unitID;
+                const property = unit.propertyID;
             
             // Calculate lease progress (percentage of lease term completed)
             const leaseStart = new Date(lease.startDate);
@@ -864,6 +1003,7 @@ router.get('/current-tenants', authenticateToken, async (req, res) => {
         res.json(currentTenants);
     } catch (error) {
         console.error('Error fetching current tenants:', error);
+        console.error('Error stack:', error.stack);
         res.status(500).json({ 
             error: 'Error fetching current tenants', 
             details: error.message 
