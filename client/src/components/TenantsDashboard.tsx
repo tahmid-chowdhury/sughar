@@ -103,6 +103,43 @@ const QuickViewCard: React.FC = () => (
 export const TenantsDashboard: React.FC<TenantsDashboardProps> = ({ setViewingTenantId }) => {
   const [activeTab, setActiveTab] = useState('Overview');
 
+  // Hardcoded tenant data for Overview tab
+  const hardcodedTenants = [
+    // Building 1 – Lalmatia Court
+    { id: 'T001', name: 'Farzana Akhter', avatar: 'https://ui-avatars.com/api/?name=Farzana+Akhter&background=random', rating: 4.5, building: 'Lalmatia Court', leaseProgress: 85, rentStatus: RentStatus.Paid, requests: 0 },
+    { id: 'T003', name: 'Shahriar Karim', avatar: 'https://ui-avatars.com/api/?name=Shahriar+Karim&background=random', rating: 4.2, building: 'Lalmatia Court', leaseProgress: 30, rentStatus: RentStatus.Paid, requests: 0 },
+    { id: 'T004', name: 'Tania Akter', avatar: 'https://ui-avatars.com/api/?name=Tania+Akter&background=random', rating: 4.8, building: 'Lalmatia Court', leaseProgress: 32, rentStatus: RentStatus.Pending, requests: 1 },
+    { id: 'T005', name: 'Imran Chowdhury', avatar: 'https://ui-avatars.com/api/?name=Imran+Chowdhury&background=random', rating: 4.6, building: 'Lalmatia Court', leaseProgress: 45, rentStatus: RentStatus.Paid, requests: 0 },
+    { id: 'T006', name: 'Sumi Akhter', avatar: 'https://ui-avatars.com/api/?name=Sumi+Akhter&background=random', rating: 4.3, building: 'Lalmatia Court', leaseProgress: 42, rentStatus: RentStatus.Overdue, requests: 1 },
+    { id: 'T007', name: 'Hasan Mahmud', avatar: 'https://ui-avatars.com/api/?name=Hasan+Mahmud&background=random', rating: 4.7, building: 'Lalmatia Court', leaseProgress: 52, rentStatus: RentStatus.Paid, requests: 0 },
+    { id: 'T008', name: 'Shuvo Islam', avatar: 'https://ui-avatars.com/api/?name=Shuvo+Islam&background=random', rating: 4.1, building: 'Lalmatia Court', leaseProgress: 25, rentStatus: RentStatus.Paid, requests: 0 },
+    { id: 'T009', name: 'Maruf Khan', avatar: 'https://ui-avatars.com/api/?name=Maruf+Khan&background=random', rating: 4.4, building: 'Lalmatia Court', leaseProgress: 95, rentStatus: RentStatus.Paid, requests: 1 },
+    { id: 'T010', name: 'Mahin Alam', avatar: 'https://ui-avatars.com/api/?name=Mahin+Alam&background=random', rating: 4.9, building: 'Lalmatia Court', leaseProgress: 68, rentStatus: RentStatus.Paid, requests: 0 },
+    { id: 'T011', name: 'Saima Binte Noor', avatar: 'https://ui-avatars.com/api/?name=Saima+Binte+Noor&background=random', rating: 4.6, building: 'Lalmatia Court', leaseProgress: 60, rentStatus: RentStatus.Paid, requests: 0 },
+    { id: 'T012', name: 'Javed Rahman', avatar: 'https://ui-avatars.com/api/?name=Javed+Rahman&background=random', rating: 4.2, building: 'Lalmatia Court', leaseProgress: 92, rentStatus: RentStatus.Pending, requests: 0 },
+    
+    // Building 2 – Banani Heights
+    { id: 'T013', name: 'Sadia Hossain', avatar: 'https://ui-avatars.com/api/?name=Sadia+Hossain&background=random', rating: 4.8, building: 'Banani Heights', leaseProgress: 78, rentStatus: RentStatus.Paid, requests: 0 },
+    { id: 'T014', name: 'Kamal Uddin', avatar: 'https://ui-avatars.com/api/?name=Kamal+Uddin&background=random', rating: 4.3, building: 'Banani Heights', leaseProgress: 72, rentStatus: RentStatus.Paid, requests: 1 },
+    { id: 'T015', name: 'Mehnaz Sultana', avatar: 'https://ui-avatars.com/api/?name=Mehnaz+Sultana&background=random', rating: 4.7, building: 'Banani Heights', leaseProgress: 48, rentStatus: RentStatus.Paid, requests: 0 },
+    { id: 'T016', name: 'Tanvir Ahmed', avatar: 'https://ui-avatars.com/api/?name=Tanvir+Ahmed&background=random', rating: 4.1, building: 'Banani Heights', leaseProgress: 38, rentStatus: RentStatus.Overdue, requests: 1 },
+    { id: 'T017', name: 'Nasrin Akter', avatar: 'https://ui-avatars.com/api/?name=Nasrin+Akter&background=random', rating: 4.5, building: 'Banani Heights', leaseProgress: 35, rentStatus: RentStatus.Paid, requests: 0 },
+    { id: 'T018', name: 'Mithun Das', avatar: 'https://ui-avatars.com/api/?name=Mithun+Das&background=random', rating: 4.6, building: 'Banani Heights', leaseProgress: 65, rentStatus: RentStatus.Paid, requests: 0 },
+    { id: 'T019', name: 'Zahid Hasan', avatar: 'https://ui-avatars.com/api/?name=Zahid+Hasan&background=random', rating: 4.4, building: 'Banani Heights', leaseProgress: 55, rentStatus: RentStatus.Pending, requests: 1 },
+    { id: 'T020', name: 'Roksana Begum', avatar: 'https://ui-avatars.com/api/?name=Roksana+Begum&background=random', rating: 4.0, building: 'Banani Heights', leaseProgress: 88, rentStatus: RentStatus.Paid, requests: 0 },
+    
+    // Building 3 – Dhanmondi Residency
+    { id: 'T021', name: 'Shila Rahman', avatar: 'https://ui-avatars.com/api/?name=Shila+Rahman&background=random', rating: 4.7, building: 'Dhanmondi Residency', leaseProgress: 28, rentStatus: RentStatus.Paid, requests: 1 },
+    { id: 'T022', name: 'Arefin Chowdhury', avatar: 'https://ui-avatars.com/api/?name=Arefin+Chowdhury&background=random', rating: 4.2, building: 'Dhanmondi Residency', leaseProgress: 93, rentStatus: RentStatus.Paid, requests: 0 },
+    { id: 'T023', name: 'Rezaul Karim', avatar: 'https://ui-avatars.com/api/?name=Rezaul+Karim&background=random', rating: 4.5, building: 'Dhanmondi Residency', leaseProgress: 82, rentStatus: RentStatus.Overdue, requests: 1 },
+    { id: 'T024', name: 'Nadia Islam', avatar: 'https://ui-avatars.com/api/?name=Nadia+Islam&background=random', rating: 4.8, building: 'Dhanmondi Residency', leaseProgress: 62, rentStatus: RentStatus.Paid, requests: 0 },
+    
+    // Building 4 – Uttara Gardens
+    { id: 'T025', name: 'Selina Yasmin', avatar: 'https://ui-avatars.com/api/?name=Selina+Yasmin&background=random', rating: 4.6, building: 'Uttara Gardens', leaseProgress: 80, rentStatus: RentStatus.Paid, requests: 1 },
+    { id: 'T026', name: 'Abdul Malek', avatar: 'https://ui-avatars.com/api/?name=Abdul+Malek&background=random', rating: 4.3, building: 'Uttara Gardens', leaseProgress: 98, rentStatus: RentStatus.Paid, requests: 0 },
+    { id: 'T027', name: 'Rafsan Chowdhury', avatar: 'https://ui-avatars.com/api/?name=Rafsan+Chowdhury&background=random', rating: 4.7, building: 'Uttara Gardens', leaseProgress: 75, rentStatus: RentStatus.Paid, requests: 0 }
+  ];
+
   const renderContent = () => {
     switch(activeTab) {
       case 'Overview':
@@ -115,7 +152,7 @@ export const TenantsDashboard: React.FC<TenantsDashboardProps> = ({ setViewingTe
             </div>
             <div className="grid grid-cols-12 gap-8">
                 <div className="col-span-12 lg:col-span-6 xl:col-span-7">
-                    <TenantTable tenants={TENANTS_DASHBOARD_TABLE_DATA} setViewingTenantId={setViewingTenantId} />
+                    <TenantTable tenants={hardcodedTenants} setViewingTenantId={setViewingTenantId} />
                 </div>
                 <div className="col-span-12 lg:col-span-6 xl:col-span-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-8">
                     <div className="md:col-span-2 lg:col-span-1 grid grid-cols-1 md:grid-cols-2 gap-8">

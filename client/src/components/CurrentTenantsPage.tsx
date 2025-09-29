@@ -208,10 +208,48 @@ export const CurrentTenantsPage: React.FC<CurrentTenantsPageProps> = ({
             try {
                 setLoading(true);
                 setError(null);
-                const data = await currentTenantsAPI.getAll();
-                setTenantsData(data);
+                
+                // Hardcoded current tenants data
+                const hardcodedTenants: CurrentTenant[] = [
+                    // Building 1 – Lalmatia Court
+                    { id: 'T001', name: 'Farzana Akhter', avatar: 'https://ui-avatars.com/api/?name=Farzana+Akhter&background=random', rating: 4.5, building: 'Lalmatia Court', unit: 101, leaseProgress: { value: 85, variant: 'dark' }, rentStatus: RentStatus.Paid, requests: 0 },
+                    { id: 'T003', name: 'Shahriar Karim', avatar: 'https://ui-avatars.com/api/?name=Shahriar+Karim&background=random', rating: 4.2, building: 'Lalmatia Court', unit: 103, leaseProgress: { value: 30, variant: 'light' }, rentStatus: RentStatus.Paid, requests: 0 },
+                    { id: 'T004', name: 'Tania Akter', avatar: 'https://ui-avatars.com/api/?name=Tania+Akter&background=random', rating: 4.8, building: 'Lalmatia Court', unit: 104, leaseProgress: { value: 32, variant: 'light' }, rentStatus: RentStatus.Pending, requests: 1 },
+                    { id: 'T005', name: 'Imran Chowdhury', avatar: 'https://ui-avatars.com/api/?name=Imran+Chowdhury&background=random', rating: 4.6, building: 'Lalmatia Court', unit: 201, leaseProgress: { value: 45, variant: 'light' }, rentStatus: RentStatus.Paid, requests: 0 },
+                    { id: 'T006', name: 'Sumi Akhter', avatar: 'https://ui-avatars.com/api/?name=Sumi+Akhter&background=random', rating: 4.3, building: 'Lalmatia Court', unit: 202, leaseProgress: { value: 42, variant: 'light' }, rentStatus: RentStatus.Overdue, requests: 1 },
+                    { id: 'T007', name: 'Hasan Mahmud', avatar: 'https://ui-avatars.com/api/?name=Hasan+Mahmud&background=random', rating: 4.7, building: 'Lalmatia Court', unit: 203, leaseProgress: { value: 52, variant: 'dark' }, rentStatus: RentStatus.Paid, requests: 0 },
+                    { id: 'T008', name: 'Shuvo Islam', avatar: 'https://ui-avatars.com/api/?name=Shuvo+Islam&background=random', rating: 4.1, building: 'Lalmatia Court', unit: 204, leaseProgress: { value: 25, variant: 'light' }, rentStatus: RentStatus.Paid, requests: 0 },
+                    { id: 'T009', name: 'Maruf Khan', avatar: 'https://ui-avatars.com/api/?name=Maruf+Khan&background=random', rating: 4.4, building: 'Lalmatia Court', unit: 301, leaseProgress: { value: 95, variant: 'dark' }, rentStatus: RentStatus.Paid, requests: 1 },
+                    { id: 'T010', name: 'Mahin Alam', avatar: 'https://ui-avatars.com/api/?name=Mahin+Alam&background=random', rating: 4.9, building: 'Lalmatia Court', unit: 302, leaseProgress: { value: 68, variant: 'dark' }, rentStatus: RentStatus.Paid, requests: 0 },
+                    { id: 'T011', name: 'Saima Binte Noor', avatar: 'https://ui-avatars.com/api/?name=Saima+Binte+Noor&background=random', rating: 4.6, building: 'Lalmatia Court', unit: 303, leaseProgress: { value: 60, variant: 'dark' }, rentStatus: RentStatus.Paid, requests: 0 },
+                    { id: 'T012', name: 'Javed Rahman', avatar: 'https://ui-avatars.com/api/?name=Javed+Rahman&background=random', rating: 4.2, building: 'Lalmatia Court', unit: 304, leaseProgress: { value: 92, variant: 'dark' }, rentStatus: RentStatus.Pending, requests: 0 },
+                    
+                    // Building 2 – Banani Heights
+                    { id: 'T013', name: 'Sadia Hossain', avatar: 'https://ui-avatars.com/api/?name=Sadia+Hossain&background=random', rating: 4.8, building: 'Banani Heights', unit: 101, leaseProgress: { value: 78, variant: 'dark' }, rentStatus: RentStatus.Paid, requests: 0 },
+                    { id: 'T014', name: 'Kamal Uddin', avatar: 'https://ui-avatars.com/api/?name=Kamal+Uddin&background=random', rating: 4.3, building: 'Banani Heights', unit: 102, leaseProgress: { value: 72, variant: 'dark' }, rentStatus: RentStatus.Paid, requests: 1 },
+                    { id: 'T015', name: 'Mehnaz Sultana', avatar: 'https://ui-avatars.com/api/?name=Mehnaz+Sultana&background=random', rating: 4.7, building: 'Banani Heights', unit: 103, leaseProgress: { value: 48, variant: 'light' }, rentStatus: RentStatus.Paid, requests: 0 },
+                    { id: 'T016', name: 'Tanvir Ahmed', avatar: 'https://ui-avatars.com/api/?name=Tanvir+Ahmed&background=random', rating: 4.1, building: 'Banani Heights', unit: 104, leaseProgress: { value: 38, variant: 'light' }, rentStatus: RentStatus.Overdue, requests: 1 },
+                    { id: 'T017', name: 'Nasrin Akter', avatar: 'https://ui-avatars.com/api/?name=Nasrin+Akter&background=random', rating: 4.5, building: 'Banani Heights', unit: 201, leaseProgress: { value: 35, variant: 'light' }, rentStatus: RentStatus.Paid, requests: 0 },
+                    { id: 'T018', name: 'Mithun Das', avatar: 'https://ui-avatars.com/api/?name=Mithun+Das&background=random', rating: 4.6, building: 'Banani Heights', unit: 202, leaseProgress: { value: 65, variant: 'dark' }, rentStatus: RentStatus.Paid, requests: 0 },
+                    { id: 'T019', name: 'Zahid Hasan', avatar: 'https://ui-avatars.com/api/?name=Zahid+Hasan&background=random', rating: 4.4, building: 'Banani Heights', unit: 203, leaseProgress: { value: 55, variant: 'dark' }, rentStatus: RentStatus.Pending, requests: 1 },
+                    { id: 'T020', name: 'Roksana Begum', avatar: 'https://ui-avatars.com/api/?name=Roksana+Begum&background=random', rating: 4.0, building: 'Banani Heights', unit: 204, leaseProgress: { value: 88, variant: 'dark' }, rentStatus: RentStatus.Paid, requests: 0 },
+                    
+                    // Building 3 – Dhanmondi Residency (excluding vacant units)
+                    { id: 'T021', name: 'Shila Rahman', avatar: 'https://ui-avatars.com/api/?name=Shila+Rahman&background=random', rating: 4.7, building: 'Dhanmondi Residency', unit: 102, leaseProgress: { value: 28, variant: 'light' }, rentStatus: RentStatus.Paid, requests: 1 },
+                    { id: 'T022', name: 'Arefin Chowdhury', avatar: 'https://ui-avatars.com/api/?name=Arefin+Chowdhury&background=random', rating: 4.2, building: 'Dhanmondi Residency', unit: 103, leaseProgress: { value: 93, variant: 'dark' }, rentStatus: RentStatus.Paid, requests: 0 },
+                    { id: 'T023', name: 'Rezaul Karim', avatar: 'https://ui-avatars.com/api/?name=Rezaul+Karim&background=random', rating: 4.5, building: 'Dhanmondi Residency', unit: 104, leaseProgress: { value: 82, variant: 'dark' }, rentStatus: RentStatus.Overdue, requests: 1 },
+                    { id: 'T024', name: 'Nadia Islam', avatar: 'https://ui-avatars.com/api/?name=Nadia+Islam&background=random', rating: 4.8, building: 'Dhanmondi Residency', unit: 105, leaseProgress: { value: 62, variant: 'dark' }, rentStatus: RentStatus.Paid, requests: 0 },
+                    
+                    // Building 4 – Uttara Gardens
+                    { id: 'T025', name: 'Selina Yasmin', avatar: 'https://ui-avatars.com/api/?name=Selina+Yasmin&background=random', rating: 4.6, building: 'Uttara Gardens', unit: 1, leaseProgress: { value: 80, variant: 'dark' }, rentStatus: RentStatus.Paid, requests: 1 },
+                    { id: 'T026', name: 'Abdul Malek', avatar: 'https://ui-avatars.com/api/?name=Abdul+Malek&background=random', rating: 4.3, building: 'Uttara Gardens', unit: 2, leaseProgress: { value: 98, variant: 'dark' }, rentStatus: RentStatus.Paid, requests: 0 },
+                    { id: 'T027', name: 'Rafsan Chowdhury', avatar: 'https://ui-avatars.com/api/?name=Rafsan+Chowdhury&background=random', rating: 4.7, building: 'Uttara Gardens', unit: 3, leaseProgress: { value: 75, variant: 'dark' }, rentStatus: RentStatus.Paid, requests: 0 }
+                ];
+                
+                console.log('Hardcoded current tenants loaded:', hardcodedTenants.length, 'tenants');
+                setTenantsData(hardcodedTenants);
             } catch (err) {
-                console.error('Error fetching tenants:', err);
+                console.error('Error loading hardcoded tenants:', err);
                 setError('Failed to load tenants data');
             } finally {
                 setLoading(false);
