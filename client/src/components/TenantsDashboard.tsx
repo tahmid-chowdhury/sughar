@@ -14,7 +14,8 @@ import { ChevronRight } from './icons';
 import { CurrentTenantsPage } from './CurrentTenantsPage';
 import TenantApplicationsPage from './TenantApplicationsPage';
 import AllTenantsPage from './AllTenantsPage';
-import { rentalApplicationsAPI, currentTenantsAPI, unitsAPI, propertiesAPI } from '../services/api';
+import DataPopulator from './DataPopulator';
+import { rentalApplicationsAPI, currentTenantsAPI, unitsAPI, propertiesAPI, getAuthToken } from '../services/api';
 
 interface TenantsDashboardProps {
   setViewingTenantId: (id: string) => void;
@@ -174,14 +175,31 @@ export const TenantsDashboard: React.FC<TenantsDashboardProps> = ({
         setLoading(true);
         setError(null);
         
+        console.log('=== Starting Tenant Dashboard Data Fetch ===');
+        console.log('Auth token:', !!getAuthToken());
+        
         // Fetch current tenants using the new API endpoint
+        console.log('Fetching all required data...');
         const [applications, currentTenants, units, properties] = await Promise.all([
-          rentalApplicationsAPI.getAll().catch(() => []),
-          currentTenantsAPI.getAll().catch(() => []),
-          unitsAPI.getAll().catch(() => []),
-          propertiesAPI.getAll().catch(() => [])
+          rentalApplicationsAPI.getAll().catch((err) => {
+            console.error('Applications API failed:', err);
+            return [];
+          }),
+          currentTenantsAPI.getAll().catch((err) => {
+            console.error('Current tenants API failed:', err);
+            return [];
+          }),
+          unitsAPI.getAll().catch((err) => {
+            console.error('Units API failed:', err);
+            return [];
+          }),
+          propertiesAPI.getAll().catch((err) => {
+            console.error('Properties API failed:', err);
+            return [];
+          })
         ]);
 
+        console.log('=== API Response Summary ===');
         console.log('Fetched data:', {
           applications: applications.length,
           currentTenants: currentTenants.length,
@@ -190,10 +208,11 @@ export const TenantsDashboard: React.FC<TenantsDashboardProps> = ({
         });
 
         // Log the actual data structure to debug
+        console.log('=== Detailed Data ===');
         console.log('Current tenants data:', currentTenants);
-        console.log('Applications data:', applications);
-        console.log('Units data:', units);
-        console.log('Properties data:', properties);
+        console.log('Applications data sample:', applications.slice(0, 2));
+        console.log('Units data sample:', units.slice(0, 2));
+        console.log('Properties data sample:', properties.slice(0, 2));
 
         // Calculate stats
         const totalApplications = applications.length;
@@ -243,6 +262,31 @@ export const TenantsDashboard: React.FC<TenantsDashboardProps> = ({
 
         // Use the real current tenants data (no transformation needed)
         setTenants(currentTenants);
+
+        console.log('=== Data Dependencies Check ===');
+        if (currentTenants.length === 0) {
+          console.warn('No current tenants found. This could be because:');
+          console.warn('1. No properties found for user');
+          console.warn('2. No units found for properties');
+          console.warn('3. No active lease agreements found');
+          console.warn('4. Lease agreements missing required data');
+          
+          if (properties.length === 0) {
+            console.error('❌ No properties found - user needs to create properties first');
+          } else {
+            console.log('✅ Properties found:', properties.length);
+          }
+          
+          if (units.length === 0) {
+            console.error('❌ No units found - need to create units for properties');
+          } else {
+            console.log('✅ Units found:', units.length);
+          }
+          
+          console.log('Check server logs for lease agreement details');
+        } else {
+          console.log('✅ Current tenants loaded successfully:', currentTenants.length);
+        }
 
         // Create vacant units data by building
         const buildingVacancyData = properties.map((property: any) => {
@@ -329,6 +373,12 @@ export const TenantsDashboard: React.FC<TenantsDashboardProps> = ({
                 <StatCard key={stat.label} stat={stat} />
               ))}
             </div>
+            
+            {/* Show data populator if no current tenants */}
+            {tenants.length === 0 && (
+              <DataPopulator />
+            )}
+            
             <div className="grid grid-cols-12 gap-8">
                 <div className="col-span-12 lg:col-span-6 xl:col-span-7">
                     <TenantTable 
