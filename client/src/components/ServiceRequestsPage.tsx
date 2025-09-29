@@ -390,20 +390,32 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
             return [];
         }
 
-        const transformedData = rawServiceRequestsData.map((sr: any) => {
+        const transformedData = rawServiceRequestsData.map((sr: any, index: number) => {
             const urgencyScore = calculateUrgencyScore(sr);
             
+            // Handle different data formats - dashboard stats vs API data
+            const building = sr.property?.split(',')[0] || 
+                           sr.unitID?.propertyID?.address?.split(',')[0] || 
+                           'Unknown Building';
+            
+            const unit = sr.unit || 
+                        sr.unitID?.unitNumber || 
+                        'Unknown Unit';
+            
+            const tenantName = sr.tenant || 
+                             sr.contractorID?.companyName ||
+                             (sr.tenantID?.firstName && sr.tenantID?.lastName ? 
+                              `${sr.tenantID.firstName} ${sr.tenantID.lastName}` : 
+                              sr.tenantID?.email || 'Unassigned');
+            
             return {
-                id: sr._id || `sr-${Math.random()}`,
-                building: sr.unitID?.propertyID?.address?.split(',')[0] || 'Unknown Building',
-                unit: sr.unitID?.unitNumber || 'Unknown Unit',
-                requestDate: new Date(sr.dateCreated || sr.createdAt).toLocaleDateString(),
+                id: sr._id || `sr-stable-${index}`,
+                building,
+                unit,
+                requestDate: new Date(sr.dateCreated || sr.createdAt || Date.now()).toLocaleDateString(),
                 assignedContact: {
-                    name: sr.contractorID?.companyName || 
-                          (sr.tenantID?.firstName && sr.tenantID?.lastName ? 
-                           `${sr.tenantID.firstName} ${sr.tenantID.lastName}` : 
-                           sr.tenantID?.email || 'Unassigned'),
-                    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${sr.tenantID?.email || sr._id}`
+                    name: tenantName,
+                    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${sr.tenantID?.email || sr._id || index}`
                 },
                 status: mapApiStatusToRequestStatus(sr.status),
                 description: sr.description || 'No description provided',
