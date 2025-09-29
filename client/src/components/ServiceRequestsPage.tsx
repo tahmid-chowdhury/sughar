@@ -264,6 +264,23 @@ const calculateUrgencyScore = (request: any) => {
     return Math.min(score, 100);
 };
 
+// Helper function to map API status to RequestStatus enum (moved outside component to prevent hoisting issues)
+const mapApiStatusToRequestStatus = (apiStatus: string): RequestStatus => {
+    switch (apiStatus?.toLowerCase()) {
+        case 'completed':
+        case 'complete':
+            return RequestStatus.Complete;
+        case 'in-progress':
+        case 'in_progress':
+        case 'assigned':
+            return RequestStatus.InProgress;
+        case 'pending':
+        case 'open':
+        default:
+            return RequestStatus.Pending;
+    }
+};
+
 export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({ 
     onBuildingClick, 
     onUnitClick, 
@@ -406,23 +423,6 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
         // Sort by urgency score by default for better prioritization
         return transformedData.sort((a, b) => b.urgencyScore! - a.urgencyScore!);
     }, [rawServiceRequestsData, dashboardStats]);
-
-    // Helper function to map API status to RequestStatus enum
-    const mapApiStatusToRequestStatus = (apiStatus: string): RequestStatus => {
-        switch (apiStatus?.toLowerCase()) {
-            case 'completed':
-            case 'complete':
-                return RequestStatus.Complete;
-            case 'in-progress':
-            case 'in_progress':
-            case 'assigned':
-                return RequestStatus.InProgress;
-            case 'pending':
-            case 'open':
-            default:
-                return RequestStatus.Pending;
-        }
-    };
 
     const handleSort = (field: SortField) => {
         setSortConfig(prev => ({
