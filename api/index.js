@@ -118,7 +118,7 @@ export default async function handler(req, res) {
       // Handle direct auth endpoints
       await connectToDatabase();
       return await handleAuth(req, res, [null, resource]); // Pass resource as endpoint
-    } else if (resource && (resource === 'properties' || resource === 'units' || resource === 'service-requests' || resource === 'rental-applications' || resource === 'lease-agreements' || resource === 'payments' || resource === 'dashboard' || resource === 'current-tenants' || resource === 'debug' || resource === 'populate-test-data')) {
+    } else if (resource && (resource === 'properties' || resource === 'units' || resource === 'service-requests' || resource === 'rental-applications' || resource === 'lease-agreements' || resource === 'payments' || resource === 'dashboard' || resource === 'current-tenants' || resource === 'tenants' || resource === 'debug' || resource === 'populate-test-data')) {
       await connectToDatabase();
       return await handleAPI(req, res, urlParts);
     } else {
@@ -611,6 +611,12 @@ async function handleAPI(req, res, urlParts) {
   else if (resource === 'current-tenants') {
     if (method === 'GET' && !id) {
       return await getCurrentTenants(req, res);
+    }
+  }
+  // All tenants route
+  else if (resource === 'tenants') {
+    if (method === 'GET' && !id) {
+      return await getAllTenants(req, res);
     }
   }
   // Debug routes
@@ -1786,6 +1792,40 @@ async function getCurrentTenants(req, res) {
       console.error('Error stack:', error.stack);
       res.status(500).json({ 
         error: 'Error fetching current tenants', 
+        details: error.message 
+      });
+    }
+  });
+}
+
+// Get all tenants (users with role 'tenant')
+async function getAllTenants(req, res) {
+  authenticateToken(req, res, async () => {
+    try {
+      console.log('Fetching all tenants for user:', req.user.userId);
+      
+      const tenants = await User.find({ role: 'tenant' })
+        .select('firstName lastName email phoneNumber createdAt')
+        .sort({ lastName: 1, firstName: 1 });
+      
+      console.log('Found tenants:', tenants.length);
+      
+      // Transform to include additional info
+      const tenantsWithInfo = tenants.map(tenant => ({
+        id: tenant._id.toString(),
+        name: `${tenant.firstName} ${tenant.lastName}`,
+        email: tenant.email,
+        phoneNumber: tenant.phoneNumber,
+        joinDate: tenant.createdAt,
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(tenant.firstName + ' ' + tenant.lastName)}&background=random`
+      }));
+      
+      console.log('Returning tenants:', tenantsWithInfo.length);
+      res.json(tenantsWithInfo);
+    } catch (error) {
+      console.error('Error fetching tenants:', error);
+      res.status(500).json({ 
+        error: 'Error fetching tenants', 
         details: error.message 
       });
     }

@@ -323,12 +323,54 @@ router.put('/service-requests/:id', authenticateToken, async (req, res) => {
     }
 });
 
+// TENANTS ROUTES
+// Get all tenants (users with role 'tenant')
+router.get('/tenants', authenticateToken, async (req, res) => {
+    try {
+        const tenants = await User.find({ role: 'tenant' })
+            .select('firstName lastName email phoneNumber createdAt')
+            .sort({ lastName: 1, firstName: 1 });
+        
+        // Transform to include additional info
+        const tenantsWithInfo = tenants.map(tenant => ({
+            id: tenant._id,
+            name: `${tenant.firstName} ${tenant.lastName}`,
+            email: tenant.email,
+            phoneNumber: tenant.phoneNumber,
+            joinDate: tenant.createdAt,
+            avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(tenant.firstName + ' ' + tenant.lastName)}&background=random`
+        }));
+        
+        res.json(tenantsWithInfo);
+    } catch (error) {
+        console.error('Error fetching tenants:', error);
+        res.status(500).json({ error: 'Error fetching tenants' });
+    }
+});
+
 // RENTAL APPLICATION ROUTES
-// Get all rental applications
+// Get all rental applications for landlord's properties
 router.get('/rental-applications', authenticateToken, async (req, res) => {
     try {
-        const applications = await RentalApplication.find({ userID: req.user.userId })
-            .populate('userID', 'firstName lastName email')
+        // First get the landlord's properties
+        const properties = await Property.find({ userID: req.user.userId });
+        if (properties.length === 0) {
+            return res.json([]);
+        }
+        
+        const propertyIds = properties.map(prop => prop._id);
+        
+        // Get units for these properties
+        const units = await Unit.find({ propertyID: { $in: propertyIds } });
+        if (units.length === 0) {
+            return res.json([]);
+        }
+        
+        const unitIds = units.map(unit => unit._id);
+        
+        // Find applications for these units
+        const applications = await RentalApplication.find({ unitID: { $in: unitIds } })
+            .populate('userID', 'firstName lastName email phoneNumber')
             .populate('unitID', 'unitNumber monthlyRent propertyID')
             .populate({
                 path: 'unitID',

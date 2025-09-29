@@ -174,6 +174,11 @@ export const currentTenantsAPI = {
   getAll: (): Promise<any> => apiRequest('/api/current-tenants'),
 };
 
+// Tenants API (all users with tenant role)
+export const tenantsAPI = {
+  getAll: (): Promise<any> => apiRequest('/api/tenants'),
+};
+
 // Helper functions to calculate dashboard stats
 const calculateBuildingStats = (properties: any[]) => {
   return properties.map((property, index) => ({

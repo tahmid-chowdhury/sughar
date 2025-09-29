@@ -13,6 +13,7 @@ import { RentStatusChart } from './charts/RentStatusChart';
 import { ChevronRight } from './icons';
 import { CurrentTenantsPage } from './CurrentTenantsPage';
 import TenantApplicationsPage from './TenantApplicationsPage';
+import AllTenantsPage from './AllTenantsPage';
 import { rentalApplicationsAPI, currentTenantsAPI, unitsAPI, propertiesAPI } from '../services/api';
 
 interface TenantsDashboardProps {
@@ -326,18 +327,31 @@ export const TenantsDashboard: React.FC<TenantsDashboardProps> = ({
           onBuildingClick={onBuildingClick}
           onUnitClick={onUnitClick}
         />;
+      case 'All Tenants':
+        return <AllTenantsPage 
+          setViewingTenantId={setViewingTenantId}
+        />;
       default:
         return null;
     }
   };
   
-  const pageTitle = activeTab === 'Applications' ? 'Prospective Tenant Applications' : 'Tenants Dashboard';
+  const getPageTitle = () => {
+    switch (activeTab) {
+      case 'Applications':
+        return 'Prospective Tenant Applications';
+      case 'All Tenants':
+        return 'All Tenant Users';
+      default:
+        return 'Tenants Dashboard';
+    }
+  };
 
   return (
     <div className="container mx-auto">
       <Header 
-        title={pageTitle}
-        tabs={['Overview', 'Current Tenants', 'Applications']}
+        title={getPageTitle()}
+        tabs={['Overview', 'Current Tenants', 'All Tenants', 'Applications']}
         activeTab={activeTab}
         onTabChange={setActiveTab}
       />
