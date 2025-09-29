@@ -76,31 +76,31 @@ export const FinancialsDashboard = () => {
         const stats: FinancialStat[] = [
           { 
             label: 'Revenue This Month', 
-            value: `$${data.revenueThisMonth.toLocaleString()}`, 
+            value: `৳${data.revenueThisMonth.toLocaleString()}`, 
             icon: DollarSign, 
             color: 'text-green-500' 
           },
           { 
             label: 'Incoming Rent', 
-            value: `$${data.incomingRent.toLocaleString()}`, 
+            value: `৳${data.incomingRent.toLocaleString()}`, 
             icon: ArrowUp, 
             color: 'text-blue-500' 
           },
           { 
             label: 'Overdue Rent', 
-            value: `$${data.overdueRent.toLocaleString()}`, 
+            value: `৳${data.overdueRent.toLocaleString()}`, 
             icon: ArrowDown, 
             color: 'text-red-500' 
           },
           { 
             label: 'Utilities/Misc Expenses', 
-            value: `$${data.utilitiesCosts.toLocaleString()}`, 
+            value: `৳${data.utilitiesCosts.toLocaleString()}`, 
             icon: Settings, 
             color: 'text-yellow-500' 
           },
           { 
             label: 'Service Costs', 
-            value: `$${data.serviceCosts.toLocaleString()}`, 
+            value: `৳${data.serviceCosts.toLocaleString()}`, 
             icon: Wrench, 
             color: 'text-purple-500' 
           },
