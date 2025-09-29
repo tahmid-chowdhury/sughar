@@ -346,32 +346,12 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
             if (serviceRequestsData.length === 0) {
                 console.log('No service requests from API, checking dashboard stats');
                 
-                // If dashboard stats show service requests exist, try to use that data
+                // If dashboard stats show service requests exist, use that RAW data
                 if (dashboardData?.serviceRequests?.recent && dashboardData.serviceRequests.recent.length > 0) {
                     console.log('Using service requests from dashboard stats:', dashboardData.serviceRequests.recent);
                     
-                    // Transform dashboard service request data
-                    const dashboardServiceRequests = dashboardData.serviceRequests.recent.map((sr: any, index: number) => ({
-                        id: sr._id || `sr-dashboard-${index}`,
-                        building: sr.unitID?.propertyID?.address?.split(',')[0] || 'Unknown Building',
-                        unit: sr.unitID?.unitNumber || 'Unknown Unit',
-                        requestDate: new Date(sr.dateCreated || sr.createdAt || Date.now()).toLocaleDateString(),
-                        assignedContact: {
-                            name: sr.contractorID?.companyName || 
-                                  (sr.tenantID?.firstName && sr.tenantID?.lastName ? 
-                                   `${sr.tenantID.firstName} ${sr.tenantID.lastName}` : 
-                                   sr.tenantID?.email || 'Unassigned'),
-                            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${sr.tenantID?.email || sr._id || index}`
-                        },
-                        status: mapApiStatusToRequestStatus(sr.status),
-                        description: sr.description || 'No description provided',
-                        category: sr.category || 'General',
-                        priority: sr.priority || 'medium',
-                        urgencyScore: calculateUrgencyScore(sr),
-                        requests: 1
-                    }));
-                    
-                    setRawServiceRequestsData(dashboardServiceRequests);
+                    // Store RAW dashboard service request data - transformation happens in useMemo
+                    setRawServiceRequestsData(dashboardData.serviceRequests.recent);
                 } else {
                     console.log('No service requests found anywhere, setting empty array');
                     setRawServiceRequestsData([]);
@@ -413,17 +393,10 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
         const transformedData = rawServiceRequestsData.map((sr: any) => {
             const urgencyScore = calculateUrgencyScore(sr);
             
-            // Try to get unit info from dashboard data
-            const unitInfo = dashboardStats?.units?.details?.find((unit: any) => 
-                unit._id === sr.unitID?._id
-            );
-            
             return {
                 id: sr._id || `sr-${Math.random()}`,
-                building: sr.unitID?.propertyID?.address?.split(',')[0] || 
-                         unitInfo?.property?.split(',')[0] || 
-                         'Unknown Building',
-                unit: sr.unitID?.unitNumber || unitInfo?.unitNumber || 'Unknown Unit',
+                building: sr.unitID?.propertyID?.address?.split(',')[0] || 'Unknown Building',
+                unit: sr.unitID?.unitNumber || 'Unknown Unit',
                 requestDate: new Date(sr.dateCreated || sr.createdAt).toLocaleDateString(),
                 assignedContact: {
                     name: sr.contractorID?.companyName || 
@@ -441,9 +414,8 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
             };
         });
         
-        // Sort by urgency score by default for better prioritization
         return transformedData.sort((a, b) => b.urgencyScore! - a.urgencyScore!);
-    }, [rawServiceRequestsData, dashboardStats?.units?.details]);
+    }, [rawServiceRequestsData]);
 
     const handleSort = useCallback((field: SortField) => {
         setSortConfig(prev => ({
@@ -523,7 +495,17 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
         });
 
         return filtered;
-    }, [transformedServiceRequests, sortConfig.field, sortConfig.direction, filters.status, filters.building, filters.assignedContact, filters.priority, filters.category, filters.searchTerm]);
+    }, [
+        transformedServiceRequests, 
+        sortConfig.field, 
+        sortConfig.direction, 
+        filters.status, 
+        filters.building, 
+        filters.assignedContact, 
+        filters.priority, 
+        filters.category, 
+        filters.searchTerm
+    ]);
 
     const handleRequestClick = useCallback((id: string) => {
         setSelectedRequestId(id);
