@@ -1986,6 +1986,26 @@ async function populateTestData(req, res) {
     try {
       console.log('Populating Asha Properties test data for user:', req.user.userId);
       
+      // Clean up existing test data for this user first
+      console.log('Cleaning up existing data...');
+      await Payment.deleteMany({ landlord: req.user.userId });
+      await ServiceRequest.deleteMany({ tenant: { $in: await User.find({ role: 'tenant' }).select('_id') } });
+      await RentalApplication.deleteMany({});
+      await LeaseAgreement.deleteMany({ landlord: req.user.userId });
+      await Unit.deleteMany({ property: { $in: await Property.find({ landlord: req.user.userId }).select('_id') } });
+      await Property.deleteMany({ landlord: req.user.userId });
+      
+      // Clean up test tenant users (those with specific email patterns)
+      const testEmails = [
+        'farzana.akhter@email.com', 'amrul.hoque@email.com', 'shahriar.karim@email.com',
+        'tania.akter@email.com', 'imran.chowdhury@email.com', 'sumi.akhter@email.com',
+        'raiyan.rahman@email.com', 'niloy.hossain@email.com', 'arif.mahmud@email.com',
+        'zarin.tasnim@email.com', 'ayaan.chowdhury@email.com'
+      ];
+      await User.deleteMany({ email: { $in: testEmails } });
+      
+      console.log('Cleanup completed. Creating new data...');
+      
       // Create Asha Properties portfolio
       const properties = await Property.insertMany([
         {
