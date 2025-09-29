@@ -1216,12 +1216,12 @@ async function getDashboardStats(req, res) {
       
       // Get units for user's properties  
       const units = await Unit.find({ property: { $in: propertyIds } })
-        .populate('property', 'address');
+        .populate('property', 'name address');
       console.log('Found units:', units.length);
       
       // Get service requests for user's properties
       const serviceRequests = await ServiceRequest.find({ property: { $in: propertyIds } })
-        .populate('property', 'address')
+        .populate('property', 'name address')
         .populate('tenant', 'firstName lastName');
       console.log('Found service requests:', serviceRequests.length);
       
@@ -1231,7 +1231,7 @@ async function getDashboardStats(req, res) {
       
       // Get lease agreements for user's properties
       const leases = await LeaseAgreement.find({ landlord: userId })
-        .populate('property', 'address') 
+        .populate('property', 'name address') 
         .populate('unit', 'unitNumber')
         .populate('tenant', 'firstName lastName');
       console.log('Found leases:', leases.length);
@@ -1271,7 +1271,7 @@ async function getDashboardStats(req, res) {
       const stats = {
         properties: {
           total: totalProperties,
-          addresses: properties.map(p => `${p.address.street}, ${p.address.city}, ${p.address.state}`)
+          addresses: properties.map(p => p.name || `${p.address.street}, ${p.address.city}, ${p.address.state}`)
         },
         units: {
           total: totalUnits,
@@ -1284,8 +1284,8 @@ async function getDashboardStats(req, res) {
             unitNumber: unit.unitNumber,
             isOccupied: unit.isOccupied,
             monthlyRent: unit.monthlyRent,
-            property: unit.property?.address ? 
-              `${unit.property.address.street}, ${unit.property.address.city}` : 'Unknown'
+            property: unit.property?.name || 
+              (unit.property?.address ? `${unit.property.address.street}, ${unit.property.address.city}` : 'Unknown')
           }))
         },
         serviceRequests: {
@@ -1303,8 +1303,8 @@ async function getDashboardStats(req, res) {
             description: sr.description,
             status: sr.status,
             tenant: sr.tenant ? `${sr.tenant.firstName} ${sr.tenant.lastName}` : 'Unknown',
-            property: sr.property?.address ? 
-              `${sr.property.address.street}, ${sr.property.address.city}` : 'Unknown',
+            property: sr.property?.name || 
+              (sr.property?.address ? `${sr.property.address.street}, ${sr.property.address.city}` : 'Unknown'),
             createdAt: sr.createdAt
           }))
         },
@@ -1321,8 +1321,8 @@ async function getDashboardStats(req, res) {
             _id: lease._id,
             tenant: lease.tenant ? `${lease.tenant.firstName} ${lease.tenant.lastName}` : 'Unknown',
             unit: lease.unit?.unitNumber || 'Unknown',
-            property: lease.property?.address ? 
-              `${lease.property.address.street}, ${lease.property.address.city}` : 'Unknown',
+            property: lease.property?.name || 
+              (lease.property?.address ? `${lease.property.address.street}, ${lease.property.address.city}` : 'Unknown'),
             endDate: lease.endDate
           }))
         }
