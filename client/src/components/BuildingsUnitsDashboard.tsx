@@ -76,16 +76,16 @@ export const BuildingsUnitsDashboard: React.FC<BuildingsUnitsDashboardProps> = (
             });
 
             // Create chart data from dashboard stats
-            const vacantUnitsData: VacantUnit[] = dashboardStats.properties?.addresses?.map((address: string, index: number) => {
+            const vacantUnitsData: VacantUnit[] = dashboardStats.properties?.addresses?.map((propertyName: string, index: number) => {
                 // Get units for this property to calculate vacant units
                 const propertyUnits = dashboardStats.units?.details?.filter((unit) => 
-                    unit.property === address
+                    unit.property === propertyName
                 ) || [];
                 
                 const vacantCount = propertyUnits.filter((unit) => unit.status === 'vacant').length;
                 
                 return {
-                    name: address?.split(',')[0]?.substring(0, 10) || `Building ${index + 1}`,
+                    name: propertyName || `Building ${index + 1}`,
                     vacant: vacantCount
                 };
             }) || [];
@@ -93,9 +93,21 @@ export const BuildingsUnitsDashboard: React.FC<BuildingsUnitsDashboardProps> = (
             // Generate rent collection trend data based on current revenue
             const currentRevenue = dashboardStats.units?.totalRevenue || 0;
             const rentCollectionData: RentCollection[] = Array.from({ length: 12 }, (_, i) => {
-                const baseAmount = currentRevenue;
-                const variation = (Math.random() - 0.5) * 0.3; // ±15% variation
-                const monthlyRevenue = Math.max(0, baseAmount * (1 + variation));
+                const currentMonth = new Date().getMonth();
+                
+                // For current month, use exact revenue without variation
+                if (i === currentMonth) {
+                    return {
+                        month: new Date(2025, i).toLocaleString('default', { month: 'short' }),
+                        rent: Math.round(currentRevenue)
+                    };
+                }
+                
+                // For other months, use seeded pseudo-random variation for consistency
+                const seed = i + 2025; // Use month index + year as seed
+                const pseudoRandom = (Math.sin(seed * 12345) + 1) / 2; // Deterministic "random"
+                const variation = (pseudoRandom - 0.5) * 0.3; // ±15% variation
+                const monthlyRevenue = Math.max(0, currentRevenue * (1 + variation));
                 
                 return {
                     month: new Date(2025, i).toLocaleString('default', { month: 'short' }),
@@ -257,7 +269,7 @@ export const BuildingsUnitsDashboard: React.FC<BuildingsUnitsDashboardProps> = (
                                 <div>
                                     <h3 className="text-lg font-semibold text-text-main mb-2">Monthly Revenue</h3>
                                     <p className="text-3xl font-bold text-green-600">
-                                        ${chartData.rentCollection.length > 0 ? 
+                                        ৳{chartData.rentCollection.length > 0 ? 
                                             chartData.rentCollection[new Date().getMonth()]?.rent?.toLocaleString() || '0' : 
                                             '0'}
                                     </p>
@@ -289,7 +301,7 @@ export const BuildingsUnitsDashboard: React.FC<BuildingsUnitsDashboardProps> = (
                                 <div className="text-center">
                                     <h3 className="text-sm font-semibold text-text-secondary mb-1">Revenue</h3>
                                     <p className="text-2xl font-bold text-green-600">
-                                        ${chartData.rentCollection.length > 0 ? 
+                                        ৳{chartData.rentCollection.length > 0 ? 
                                             chartData.rentCollection[new Date().getMonth()]?.rent?.toLocaleString() || '0' : 
                                             '0'}
                                     </p>

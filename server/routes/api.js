@@ -553,23 +553,40 @@ router.get('/dashboard/stats', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.userId;
         
-        // Get user's properties
-        const properties = await Property.find({ userID: userId });
+        // Get user's properties - check both userID and landlord fields
+        const properties = await Property.find({
+            $or: [
+                { userID: userId },
+                { landlord: userId }
+            ]
+        });
         const propertyIds = properties.map(p => p._id);
         
-        // Get units for user's properties
-        const units = await Unit.find({ propertyID: { $in: propertyIds } })
-            .populate('propertyID', 'address');
+        // Get units for user's properties - check both propertyID and property fields
+        const units = await Unit.find({
+            $or: [
+                { propertyID: { $in: propertyIds } },
+                { property: { $in: propertyIds } }
+            ]
+        }).populate([
+            { path: 'propertyID', select: 'name address' },
+            { path: 'property', select: 'name address' }
+        ]);
         
         // Get service requests for user's properties
         const serviceRequests = await ServiceRequest.find()
             .populate({
                 path: 'unitID',
-                match: { propertyID: { $in: propertyIds } },
-                populate: {
-                    path: 'propertyID',
-                    select: 'address'
-                }
+                match: { 
+                    $or: [
+                        { propertyID: { $in: propertyIds } },
+                        { property: { $in: propertyIds } }
+                    ]
+                },
+                populate: [
+                    { path: 'propertyID', select: 'name address' },
+                    { path: 'property', select: 'name address' }
+                ]
             })
             .populate('userID', 'firstName lastName');
         
@@ -580,11 +597,16 @@ router.get('/dashboard/stats', authenticateToken, async (req, res) => {
         const applications = await RentalApplication.find()
             .populate({
                 path: 'unitID',
-                match: { propertyID: { $in: propertyIds } },
-                populate: {
-                    path: 'propertyID',
-                    select: 'address'
-                }
+                match: { 
+                    $or: [
+                        { propertyID: { $in: propertyIds } },
+                        { property: { $in: propertyIds } }
+                    ]
+                },
+                populate: [
+                    { path: 'propertyID', select: 'name address' },
+                    { path: 'property', select: 'name address' }
+                ]
             })
             .populate('userID', 'firstName lastName');
         
@@ -595,11 +617,16 @@ router.get('/dashboard/stats', authenticateToken, async (req, res) => {
         const leases = await LeaseAgreement.find()
             .populate({
                 path: 'unitID',
-                match: { propertyID: { $in: propertyIds } },
-                populate: {
-                    path: 'propertyID',
-                    select: 'address'
-                }
+                match: { 
+                    $or: [
+                        { propertyID: { $in: propertyIds } },
+                        { property: { $in: propertyIds } }
+                    ]
+                },
+                populate: [
+                    { path: 'propertyID', select: 'name address' },
+                    { path: 'property', select: 'name address' }
+                ]
             })
             .populate('userID', 'firstName lastName');
         
@@ -608,7 +635,17 @@ router.get('/dashboard/stats', authenticateToken, async (req, res) => {
         // Calculate statistics
         const totalProperties = properties.length;
         const totalUnits = units.length;
-        const occupiedUnits = units.filter(unit => unit.status === 'occupied').length;
+        
+        // Handle both status formats: 'occupied'/'vacant' and isOccupied boolean
+        const occupiedUnits = units.filter(unit => {
+            if (unit.status) {
+                return unit.status === 'occupied';
+            } else if (unit.isOccupied !== undefined) {
+                return unit.isOccupied === true;
+            }
+            return false;
+        }).length;
+        
         const vacantUnits = totalUnits - occupiedUnits;
         const occupancyRate = totalUnits > 0 ? Math.round((occupiedUnits / totalUnits) * 100) : 0;
         
@@ -636,16 +673,30 @@ router.get('/dashboard/stats', authenticateToken, async (req, res) => {
             return endDate.toDateString() === todayStr;
         });
         
-        // Calculate total revenue
+        // Calculate total revenue - handle both status formats
         const totalRevenue = units
-            .filter(unit => unit.status === 'occupied')
-            .reduce((sum, unit) => sum + (unit.monthlyRent || 0), 0);
+            .filter(unit => {
+                if (unit.status) {
+                    return unit.status === 'occupied';
+                } else if (unit.isOccupied !== undefined) {
+                    return unit.isOccupied === true;
+                }
+                return false;
+            })
+            .reduce((sum, unit) => {
+                const rent = unit.monthlyRent;
+                // Handle Decimal128 type
+                const rentValue = rent && typeof rent === 'object' && rent.$numberDecimal 
+                    ? parseFloat(rent.$numberDecimal) 
+                    : (rent || 0);
+                return sum + rentValue;
+            }, 0);
         
         // Prepare response
         const stats = {
             properties: {
                 total: totalProperties,
-                addresses: properties.map(p => p.address)
+                addresses: properties.map(p => p.name || p.address || 'Unknown Property')
             },
             units: {
                 total: totalUnits,
@@ -653,13 +704,33 @@ router.get('/dashboard/stats', authenticateToken, async (req, res) => {
                 vacant: vacantUnits,
                 occupancyRate: occupancyRate,
                 totalRevenue: totalRevenue,
-                details: units.map(unit => ({
-                    _id: unit._id,
-                    unitNumber: unit.unitNumber,
-                    status: unit.status,
-                    monthlyRent: unit.monthlyRent,
-                    property: unit.propertyID?.address
-                }))
+                details: units.map(unit => {
+                    // Get property reference from either field
+                    const propertyRef = unit.propertyID || unit.property;
+                    const propertyName = propertyRef?.name || propertyRef?.address || 'Unknown Property';
+                    
+                    // Get status from either field
+                    let unitStatus = 'vacant';
+                    if (unit.status) {
+                        unitStatus = unit.status;
+                    } else if (unit.isOccupied !== undefined) {
+                        unitStatus = unit.isOccupied ? 'occupied' : 'vacant';
+                    }
+                    
+                    // Handle monthlyRent (might be Decimal128)
+                    const rent = unit.monthlyRent;
+                    const rentValue = rent && typeof rent === 'object' && rent.$numberDecimal 
+                        ? parseFloat(rent.$numberDecimal) 
+                        : (rent || 0);
+                    
+                    return {
+                        _id: unit._id,
+                        unitNumber: unit.unitNumber,
+                        status: unitStatus,
+                        monthlyRent: rentValue,
+                        property: propertyName
+                    };
+                })
             },
             serviceRequests: {
                 total: userServiceRequests.length,
@@ -670,15 +741,21 @@ router.get('/dashboard/stats', authenticateToken, async (req, res) => {
                     const updatedDate = new Date(sr.updatedAt || sr.createdAt);
                     return updatedDate.toDateString() === today.toDateString();
                 }).length,
-                recent: userServiceRequests.slice(0, 5).map(sr => ({
-                    _id: sr._id,
-                    description: sr.description,
-                    status: sr.status,
-                    tenant: sr.userID ? `${sr.userID.firstName} ${sr.userID.lastName}` : 'Unknown',
-                    unit: sr.unitID?.unitNumber,
-                    property: sr.unitID?.propertyID?.address,
-                    requestDate: sr.requestDate
-                }))
+                recent: userServiceRequests.slice(0, 5).map(sr => {
+                    // Handle both property field formats
+                    const unitPropertyRef = sr.unitID?.propertyID || sr.unitID?.property;
+                    const propertyName = unitPropertyRef?.name || unitPropertyRef?.address || 'Unknown Property';
+                    
+                    return {
+                        _id: sr._id,
+                        description: sr.description,
+                        status: sr.status,
+                        tenant: sr.userID ? `${sr.userID.firstName} ${sr.userID.lastName}` : 'Unknown',
+                        unit: sr.unitID?.unitNumber,
+                        property: propertyName,
+                        requestDate: sr.requestDate
+                    };
+                })
             },
             applications: {
                 total: userApplications.length,
@@ -690,20 +767,32 @@ router.get('/dashboard/stats', authenticateToken, async (req, res) => {
                 total: userLeases.length,
                 endingSoon: leasesEndingSoon.length,
                 endingToday: leasesEndingToday.length,
-                endingSoonDetails: leasesEndingSoon.map(lease => ({
-                    _id: lease._id,
-                    tenant: `${lease.userID.firstName} ${lease.userID.lastName}`,
-                    unit: lease.unitID.unitNumber,
-                    property: lease.unitID.propertyID.address,
-                    endDate: lease.endDate
-                })),
-                endingTodayDetails: leasesEndingToday.map(lease => ({
-                    _id: lease._id,
-                    tenant: `${lease.userID.firstName} ${lease.userID.lastName}`,
-                    unit: lease.unitID.unitNumber,
-                    property: lease.unitID.propertyID.address,
-                    endDate: lease.endDate
-                }))
+                endingSoonDetails: leasesEndingSoon.map(lease => {
+                    // Handle both property field formats
+                    const unitPropertyRef = lease.unitID.propertyID || lease.unitID.property;
+                    const propertyName = unitPropertyRef?.name || unitPropertyRef?.address || 'Unknown Property';
+                    
+                    return {
+                        _id: lease._id,
+                        tenant: `${lease.userID.firstName} ${lease.userID.lastName}`,
+                        unit: lease.unitID.unitNumber,
+                        property: propertyName,
+                        endDate: lease.endDate
+                    };
+                }),
+                endingTodayDetails: leasesEndingToday.map(lease => {
+                    // Handle both property field formats
+                    const unitPropertyRef = lease.unitID.propertyID || lease.unitID.property;
+                    const propertyName = unitPropertyRef?.name || unitPropertyRef?.address || 'Unknown Property';
+                    
+                    return {
+                        _id: lease._id,
+                        tenant: `${lease.userID.firstName} ${lease.userID.lastName}`,
+                        unit: lease.unitID.unitNumber,
+                        property: propertyName,
+                        endDate: lease.endDate
+                    };
+                })
             }
         };
         
