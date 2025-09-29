@@ -3,7 +3,6 @@ import { Card } from './Card';
 import { Header } from './Header';
 import { BuildingsPage as BuildingsTable } from './BuildingsPage';
 import { UnitsPage } from './UnitsPage';
-import { ApplicationsPage } from './ApplicationsPage';
 import { VacantUnitsChart } from './charts/VacantUnitsChart';
 import { RentCollectionChart } from './charts/RentCollectionChart';
 import { HomeIcon, Building, Users, Wrench } from './icons';
@@ -312,9 +311,9 @@ export const BuildingsUnitsDashboard: React.FC<BuildingsUnitsDashboardProps> = (
                 )}
                 
                 {/* Charts Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <Card>
-                        <h3 className="text-lg font-semibold mb-4">Vacant Units by Building</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+                    <Card className="p-6">
+                        <h3 className="text-lg font-semibold mb-6">Vacant Units by Building</h3>
                         {chartData.vacantUnits.length > 0 ? (
                             <VacantUnitsChart data={chartData.vacantUnits} />
                         ) : (
@@ -327,8 +326,8 @@ export const BuildingsUnitsDashboard: React.FC<BuildingsUnitsDashboardProps> = (
                             </div>
                         )}
                     </Card>
-                    <Card>
-                        <h3 className="text-lg font-semibold mb-4">Rent Collection Trends</h3>
+                    <Card className="p-6">
+                        <h3 className="text-lg font-semibold mb-6">Rent Collection Trends</h3>
                         {chartData.rentCollection.length > 0 ? (
                             <RentCollectionChart data={chartData.rentCollection} />
                         ) : (
@@ -400,8 +399,6 @@ export const BuildingsUnitsDashboard: React.FC<BuildingsUnitsDashboardProps> = (
                 return <BuildingsTable onBuildingClick={onBuildingClick} onAddNewBuilding={onAddNewBuilding} />;
             case 'Units':
                 return <UnitsPage setViewingTenantId={setViewingTenantId} onAddNewUnit={onAddNewUnit} />;
-            case 'Applications':
-                return <ApplicationsPage setViewingTenantId={setViewingTenantId} />;
             default:
                 return <OverviewTab />;
         }
@@ -411,7 +408,7 @@ export const BuildingsUnitsDashboard: React.FC<BuildingsUnitsDashboardProps> = (
         <div className="container mx-auto">
             <Header 
                 title="Buildings & Units Dashboard"
-                tabs={['Overview', 'Buildings', 'Units', 'Applications']}
+                tabs={['Overview', 'Buildings', 'Units']}
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
             />
