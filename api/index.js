@@ -18,32 +18,18 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 // Authentication middleware
 function authenticateToken(req, res, next) {
-  console.log('=== AUTHENTICATION DEBUG ===');
-  console.log('Headers:', req.headers);
-  
   const authHeader = req.headers['authorization'];
-  console.log('Auth header:', authHeader);
-  
   const token = authHeader && authHeader.split(' ')[1];
-  console.log('Token:', token ? 'Present' : 'Missing');
   
   if (!token) {
-    console.log('No token provided');
     return res.status(401).json({ error: 'Access token required' });
   }
-  
-  console.log('JWT_SECRET:', JWT_SECRET ? 'Present' : 'Missing');
   
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) {
       console.error('JWT verification error:', err);
-      console.error('Error type:', err.name);
-      console.error('Error message:', err.message);
-      return res.status(403).json({ error: 'Invalid or expired token', details: err.message });
+      return res.status(403).json({ error: 'Invalid or expired token' });
     }
-    console.log('JWT decoded user:', user);
-    console.log('User ID from token:', user.userId);
-    console.log('User ID type:', typeof user.userId);
     req.user = user;
     next();
   });
@@ -1999,13 +1985,351 @@ async function populateTestData(req, res) {
   authenticateToken(req, res, async () => {
     try {
       console.log('Populating Asha Properties test data for user:', req.user.userId);
-      console.log('User object:', req.user);
       
-      // Test basic response first
+      // Create Asha Properties portfolio
+      const properties = await Property.insertMany([
+        {
+          userID: req.user.userId,
+          address: "Lalmatia, Dhaka, Bangladesh",
+          propertyType: "apartment",
+          name: "Lalmatia Court"
+        },
+        {
+          userID: req.user.userId,
+          address: "Banani, Dhaka, Bangladesh", 
+          propertyType: "apartment",
+          name: "Banani Heights"
+        },
+        {
+          userID: req.user.userId,
+          address: "Dhanmondi, Dhaka, Bangladesh",
+          propertyType: "apartment", 
+          name: "Dhanmondi Residency"
+        },
+        {
+          userID: req.user.userId,
+          address: "Uttara, Dhaka, Bangladesh",
+          propertyType: "apartment",
+          name: "Uttara Gardens"
+        }
+      ]);
+      
+      console.log('Created Asha Properties:', properties.length);
+      
+      // Create units for each property
+      const units = [];
+      
+      // Lalmatia Court - 12 units
+      const lalmatiaUnits = ['1A', '2A', '3A', '4A', '1B', '2B', '3B', '4B', '1C', '2C', '3C', '4C'];
+      const lalmatiaOccupancy = [true, false, true, true, true, true, true, true, true, true, true, true]; // 2A is vacant
+      
+      for (let i = 0; i < lalmatiaUnits.length; i++) {
+        const unit = await Unit.create({
+          propertyID: properties[0]._id,
+          unitNumber: lalmatiaUnits[i],
+          bedrooms: 2,
+          bathrooms: 1,
+          rentAmount: 25000,
+          monthlyRent: 25000,
+          size: "900 sq ft",
+          description: `2-bedroom apartment in Lalmatia Court`,
+          isOccupied: lalmatiaOccupancy[i]
+        });
+        units.push(unit);
+      }
+      
+      // Banani Heights - 8 units
+      const bananiUnits = ['1A', '2A', '3A', '4A', '1B', '2B', '3B', '4B'];
+      for (let i = 0; i < bananiUnits.length; i++) {
+        const unit = await Unit.create({
+          propertyID: properties[1]._id,
+          unitNumber: bananiUnits[i],
+          bedrooms: 3,
+          bathrooms: 2,
+          rentAmount: 35000,
+          monthlyRent: 35000,
+          size: "1200 sq ft",
+          description: `3-bedroom apartment in Banani Heights`,
+          isOccupied: true
+        });
+        units.push(unit);
+      }
+      
+      // Dhanmondi Residency - 5 units
+      const dhanmondiUnits = ['1A', '2A', '3A', '4A', '5A'];
+      const dhanmondiOccupancy = [false, true, true, true, true]; // 1A is vacant
+      for (let i = 0; i < dhanmondiUnits.length; i++) {
+        const unit = await Unit.create({
+          propertyID: properties[2]._id,
+          unitNumber: dhanmondiUnits[i],
+          bedrooms: 3,
+          bathrooms: 2,
+          rentAmount: 40000,
+          monthlyRent: 40000,
+          size: "1400 sq ft",
+          description: `3-bedroom apartment in Dhanmondi Residency`,
+          isOccupied: dhanmondiOccupancy[i]
+        });
+        units.push(unit);
+      }
+      
+      // Uttara Gardens - 3 units
+      for (let i = 1; i <= 3; i++) {
+        const unit = await Unit.create({
+          propertyID: properties[3]._id,
+          unitNumber: i.toString(),
+          bedrooms: 2,
+          bathrooms: 1,
+          rentAmount: 30000,
+          monthlyRent: 30000,
+          size: "1000 sq ft",
+          description: `2-bedroom apartment in Uttara Gardens`,
+          isOccupied: true
+        });
+        units.push(unit);
+      }
+      
+      console.log('Created units:', units.length);
+      
+      // Create tenant users based on sample data
+      const bcrypt = require('bcryptjs');
+      const passwordHash = await bcrypt.hash("password123", 10);
+      
+      const tenantNames = [
+        'Farzana Akhter', 'Amrul Hoque', 'Shahriar Karim', 'Tania Akter', 'Imran Chowdhury', 'Sumi Akhter',
+        'Hasan Mahmud', 'Shuvo Islam', 'Maruf Khan', 'Mahin Alam', 'Saima Binte Noor', 'Javed Rahman',
+        'Sadia Hossain', 'Kamal Uddin', 'Mehnaz Sultana', 'Tanvir Ahmed', 'Nasrin Akter', 'Mithun Das',
+        'Zahid Hasan', 'Roksana Begum', 'Shila Rahman', 'Arefin Chowdhury', 'Rezaul Karim', 'Nadia Islam',
+        'Selina Yasmin', 'Abdul Malek', 'Rafsan Chowdhury'
+      ];
+      
+      const tenants = [];
+      for (let i = 0; i < tenantNames.length; i++) {
+        const nameParts = tenantNames[i].split(' ');
+        const firstName = nameParts[0];
+        const lastName = nameParts.slice(1).join(' ');
+        
+        const tenant = await User.create({
+          firstName,
+          lastName,
+          email: `${firstName.toLowerCase()}.${lastName.toLowerCase().replace(' ', '')}@email.com`,
+          phoneNumber: `+880-17${(12345678 + i).toString().slice(-8)}`,
+          role: "tenant",
+          passwordHash
+        });
+        tenants.push(tenant);
+      }
+      
+      console.log('Created tenant users:', tenants.length);
+      
+      // Create lease agreements for occupied units
+      const occupiedUnits = units.filter(unit => unit.isOccupied);
+      const leases = [];
+      
+      // Define lease end dates based on sample data
+      const leaseEndDates = [
+        '2026-01-14', '2026-03-02', '2026-03-03', '2026-05-11', '2026-04-28', '2026-06-17', '2026-02-09',
+        '2025-11-22', '2026-08-15', '2026-07-05', '2025-12-19', '2026-10-03', '2026-09-02', '2026-05-23',
+        '2026-04-11', '2026-03-29', '2026-08-20', '2026-06-08', '2025-12-30', '2026-02-13', '2025-11-09',
+        '2026-01-18', '2026-07-27', '2026-01-12', '2025-10-30', '2026-09-19'
+      ];
+      
+      for (let i = 0; i < Math.min(occupiedUnits.length, tenants.length); i++) {
+        const lease = await LeaseAgreement.create({
+          unitID: occupiedUnits[i]._id,
+          tenantID: tenants[i]._id,
+          startDate: new Date('2024-01-01'),
+          endDate: new Date(leaseEndDates[i] || '2026-01-01'),
+          rentAmount: occupiedUnits[i].rentAmount,
+          securityDeposit: occupiedUnits[i].rentAmount * 2,
+          leaseTerms: "Standard lease agreement"
+        });
+        leases.push(lease);
+      }
+      
+      console.log('Created lease agreements:', leases.length);
+      
+      // Create rental applications from sample applicants
+      const applicantData = [
+        {
+          name: 'Raiyan Rahman',
+          email: 'raiyan.rahman@email.com',
+          phone: '+880-1712345678',
+          dob: '1996-02-02',
+          occupation: 'Software Engineer',
+          employer: 'Grameenphone IT Division',
+          income: 120000,
+          yearsEmployed: 3,
+          rating: 4.8,
+          status: 'pending'
+        },
+        {
+          name: 'Niloy Hossain',
+          email: 'niloy.hossain@email.com',
+          phone: '+880-1798765432',
+          dob: '2001-07-17',
+          occupation: 'Freelance Graphic Designer',
+          employer: 'Self-employed (Upwork/Fiverr)',
+          income: 45000,
+          yearsEmployed: 2,
+          rating: null,
+          status: 'under_review'
+        },
+        {
+          name: 'Arif Mahmud',
+          email: 'arif.mahmud@email.com',
+          phone: '+880-1656789123',
+          dob: '1989-11-11',
+          occupation: 'Senior Accountant',
+          employer: 'BRAC Bank',
+          income: 95000,
+          yearsEmployed: 5,
+          rating: 4.5,
+          status: 'approved'
+        },
+        {
+          name: 'Zarin Tasnim',
+          email: 'zarin.tasnim@email.com',
+          phone: '+880-1534567890',
+          dob: '1993-05-25',
+          occupation: 'Lecturer (Economics)',
+          employer: 'University of Dhaka',
+          income: 70000,
+          yearsEmployed: 4,
+          rating: 4.9,
+          status: 'pending'
+        },
+        {
+          name: 'Ayaan Chowdhury',
+          email: 'ayaan.chowdhury@email.com',
+          phone: '+880-1412345678',
+          dob: '1998-12-04',
+          occupation: 'Junior Doctor (Resident)',
+          employer: 'Square Hospital',
+          income: 65000,
+          yearsEmployed: 1,
+          rating: null,
+          status: 'rejected'
+        }
+      ];
+      
+      // Create applicant users and applications
+      const availableUnits = units.filter(unit => !unit.isOccupied);
+      const applications = [];
+      
+      for (let i = 0; i < Math.min(applicantData.length, availableUnits.length + 2); i++) {
+        const data = applicantData[i];
+        const nameParts = data.name.split(' ');
+        
+        // Create applicant user
+        const applicantUser = await User.create({
+          firstName: nameParts[0],
+          lastName: nameParts.slice(1).join(' '),
+          email: data.email,
+          phoneNumber: data.phone,
+          role: "tenant",
+          passwordHash
+        });
+        
+        // Create rental application
+        const targetUnit = availableUnits[i % availableUnits.length];
+        const application = await RentalApplication.create({
+          applicant: applicantUser._id,
+          unit: targetUnit._id,
+          property: targetUnit.propertyID,
+          desiredMoveInDate: new Date(Date.now() + (15 + i * 5) * 24 * 60 * 60 * 1000),
+          monthlyIncome: data.income,
+          employmentStatus: data.employer.includes('Self-employed') ? 'Self-employed' : 'Full-time employed',
+          previousAddress: `Previous Address ${i + 1}, Dhaka`,
+          references: [`${data.employer}`, `Reference ${i + 1}`],
+          status: data.status,
+          applicationDate: new Date(Date.now() - (i + 1) * 24 * 60 * 60 * 1000),
+          occupation: data.occupation,
+          employer: data.employer,
+          yearsAtEmployer: data.yearsEmployed,
+          previousTenantRating: data.rating
+        });
+        applications.push(application);
+      }
+      
+      console.log('Created rental applications:', applications.length);
+      
+      // Create service requests
+      const serviceRequestsData = [
+        { unitRef: 'Lalmatia Court-4A', title: 'Leak under kitchen sink', desc: 'Tenant reports water pooling under sink; cabinet getting damaged.', date: '2025-09-20', priority: 'high' },
+        { unitRef: 'Lalmatia Court-2B', title: 'Bathroom faucet dripping', desc: 'Constant dripping, wasting water and raising bill.', date: '2025-09-22', priority: 'medium' },
+        { unitRef: 'Lalmatia Court-1C', title: 'AC not cooling properly', desc: 'AC blows warm air even after filter cleaning.', date: '2025-09-19', priority: 'high' },
+        { unitRef: 'Banani Heights-2A', title: 'Electrical outage in living room', desc: 'Circuit breaker keeps tripping, no power in living room.', date: '2025-09-18', priority: 'high' },
+        { unitRef: 'Banani Heights-4A', title: 'Window glass cracked', desc: 'Small crack in bedroom window, risk of shattering.', date: '2025-09-23', priority: 'medium' }
+      ];
+      
+      const serviceRequests = [];
+      for (let i = 0; i < serviceRequestsData.length; i++) {
+        const srData = serviceRequestsData[i];
+        const [propertyName, unitNum] = srData.unitRef.split('-');
+        
+        // Find the corresponding unit and tenant
+        const targetProperty = properties.find(p => p.name === propertyName);
+        const targetUnit = units.find(u => u.propertyID.equals(targetProperty._id) && u.unitNumber === unitNum);
+        const targetLease = leases.find(l => l.unitID.equals(targetUnit._id));
+        
+        if (targetUnit && targetLease) {
+          const serviceRequest = await ServiceRequest.create({
+            requestId: `SR-000${i + 1}`,
+            property: targetProperty._id,
+            unit: targetUnit._id,
+            tenant: targetLease.tenantID,
+            landlord: req.user.userId,
+            title: srData.title,
+            description: srData.desc,
+            status: i === 3 ? 'completed' : (i === 1 ? 'in_progress' : 'pending'),
+            priority: srData.priority,
+            requestDate: new Date(srData.date),
+            createdAt: new Date(),
+            updatedAt: new Date()
+          });
+          serviceRequests.push(serviceRequest);
+        }
+      }
+      
+      console.log('Created service requests:', serviceRequests.length);
+      
+      // Create payment history for active leases
+      const payments = [];
+      for (const lease of leases) {
+        // Create 3 months of payment history
+        for (let month = 0; month < 3; month++) {
+          const paymentDate = new Date();
+          paymentDate.setMonth(paymentDate.getMonth() - month);
+          
+          const payment = await Payment.create({
+            leaseAgreementID: lease._id,
+            amount: lease.rentAmount,
+            paymentDate: paymentDate,
+            dueDate: new Date(paymentDate.getFullYear(), paymentDate.getMonth(), 1),
+            status: month < 2 ? "paid" : "pending",
+            paymentMethod: ["bank_transfer", "mobile_banking", "cash"][month % 3]
+          });
+          payments.push(payment);
+        }
+      }
+      
+      console.log('Created payments:', payments.length);
+      
       res.json({
-        message: 'Authentication successful!',
-        user: req.user,
-        timestamp: new Date().toISOString()
+        message: 'Asha Properties test data populated successfully!',
+        owner: 'Monir Rahman',
+        company: 'Asha Properties',
+        summary: {
+          properties: properties.length,
+          units: units.length,
+          tenants: tenants.length,
+          leaseAgreements: leases.length,
+          rentalApplications: applications.length,
+          serviceRequests: serviceRequests.length,
+          payments: payments.length,
+          occupancyRate: `${Math.round((occupiedUnits.length / units.length) * 100)}%`
+        }
       });
       
     } catch (error) {

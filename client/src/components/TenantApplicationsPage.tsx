@@ -40,8 +40,6 @@ const TenantApplicationsPage: React.FC<TenantApplicationsPageProps> = ({
       setPopulating(true);
       // Use the same token key as the API service
       const token = localStorage.getItem('authToken');
-      console.log('Token from localStorage:', token ? 'Present' : 'Missing');
-      console.log('Token preview:', token ? token.substring(0, 20) + '...' : 'N/A');
       
       const response = await fetch('/api/populate-test-data', {
         method: 'POST',
@@ -51,12 +49,9 @@ const TenantApplicationsPage: React.FC<TenantApplicationsPageProps> = ({
         }
       });
       
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-      
       if (response.ok) {
         const result = await response.json();
-        console.log('Test data populated:', result);
+        console.log('Asha Properties test data populated:', result);
         // Refresh the applications after populating
         window.location.reload();
       } else {
