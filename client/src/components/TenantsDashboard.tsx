@@ -3,7 +3,8 @@ import { Card } from './Card';
 import { Header } from './Header';
 import { 
     TenantDashboardStat, 
-    Tenant, 
+    Tenant,
+    CurrentTenant, 
     RentStatus, 
     QuickViewAction
 } from '../types';
@@ -12,7 +13,7 @@ import { RentStatusChart } from './charts/RentStatusChart';
 import { ChevronRight } from './icons';
 import { CurrentTenantsPage } from './CurrentTenantsPage';
 import { TenantApplicationsPage } from './TenantApplicationsPage';
-import { rentalApplicationsAPI, leaseAgreementsAPI, unitsAPI, propertiesAPI } from '../services/api';
+import { rentalApplicationsAPI, currentTenantsAPI, unitsAPI, propertiesAPI } from '../services/api';
 
 interface TenantsDashboardProps {
   setViewingTenantId: (id: string) => void;
@@ -42,7 +43,7 @@ const RentStatusPill: React.FC<{ status: RentStatus }> = ({ status }) => {
 };
 
 const TenantTable: React.FC<{ 
-  tenants: Tenant[], 
+  tenants: (Tenant | CurrentTenant)[], 
   setViewingTenantId: (id: string) => void,
   onBuildingClick?: (buildingId: string) => void 
 }> = ({ tenants, setViewingTenantId, onBuildingClick }) => (
@@ -53,6 +54,7 @@ const TenantTable: React.FC<{
                     <tr>
                         <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tenant</th>
                         <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Building</th>
+                        <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unit</th>
                         <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lease Progress</th>
                         <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rent Status</th>
                         <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Requests</th>
@@ -82,11 +84,30 @@ const TenantTable: React.FC<{
                                     tenant.building
                                 )}
                             </td>
-                            <td className="px-5 py-3 whitespace-nowrap">
-                                <div className="w-24 bg-gray-200 rounded-full h-2">
-                                    <div className="bg-accent-primary h-2 rounded-full" style={{ width: `${tenant.leaseProgress}%` }}></div>
-                                </div>
+                            <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-500">
+                                {'unit' in tenant ? tenant.unit : 'N/A'}
                             </td>
+                            <td className="px-5 py-3 whitespace-nowrap">
+                                {(() => {
+                                    // Handle both Tenant (number) and CurrentTenant (object) types
+                                    const progressValue = typeof tenant.leaseProgress === 'number' 
+                                        ? tenant.leaseProgress 
+                                        : tenant.leaseProgress.value;
+                                    const progressVariant = typeof tenant.leaseProgress === 'object' 
+                                        ? tenant.leaseProgress.variant 
+                                        : 'light';
+                                    const bgColor = progressVariant === 'dark' ? 'bg-purple-400' : 'bg-purple-300';
+                                    
+                                    return (
+                                        <div className="w-24 bg-gray-200 rounded-full h-2">
+                                            <div 
+                                                className={`${bgColor} h-2 rounded-full`} 
+                                                style={{ width: `${progressValue}%` }}
+                                            ></div>
+                                        </div>
+                                    );
+                                })()
+                            }</td>
                             <td className="px-5 py-3 whitespace-nowrap"><RentStatusPill status={tenant.rentStatus} /></td>
                             <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-500 text-center">{tenant.requests}</td>
                         </tr>
@@ -130,7 +151,7 @@ export const TenantsDashboard: React.FC<TenantsDashboardProps> = ({
   const [activeTab, setActiveTab] = useState('Overview');
   const [currentView, setCurrentView] = useState('dashboard');
   const [dashboardStats, setDashboardStats] = useState<TenantDashboardStat[]>([]);
-  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [tenants, setTenants] = useState<CurrentTenant[]>([]);
   const [vacantUnitsData, setVacantUnitsData] = useState<any[]>([]);
   const [rentStatusData, setRentStatusData] = useState<any[]>([]);
   const [quickActions, setQuickActions] = useState<any[]>([]);
@@ -139,12 +160,22 @@ export const TenantsDashboard: React.FC<TenantsDashboardProps> = ({
     const fetchTenantData = async () => {
       try {
         setLoading(true);
-        const [applications, leases, units, properties] = await Promise.all([
-          rentalApplicationsAPI.getAll(),
-          leaseAgreementsAPI.getAll(),
-          unitsAPI.getAll(),
-          propertiesAPI.getAll()
+        setError(null);
+        
+        // Fetch current tenants using the new API endpoint
+        const [applications, currentTenants, units, properties] = await Promise.all([
+          rentalApplicationsAPI.getAll().catch(() => []),
+          currentTenantsAPI.getAll().catch(() => []),
+          unitsAPI.getAll().catch(() => []),
+          propertiesAPI.getAll().catch(() => [])
         ]);
+
+        console.log('Fetched data:', {
+          applications: applications.length,
+          currentTenants: currentTenants.length,
+          units: units.length,
+          properties: properties.length
+        });
 
         // Calculate stats
         const totalApplications = applications.length;
@@ -154,8 +185,11 @@ export const TenantsDashboard: React.FC<TenantsDashboardProps> = ({
         const occupiedUnits = units.filter((unit: any) => unit.isOccupied).length;
         const vacantUnits = totalUnits - occupiedUnits;
         const occupancyRate = totalUnits > 0 ? Math.round((occupiedUnits / totalUnits) * 100) : 0;
+        
+        // Use current tenants count for more accurate stats
+        const activeTenants = currentTenants.length;
 
-        // Create dashboard stats
+        // Create dashboard stats with real tenant data
         const stats = [
           {
             label: 'Total Applications',
@@ -165,8 +199,8 @@ export const TenantsDashboard: React.FC<TenantsDashboardProps> = ({
             iconColor: 'text-blue-600'
           },
           {
-            label: 'Approved Tenants', 
-            value: approvedApplications.toString(),
+            label: 'Active Tenants', 
+            value: activeTenants.toString(),
             icon: () => null,
             bgColor: 'bg-green-100',
             iconColor: 'text-green-600'
@@ -189,21 +223,8 @@ export const TenantsDashboard: React.FC<TenantsDashboardProps> = ({
         
         setDashboardStats(stats);
 
-        // Transform applications to tenants
-        const tenantsData = applications
-          .filter((app: any) => app.status === 'approved')
-          .map((app: any, index: number) => ({
-            id: app._id,
-            name: app.applicantID?.firstName + ' ' + app.applicantID?.lastName || 'Unknown Tenant',
-            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${app.applicantID?.email || index}`,
-            building: app.unitID?.propertyID?.address?.split(',')[0] || 'Unknown Building',
-            leaseProgress: Math.floor(Math.random() * 100), // Placeholder - calculate actual progress
-            rentStatus: Math.random() > 0.7 ? RentStatus.Overdue : Math.random() > 0.3 ? RentStatus.Paid : RentStatus.Pending,
-            requests: Math.floor(Math.random() * 5),
-            rating: (4 + Math.random()).toFixed(1)
-          }));
-        
-        setTenants(tenantsData);
+        // Use the real current tenants data (no transformation needed)
+        setTenants(currentTenants);
 
         // Create vacant units data by building
         const buildingVacancyData = properties.map((property: any) => {
@@ -220,10 +241,10 @@ export const TenantsDashboard: React.FC<TenantsDashboardProps> = ({
         
         setVacantUnitsData(buildingVacancyData);
 
-        // Create rent status data
-        const paidCount = tenantsData.filter((t: any) => t.rentStatus === RentStatus.Paid).length;
-        const pendingCount = tenantsData.filter((t: any) => t.rentStatus === RentStatus.Pending).length;
-        const overdueCount = tenantsData.filter((t: any) => t.rentStatus === RentStatus.Overdue).length;
+        // Create rent status data using current tenants
+        const paidCount = currentTenants.filter((t: any) => t.rentStatus === RentStatus.Paid).length;
+        const pendingCount = currentTenants.filter((t: any) => t.rentStatus === RentStatus.Pending).length;
+        const overdueCount = currentTenants.filter((t: any) => t.rentStatus === RentStatus.Overdue).length;
         
         const rentData = [
           { name: 'Paid', value: paidCount, color: '#10B981' },
@@ -233,10 +254,10 @@ export const TenantsDashboard: React.FC<TenantsDashboardProps> = ({
         
         setRentStatusData(rentData);
 
-        // Set quick actions (simplified to match existing structure)
+        // Set quick actions with real data
         const actions = [
           { label: 'Applications', value: totalApplications.toString() },
-          { label: 'Active Tenants', value: approvedApplications.toString() },
+          { label: 'Active Tenants', value: activeTenants.toString() },
           { label: 'Overdue', value: overdueCount.toString() },
           { label: 'Vacant Units', value: vacantUnits.toString() }
         ];
