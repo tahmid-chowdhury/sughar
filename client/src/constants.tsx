@@ -80,16 +80,16 @@ export const FINANCIAL_STATS: FinancialStat[] = [
 
 export const RECENT_EXPENSE_DOCS: Document[] = [
   { id: 'EXP001', name: 'Unit 12A Lease Agreement', building: 'BLDG-001', unit: 'A1', type: DocumentType.Lease, uploadDate: '9/15/2025' },
-  { id: 'EXP002', name: 'Gulshan Towers Water Bill', building: 'BLDG-004', unit: 'A7', type: DocumentType.Utilities, uploadDate: '8/26/2025' },
-  { id: 'EXP003', name: 'Shakti Pest Svcs Contract', building: 'BLDG-0023', unit: 'B2', type: DocumentType.Service, uploadDate: '9/31/2025' },
-  { id: 'EXP004', name: 'Jamuna Palaces Income Statement', building: 'BLDG-0014', unit: 'B9', type: DocumentType.Income, uploadDate: '9/14/2025' },
-  { id: 'EXP005', name: 'City Lights Plumbing Service Invoice', building: 'BLDG-0012', unit: 'D1', type: DocumentType.Service, uploadDate: '9/28/2025' },
+  { id: 'EXP002', name: 'Uttara Gardens Water Bill', building: 'BLDG-004', unit: 'A7', type: DocumentType.Utilities, uploadDate: '8/26/2025' },
+  { id: 'EXP003', name: 'Dhanmondi Residency Pest Svcs Contract', building: 'BLDG-0003', unit: 'B2', type: DocumentType.Service, uploadDate: '9/31/2025' },
+  { id: 'EXP004', name: 'Uttara Gardens Income Statement', building: 'BLDG-0004', unit: 'B9', type: DocumentType.Income, uploadDate: '9/14/2025' },
+  { id: 'EXP005', name: 'City Lights Plumbing Service Invoice', building: 'BLDG-0004', unit: 'D1', type: DocumentType.Service, uploadDate: '9/28/2025' },
 ];
 
 export const RECENT_INCOME_DOCS: Document[] = [
   { id: 'INC001', name: 'Unit A1 Rent Payment', building: 'BLDG-001', unit: 'A1', type: DocumentType.Income, uploadDate: '9/15/2025' },
   { id: 'INC002', name: 'Unit A2 Rent Payment', building: 'BLDG-001', unit: 'A2', type: DocumentType.Income, uploadDate: '9/15/2025' },
-  { id: 'INC003', name: 'Gulshan Towers Income Statement', building: 'BLDG-004', unit: '---', type: DocumentType.Income, uploadDate: '9/14/2025' },
+  { id: 'INC003', name: 'Uttara Gardens Income Statement', building: 'BLDG-004', unit: '---', type: DocumentType.Income, uploadDate: '9/14/2025' },
   { id: 'INC004', name: 'Dhaka Deluxe Income Statement', building: 'BLDG-003', unit: '---', type: DocumentType.Income, uploadDate: '9/14/2025' },
 ];
 
@@ -116,30 +116,30 @@ export const MONTHLY_REVENUE_DATA: RevenueData[] = [
 ];
 
 export const BUILDING_STATS: BuildingStat[] = [
-  { label: 'Total Buildings', value: '125', icon: HomeIcon, iconBgColor: 'bg-red-100', iconColor: 'text-red-600' },
-  { label: 'Total Units', value: '1,050', icon: HomeIcon, iconBgColor: 'bg-orange-100', iconColor: 'text-orange-600' },
-  { label: 'Occupied Units', value: '850', icon: Check, iconBgColor: 'bg-yellow-100', iconColor: 'text-yellow-600' },
-  { label: 'Vacant Units', value: '200', icon: X, iconBgColor: 'bg-green-100', iconColor: 'text-green-600' },
-  { label: 'Service Requests', value: '120', icon: Settings, iconBgColor: 'bg-blue-100', iconColor: 'text-blue-600' },
+  { label: 'Total Buildings', value: '4', icon: HomeIcon, iconBgColor: 'bg-red-100', iconColor: 'text-red-600' },
+  { label: 'Total Units', value: '28', icon: HomeIcon, iconBgColor: 'bg-orange-100', iconColor: 'text-orange-600' },
+  { label: 'Occupied Units', value: '26', icon: Check, iconBgColor: 'bg-yellow-100', iconColor: 'text-yellow-600' },
+  { label: 'Vacant Units', value: '2', icon: X, iconBgColor: 'bg-green-100', iconColor: 'text-green-600' },
+  { label: 'Service Requests', value: '9', icon: Settings, iconBgColor: 'bg-blue-100', iconColor: 'text-blue-600' },
 ];
 
 export const VACANT_UNITS_BY_BUILDING_DATA: VacantUnit[] = [
-    { name: '1', vacant: 32 }, { name: '2', vacant: 20 }, { name: '3', vacant: 40 },
-    { name: '4', vacant: 60 }, { name: '5', vacant: 52 }, { name: '6', vacant: 70 },
-    { name: '7', vacant: 33 }, { name: '8', vacant: 82 }, { name: '9', vacant: 75 },
-    { name: '10', vacant: 51 }, { name: '11', vacant: 35 }, { name: '12', vacant: 50 },
+    { name: 'Lalmatia Court', vacant: 1 },
+    { name: 'Banani Heights', vacant: 0 },
+    { name: 'Dhanmondi Residency', vacant: 1 },
+    { name: 'Uttara Gardens', vacant: 0 },
 ];
 
 export const OCCUPANCY_DATA: Occupancy[] = [
-    { name: 'Occupied', value: 85 },
-    { name: 'Vacant', value: 15 },
+    { name: 'Occupied', value: 93 },
+    { name: 'Vacant', value: 7 },
 ];
 
 export const BUILDINGS_TABLE_DATA: BuildingInfo[] = [
-    { id: 'B1', name: 'Bosundhara Complex', totalUnits: 15, vacantUnits: 3, activeRequests: 8 },
-    { id: 'B2', name: 'Gulshan Towers', totalUnits: 26, vacantUnits: 10, activeRequests: 10 },
-    { id: 'B3', name: 'Bijoy Estates', totalUnits: 18, vacantUnits: 5, activeRequests: 6 },
-    { id: 'B4', name: 'Dhaka District 1 Highrise', totalUnits: 45, vacantUnits: 15, activeRequests: 21 },
+    { id: 'B1', name: 'Lalmatia Court', totalUnits: 12, vacantUnits: 1, activeRequests: 3 },
+    { id: 'B2', name: 'Banani Heights', totalUnits: 8, vacantUnits: 0, activeRequests: 3 },
+    { id: 'B3', name: 'Dhanmondi Residency', totalUnits: 5, vacantUnits: 1, activeRequests: 2 },
+    { id: 'B4', name: 'Uttara Gardens', totalUnits: 3, vacantUnits: 0, activeRequests: 1 },
 ];
 
 export const RENT_COLLECTION_DATA: RentCollection[] = [
@@ -154,44 +154,56 @@ export const RENT_COLLECTION_DATA: RentCollection[] = [
 const generateAvatar = () => `https://i.pravatar.cc/40?u=${Math.random()}`;
 
 export const BUILDING_NAMES: { [key: string]: string } = {
-    'BLDG-001': 'Bosundhara Suites A1',
-    'BLDG-002': 'Gulshan Towers',
-    'BLDG-003': 'Bijoy Estates',
-    'BLDG-004': 'Dhaka District 1 Highrise',
+    'BLDG-001': 'Lalmatia Court',
+    'BLDG-002': 'Banani Heights',
+    'BLDG-003': 'Dhanmondi Residency',
+    'BLDG-004': 'Uttara Gardens',
 };
 
 
 export const BUILDINGS_PAGE_DATA: BuildingDetail[] = [
-    { id: 'BLDG-001', category: BuildingCategory.Luxury, totalUnits: 15, vacantUnits: 5, requests: 8, occupation: 66, rentCollection: 84, contact: { name: 'Arif Hossain', avatar: generateAvatar() } },
-    { id: 'BLDG-002', category: BuildingCategory.Luxury, totalUnits: 26, vacantUnits: 14, requests: 10, occupation: 46, rentCollection: 96, contact: { name: 'Shariful Islam', avatar: generateAvatar() } },
-    { id: 'BLDG-003', category: BuildingCategory.Standard, totalUnits: 18, vacantUnits: 7, requests: 6, occupation: 61, rentCollection: 45, contact: { name: 'Rafiqul Karim', avatar: generateAvatar() } },
-    { id: 'BLDG-004', category: BuildingCategory.MidRange, totalUnits: 45, vacantUnits: 12, requests: 21, occupation: 73, rentCollection: 80, contact: { name: 'Tamim Ahmed', avatar: generateAvatar() } },
-    { id: 'BLDG-002', category: BuildingCategory.MidRange, totalUnits: 15, vacantUnits: 4, requests: 8, occupation: 73, rentCollection: 75, contact: { name: 'Kamal Uddin', avatar: generateAvatar() } },
-    { id: 'BLDG-002', category: BuildingCategory.Luxury, totalUnits: 26, vacantUnits: 8, requests: 10, occupation: 69, rentCollection: 89, contact: { name: 'Faridul Haque', avatar: generateAvatar() } },
+    { id: 'BLDG-001', name: 'Lalmatia Court', address: 'Lalmatia, Dhaka', category: BuildingCategory.Standard, totalUnits: 12, vacantUnits: 1, requests: 3, occupationPercentage: 92, rentCollectionPercentage: 88, assignedContact: { name: 'Arif Hossain', avatar: generateAvatar() } },
+    { id: 'BLDG-002', name: 'Banani Heights', address: 'Banani, Dhaka', category: BuildingCategory.MidRange, totalUnits: 8, vacantUnits: 0, requests: 3, occupationPercentage: 100, rentCollectionPercentage: 95, assignedContact: { name: 'Shariful Islam', avatar: generateAvatar() } },
+    { id: 'BLDG-003', name: 'Dhanmondi Residency', address: 'Dhanmondi, Dhaka', category: BuildingCategory.Luxury, totalUnits: 5, vacantUnits: 1, requests: 2, occupationPercentage: 80, rentCollectionPercentage: 90, assignedContact: { name: 'Rafiqul Karim', avatar: generateAvatar() } },
+    { id: 'BLDG-004', name: 'Uttara Gardens', address: 'Uttara, Dhaka', category: BuildingCategory.Luxury, totalUnits: 3, vacantUnits: 0, requests: 1, occupationPercentage: 100, rentCollectionPercentage: 100, assignedContact: { name: 'Tamim Ahmed', avatar: generateAvatar() } },
 ];
 
 export const UNITS_PAGE_DATA: UnitDetail[] = [
-    { buildingId: 'BLDG-001', unitNumber: 'A1', category: BuildingCategory.Luxury, monthlyRent: 95000, status: UnitStatus.Rented, tenant: { id: 'T001', name: 'Arif Hossain', avatar: generateAvatar() }, rentStatus: RentStatus.Paid, leaseStartDate: '10/10/2024', leaseEndDate: '10/10/2025', requests: 8 },
-    { buildingId: 'BLDG-001', unitNumber: 'A2', category: BuildingCategory.Luxury, monthlyRent: 120000, status: UnitStatus.Rented, tenant: { id: 'T002', name: 'Shariful Islam', avatar: generateAvatar() }, rentStatus: RentStatus.Paid, leaseStartDate: '10/15/2024', leaseEndDate: '10/15/2025', requests: 10 },
-    { buildingId: 'BLDG-001', unitNumber: 'A3', category: BuildingCategory.Standard, monthlyRent: 11000, status: UnitStatus.Vacant, tenant: null, rentStatus: null, leaseStartDate: null, leaseEndDate: null, requests: 6 },
-    { buildingId: 'BLDG-001', unitNumber: 'A4', category: BuildingCategory.MidRange, monthlyRent: 30000, status: UnitStatus.Vacant, tenant: null, rentStatus: null, leaseStartDate: null, leaseEndDate: null, requests: 21 },
-    { buildingId: 'BLDG-001', unitNumber: 'A5', category: BuildingCategory.MidRange, monthlyRent: 55000, status: UnitStatus.Vacant, tenant: null, rentStatus: null, leaseStartDate: null, leaseEndDate: null, requests: 8 },
-    { buildingId: 'BLDG-001', unitNumber: 'A6', category: BuildingCategory.Luxury, monthlyRent: 89000, status: UnitStatus.Rented, tenant: { id: 'T006', name: 'Faridul Haque', avatar: generateAvatar() }, rentStatus: RentStatus.Overdue, leaseStartDate: '9/26/2024', leaseEndDate: '9/26/2025', requests: 10 },
-    { buildingId: 'BLDG-001', unitNumber: 'A7', category: BuildingCategory.Luxury, monthlyRent: 145000, status: UnitStatus.Rented, tenant: { id: 'T007', name: 'Jahid Hasan', avatar: generateAvatar() }, rentStatus: RentStatus.Pending, leaseStartDate: '9/31/2024', leaseEndDate: '9/31/2025', requests: 6 },
-    { buildingId: 'BLDG-001', unitNumber: 'A8', category: BuildingCategory.Luxury, monthlyRent: 138000, status: UnitStatus.Rented, tenant: { id: 'T008', name: 'Monir Rahman', avatar: generateAvatar() }, rentStatus: RentStatus.Paid, leaseStartDate: '11/14/2024', leaseEndDate: '11/14/2025', requests: 21 },
-    { buildingId: 'BLDG-001', unitNumber: 'A9', category: BuildingCategory.MidRange, monthlyRent: 42000, status: UnitStatus.Rented, tenant: { id: 'T009', name: 'Nusrat Jahan', avatar: generateAvatar() }, rentStatus: RentStatus.Paid, leaseStartDate: '11/23/2024', leaseEndDate: '11/23/2025', requests: 8 },
-    { buildingId: 'BLDG-001', unitNumber: 'A10', category: BuildingCategory.Standard, monthlyRent: 16000, status: UnitStatus.Vacant, tenant: null, rentStatus: null, leaseStartDate: null, leaseEndDate: null, requests: 10 },
-    { buildingId: 'BLDG-001', unitNumber: 'B1', category: BuildingCategory.MidRange, monthlyRent: 30000, status: UnitStatus.Rented, tenant: { id: 'radhika-islam', name: 'Radhika Islam', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=200&auto=format&fit=crop' }, rentStatus: RentStatus.Paid, leaseStartDate: '10/01/2024', leaseEndDate: '10/01/2025', requests: 2 },
-    { buildingId: 'BLDG-001', unitNumber: 'B2', category: BuildingCategory.Luxury, monthlyRent: 165000, status: UnitStatus.Rented, tenant: { id: 'T012', name: 'Fatema Khatun', avatar: generateAvatar() }, rentStatus: RentStatus.Pending, leaseStartDate: '12/14/2024', leaseEndDate: '12/14/2025', requests: 21 },
-    { buildingId: 'BLDG-001', unitNumber: 'B3', category: BuildingCategory.MidRange, monthlyRent: 29000, status: UnitStatus.Vacant, tenant: null, rentStatus: null, leaseStartDate: null, leaseEndDate: null, requests: 8 },
-    { buildingId: 'BLDG-001', unitNumber: 'B4', category: BuildingCategory.Luxury, monthlyRent: 180000, status: UnitStatus.Rented, tenant: { id: 'T014', name: 'Maliha Sultana', avatar: generateAvatar() }, rentStatus: RentStatus.Paid, leaseStartDate: '12/24/2024', leaseEndDate: '12/24/2025', requests: 10 },
-    { buildingId: 'BLDG-001', unitNumber: 'B5', category: BuildingCategory.MidRange, monthlyRent: 40000, status: UnitStatus.Vacant, tenant: null, rentStatus: null, leaseStartDate: null, leaseEndDate: null, requests: 6 },
-    { buildingId: 'BLDG-001', unitNumber: 'B6', category: BuildingCategory.MidRange, monthlyRent: 42000, status: UnitStatus.Vacant, tenant: null, rentStatus: null, leaseStartDate: null, leaseEndDate: null, requests: 21 },
+    // Building 1 – Lalmatia Court (12 Units)
+    { id: 'U001', buildingId: 'BLDG-001', unitNumber: '1A', category: BuildingCategory.Standard, bedrooms: 2, bathrooms: 1, sqft: 850, rent: 25000, monthlyRent: 25000, status: UnitStatus.Rented, tenant: { id: 'T001', name: 'Farzana Akhter', avatar: 'https://ui-avatars.com/api/?name=Farzana+Akhter&background=random' }, rentStatus: RentStatus.Paid, leaseStartDate: '7/14/2025', leaseEndDate: '1/14/2026', requests: 0 },
+    { id: 'U002', buildingId: 'BLDG-001', unitNumber: '2A', category: BuildingCategory.Standard, bedrooms: 2, bathrooms: 1, sqft: 850, rent: 25000, monthlyRent: 25000, status: UnitStatus.Vacant, tenant: { id: 'T002', name: 'Amrul Hoque', avatar: 'https://ui-avatars.com/api/?name=Amrul+Hoque&background=random' }, rentStatus: null, leaseStartDate: '3/1/2025', leaseEndDate: '9/29/2025', requests: 0 },
+    { id: 'U003', buildingId: 'BLDG-001', unitNumber: '3A', category: BuildingCategory.Standard, bedrooms: 2, bathrooms: 1, sqft: 850, rent: 25000, monthlyRent: 25000, status: UnitStatus.Rented, tenant: { id: 'T003', name: 'Shahriar Karim', avatar: 'https://ui-avatars.com/api/?name=Shahriar+Karim&background=random' }, rentStatus: RentStatus.Paid, leaseStartDate: '9/2/2025', leaseEndDate: '3/2/2026', requests: 0 },
+    { id: 'U004', buildingId: 'BLDG-001', unitNumber: '4A', category: BuildingCategory.Standard, bedrooms: 2, bathrooms: 1, sqft: 850, rent: 25000, monthlyRent: 25000, status: UnitStatus.Rented, tenant: { id: 'T004', name: 'Tania Akter', avatar: 'https://ui-avatars.com/api/?name=Tania+Akter&background=random' }, rentStatus: RentStatus.Pending, leaseStartDate: '9/3/2025', leaseEndDate: '3/3/2026', requests: 1 },
+    { id: 'U005', buildingId: 'BLDG-001', unitNumber: '1B', category: BuildingCategory.Standard, bedrooms: 2, bathrooms: 1, sqft: 850, rent: 25000, monthlyRent: 25000, status: UnitStatus.Rented, tenant: { id: 'T005', name: 'Imran Chowdhury', avatar: 'https://ui-avatars.com/api/?name=Imran+Chowdhury&background=random' }, rentStatus: RentStatus.Paid, leaseStartDate: '11/11/2025', leaseEndDate: '5/11/2026', requests: 0 },
+    { id: 'U006', buildingId: 'BLDG-001', unitNumber: '2B', category: BuildingCategory.Standard, bedrooms: 2, bathrooms: 1, sqft: 850, rent: 25000, monthlyRent: 25000, status: UnitStatus.Rented, tenant: { id: 'T006', name: 'Sumi Akhter', avatar: 'https://ui-avatars.com/api/?name=Sumi+Akhter&background=random' }, rentStatus: RentStatus.Overdue, leaseStartDate: '10/28/2025', leaseEndDate: '4/28/2026', requests: 1 },
+    { id: 'U007', buildingId: 'BLDG-001', unitNumber: '3B', category: BuildingCategory.Standard, bedrooms: 2, bathrooms: 1, sqft: 850, rent: 25000, monthlyRent: 25000, status: UnitStatus.Rented, tenant: { id: 'T007', name: 'Hasan Mahmud', avatar: 'https://ui-avatars.com/api/?name=Hasan+Mahmud&background=random' }, rentStatus: RentStatus.Paid, leaseStartDate: '12/17/2025', leaseEndDate: '6/17/2026', requests: 0 },
+    { id: 'U008', buildingId: 'BLDG-001', unitNumber: '4B', category: BuildingCategory.Standard, bedrooms: 2, bathrooms: 1, sqft: 850, rent: 25000, monthlyRent: 25000, status: UnitStatus.Rented, tenant: { id: 'T008', name: 'Shuvo Islam', avatar: 'https://ui-avatars.com/api/?name=Shuvo+Islam&background=random' }, rentStatus: RentStatus.Paid, leaseStartDate: '8/9/2025', leaseEndDate: '2/9/2026', requests: 0 },
+    { id: 'U009', buildingId: 'BLDG-001', unitNumber: '1C', category: BuildingCategory.Standard, bedrooms: 2, bathrooms: 1, sqft: 850, rent: 25000, monthlyRent: 25000, status: UnitStatus.Rented, tenant: { id: 'T009', name: 'Maruf Khan', avatar: 'https://ui-avatars.com/api/?name=Maruf+Khan&background=random' }, rentStatus: RentStatus.Paid, leaseStartDate: '5/22/2025', leaseEndDate: '11/22/2025', requests: 1 },
+    { id: 'U010', buildingId: 'BLDG-001', unitNumber: '2C', category: BuildingCategory.Standard, bedrooms: 2, bathrooms: 1, sqft: 850, rent: 25000, monthlyRent: 25000, status: UnitStatus.Rented, tenant: { id: 'T010', name: 'Mahin Alam', avatar: 'https://ui-avatars.com/api/?name=Mahin+Alam&background=random' }, rentStatus: RentStatus.Paid, leaseStartDate: '2/15/2025', leaseEndDate: '8/15/2026', requests: 0 },
+    { id: 'U011', buildingId: 'BLDG-001', unitNumber: '3C', category: BuildingCategory.Standard, bedrooms: 2, bathrooms: 1, sqft: 850, rent: 25000, monthlyRent: 25000, status: UnitStatus.Rented, tenant: { id: 'T011', name: 'Saima Binte Noor', avatar: 'https://ui-avatars.com/api/?name=Saima+Binte+Noor&background=random' }, rentStatus: RentStatus.Paid, leaseStartDate: '1/5/2025', leaseEndDate: '7/5/2026', requests: 0 },
+    { id: 'U012', buildingId: 'BLDG-001', unitNumber: '4C', category: BuildingCategory.Standard, bedrooms: 2, bathrooms: 1, sqft: 850, rent: 25000, monthlyRent: 25000, status: UnitStatus.Rented, tenant: { id: 'T012', name: 'Javed Rahman', avatar: 'https://ui-avatars.com/api/?name=Javed+Rahman&background=random' }, rentStatus: RentStatus.Pending, leaseStartDate: '6/19/2025', leaseEndDate: '12/19/2025', requests: 0 },
     
-    // Some data for other buildings
-    { buildingId: 'BLDG-002', unitNumber: 'C1', category: BuildingCategory.MidRange, monthlyRent: 55000, status: UnitStatus.Rented, tenant: { id: 'T017', name: 'Kamal Uddin', avatar: generateAvatar() }, rentStatus: RentStatus.Paid, leaseStartDate: '9/20/2024', leaseEndDate: '9/20/2025', requests: 8 },
-    { buildingId: 'BLDG-002', unitNumber: 'C2', category: BuildingCategory.Luxury, monthlyRent: 89000, status: UnitStatus.Rented, tenant: { id: 'T018', name: 'Faridul Haque', avatar: generateAvatar() }, rentStatus: RentStatus.Overdue, leaseStartDate: '9/26/2024', leaseEndDate: '9/26/2025', requests: 10 },
-    { buildingId: 'BLDG-004', unitNumber: 'D1', category: BuildingCategory.Luxury, monthlyRent: 145000, status: UnitStatus.Rented, tenant: { id: 'T019', name: 'Jahid Hasan', avatar: generateAvatar() }, rentStatus: RentStatus.Pending, leaseStartDate: '9/31/2024', leaseEndDate: '9/31/2025', requests: 6 },
+    // Building 2 – Banani Heights (8 Units)
+    { id: 'U013', buildingId: 'BLDG-002', unitNumber: '1A', category: BuildingCategory.MidRange, bedrooms: 3, bathrooms: 2, sqft: 1100, rent: 35000, monthlyRent: 35000, status: UnitStatus.Rented, tenant: { id: 'T013', name: 'Sadia Hossain', avatar: 'https://ui-avatars.com/api/?name=Sadia+Hossain&background=random' }, rentStatus: RentStatus.Paid, leaseStartDate: '4/3/2025', leaseEndDate: '10/3/2026', requests: 0 },
+    { id: 'U014', buildingId: 'BLDG-002', unitNumber: '2A', category: BuildingCategory.MidRange, bedrooms: 3, bathrooms: 2, sqft: 1100, rent: 35000, monthlyRent: 35000, status: UnitStatus.Rented, tenant: { id: 'T014', name: 'Kamal Uddin', avatar: 'https://ui-avatars.com/api/?name=Kamal+Uddin&background=random' }, rentStatus: RentStatus.Paid, leaseStartDate: '3/2/2025', leaseEndDate: '9/2/2026', requests: 1 },
+    { id: 'U015', buildingId: 'BLDG-002', unitNumber: '3A', category: BuildingCategory.MidRange, bedrooms: 3, bathrooms: 2, sqft: 1100, rent: 35000, monthlyRent: 35000, status: UnitStatus.Rented, tenant: { id: 'T015', name: 'Mehnaz Sultana', avatar: 'https://ui-avatars.com/api/?name=Mehnaz+Sultana&background=random' }, rentStatus: RentStatus.Paid, leaseStartDate: '11/23/2025', leaseEndDate: '5/23/2026', requests: 0 },
+    { id: 'U016', buildingId: 'BLDG-002', unitNumber: '4A', category: BuildingCategory.MidRange, bedrooms: 3, bathrooms: 2, sqft: 1100, rent: 35000, monthlyRent: 35000, status: UnitStatus.Rented, tenant: { id: 'T016', name: 'Tanvir Ahmed', avatar: 'https://ui-avatars.com/api/?name=Tanvir+Ahmed&background=random' }, rentStatus: RentStatus.Overdue, leaseStartDate: '10/11/2025', leaseEndDate: '4/11/2026', requests: 1 },
+    { id: 'U017', buildingId: 'BLDG-002', unitNumber: '1B', category: BuildingCategory.MidRange, bedrooms: 3, bathrooms: 2, sqft: 1100, rent: 35000, monthlyRent: 35000, status: UnitStatus.Rented, tenant: { id: 'T017', name: 'Nasrin Akter', avatar: 'https://ui-avatars.com/api/?name=Nasrin+Akter&background=random' }, rentStatus: RentStatus.Paid, leaseStartDate: '9/29/2025', leaseEndDate: '3/29/2026', requests: 0 },
+    { id: 'U018', buildingId: 'BLDG-002', unitNumber: '2B', category: BuildingCategory.MidRange, bedrooms: 3, bathrooms: 2, sqft: 1100, rent: 35000, monthlyRent: 35000, status: UnitStatus.Rented, tenant: { id: 'T018', name: 'Mithun Das', avatar: 'https://ui-avatars.com/api/?name=Mithun+Das&background=random' }, rentStatus: RentStatus.Paid, leaseStartDate: '2/20/2025', leaseEndDate: '8/20/2026', requests: 0 },
+    { id: 'U019', buildingId: 'BLDG-002', unitNumber: '3B', category: BuildingCategory.MidRange, bedrooms: 3, bathrooms: 2, sqft: 1100, rent: 35000, monthlyRent: 35000, status: UnitStatus.Rented, tenant: { id: 'T019', name: 'Zahid Hasan', avatar: 'https://ui-avatars.com/api/?name=Zahid+Hasan&background=random' }, rentStatus: RentStatus.Pending, leaseStartDate: '12/8/2025', leaseEndDate: '6/8/2026', requests: 1 },
+    { id: 'U020', buildingId: 'BLDG-002', unitNumber: '4B', category: BuildingCategory.MidRange, bedrooms: 3, bathrooms: 2, sqft: 1100, rent: 35000, monthlyRent: 35000, status: UnitStatus.Rented, tenant: { id: 'T020', name: 'Roksana Begum', avatar: 'https://ui-avatars.com/api/?name=Roksana+Begum&background=random' }, rentStatus: RentStatus.Paid, leaseStartDate: '6/30/2025', leaseEndDate: '12/30/2025', requests: 0 },
+    
+    // Building 3 – Dhanmondi Residency (5 Units)
+    { id: 'U021', buildingId: 'BLDG-003', unitNumber: '1A', category: BuildingCategory.Luxury, bedrooms: 4, bathrooms: 3, sqft: 1400, rent: 45000, monthlyRent: 45000, status: UnitStatus.Vacant, tenant: null, rentStatus: null, leaseStartDate: null, leaseEndDate: null, requests: 0 },
+    { id: 'U022', buildingId: 'BLDG-003', unitNumber: '2A', category: BuildingCategory.Luxury, bedrooms: 4, bathrooms: 3, sqft: 1400, rent: 45000, monthlyRent: 45000, status: UnitStatus.Rented, tenant: { id: 'T021', name: 'Shila Rahman', avatar: 'https://ui-avatars.com/api/?name=Shila+Rahman&background=random' }, rentStatus: RentStatus.Paid, leaseStartDate: '8/13/2025', leaseEndDate: '2/13/2026', requests: 1 },
+    { id: 'U023', buildingId: 'BLDG-003', unitNumber: '3A', category: BuildingCategory.Luxury, bedrooms: 4, bathrooms: 3, sqft: 1400, rent: 45000, monthlyRent: 45000, status: UnitStatus.Rented, tenant: { id: 'T022', name: 'Arefin Chowdhury', avatar: 'https://ui-avatars.com/api/?name=Arefin+Chowdhury&background=random' }, rentStatus: RentStatus.Paid, leaseStartDate: '5/9/2025', leaseEndDate: '11/9/2025', requests: 0 },
+    { id: 'U024', buildingId: 'BLDG-003', unitNumber: '4A', category: BuildingCategory.Luxury, bedrooms: 4, bathrooms: 3, sqft: 1400, rent: 45000, monthlyRent: 45000, status: UnitStatus.Rented, tenant: { id: 'T023', name: 'Rezaul Karim', avatar: 'https://ui-avatars.com/api/?name=Rezaul+Karim&background=random' }, rentStatus: RentStatus.Overdue, leaseStartDate: '7/18/2025', leaseEndDate: '1/18/2026', requests: 1 },
+    { id: 'U025', buildingId: 'BLDG-003', unitNumber: '5A', category: BuildingCategory.Luxury, bedrooms: 4, bathrooms: 3, sqft: 1400, rent: 45000, monthlyRent: 45000, status: UnitStatus.Rented, tenant: { id: 'T024', name: 'Nadia Islam', avatar: 'https://ui-avatars.com/api/?name=Nadia+Islam&background=random' }, rentStatus: RentStatus.Paid, leaseStartDate: '1/27/2025', leaseEndDate: '7/27/2026', requests: 0 },
+    
+    // Building 4 – Uttara Gardens (3 Units)
+    { id: 'U026', buildingId: 'BLDG-004', unitNumber: '1', category: BuildingCategory.Luxury, bedrooms: 5, bathrooms: 4, sqft: 1800, rent: 60000, monthlyRent: 60000, status: UnitStatus.Rented, tenant: { id: 'T025', name: 'Selina Yasmin', avatar: 'https://ui-avatars.com/api/?name=Selina+Yasmin&background=random' }, rentStatus: RentStatus.Paid, leaseStartDate: '7/12/2025', leaseEndDate: '1/12/2026', requests: 1 },
+    { id: 'U027', buildingId: 'BLDG-004', unitNumber: '2', category: BuildingCategory.Luxury, bedrooms: 5, bathrooms: 4, sqft: 1800, rent: 60000, monthlyRent: 60000, status: UnitStatus.Rented, tenant: { id: 'T026', name: 'Abdul Malek', avatar: 'https://ui-avatars.com/api/?name=Abdul+Malek&background=random' }, rentStatus: RentStatus.Paid, leaseStartDate: '4/30/2025', leaseEndDate: '10/30/2025', requests: 0 },
+    { id: 'U028', buildingId: 'BLDG-004', unitNumber: '3', category: BuildingCategory.Luxury, bedrooms: 5, bathrooms: 4, sqft: 1800, rent: 60000, monthlyRent: 60000, status: UnitStatus.Rented, tenant: { id: 'T027', name: 'Rafsan Chowdhury', avatar: 'https://ui-avatars.com/api/?name=Rafsan+Chowdhury&background=random' }, rentStatus: RentStatus.Paid, leaseStartDate: '3/19/2025', leaseEndDate: '9/19/2026', requests: 0 },
 ];
 
 export const APPLICATIONS_PAGE_DATA: Application[] = [
@@ -216,28 +228,29 @@ export const APPLICATIONS_PAGE_DATA: Application[] = [
     { id: 'APP-0019', tenant: { id: 'T026', name: 'Faisal Chowdhury', avatar: generateAvatar(), rating: 4.6 }, unit: 'C6', buildingId: 'BLDG-001', matchPercentage: 64, submissionDate: '12/24/2025' },
     
     // Data for other buildings
-    { id: 'APP-0020', tenant: { id: 'T030', name: 'John Doe', avatar: generateAvatar(), rating: 4.9 }, unit: 'C1', buildingId: 'BLDG-002', matchPercentage: 88, submissionDate: '10/12/2025' },
-    { id: 'APP-0021', tenant: { id: 'T031', name: 'Jane Smith', avatar: generateAvatar(), rating: 4.1 }, unit: 'D5', buildingId: 'BLDG-004', matchPercentage: 92, submissionDate: '11/05/2025' },
+    { id: 'APP-0020', tenant: { id: 'T030', name: 'John Doe', avatar: generateAvatar(), rating: 4.9 }, unit: '1A', buildingId: 'BLDG-002', matchPercentage: 88, submissionDate: '10/12/2025' },
+    { id: 'APP-0021', tenant: { id: 'T031', name: 'Jane Smith', avatar: generateAvatar(), rating: 4.1 }, unit: '2', buildingId: 'BLDG-004', matchPercentage: 92, submissionDate: '11/05/2025' },
+    { id: 'APP-0022', tenant: { id: 'T032', name: 'Ahmed Hassan', avatar: generateAvatar(), rating: 4.7 }, unit: '2B', buildingId: 'BLDG-002', matchPercentage: 78, submissionDate: '09/22/2025' },
+    { id: 'APP-0023', tenant: { id: 'T033', name: 'Fatima Khatun', avatar: generateAvatar(), rating: 4.3 }, unit: '1A', buildingId: 'BLDG-003', matchPercentage: 91, submissionDate: '09/28/2025' },
+    { id: 'APP-0024', tenant: { id: 'T034', name: 'Mohammad Rahman', avatar: generateAvatar(), rating: 3.9 }, unit: '3C', buildingId: 'BLDG-003', matchPercentage: 45, submissionDate: '09/15/2025' },
 ];
 
 // Mock Data for Specific Building Page (BLDG-001)
 export const SPECIFIC_BUILDING_STATS: SpecificBuildingStat[] = [
-  { label: 'Monthly Rent Roll', value: '111/250K', icon: DollarSign, bgColor: 'bg-green-100', color: 'text-green-600' },
-  { label: 'Total Units', value: '85', icon: HomeIcon, bgColor: 'bg-orange-100', color: 'text-orange-600' },
-  { label: 'Occupied Units', value: '65', icon: Check, bgColor: 'bg-yellow-100', color: 'text-yellow-600' },
-  { label: 'Vacant Units', value: '20', icon: X, bgColor: 'bg-red-100', color: 'text-red-600' },
-  { label: 'Service Requests', value: '105', icon: Settings, bgColor: 'bg-blue-100', color: 'text-blue-600' },
+  { label: 'Monthly Rent Roll', value: '11/12K', icon: DollarSign, bgColor: 'bg-green-100', color: 'text-green-600' },
+  { label: 'Total Units', value: '12', icon: HomeIcon, bgColor: 'bg-orange-100', color: 'text-orange-600' },
+  { label: 'Occupied Units', value: '11', icon: Check, bgColor: 'bg-yellow-100', color: 'text-yellow-600' },
+  { label: 'Vacant Units', value: '1', icon: X, bgColor: 'bg-red-100', color: 'text-red-600' },
+  { label: 'Service Requests', value: '3', icon: Settings, bgColor: 'bg-blue-100', color: 'text-blue-600' },
 ];
 
 export const LEASES_ENDING_SOON_DATA: LeaseEndingSoon[] = [
-    { tenant: { id: 'T020', name: 'Naki Chowdhury', avatar: generateAvatar(), rating: 4.8 }, unit: 'A1', leaseStartDate: '10/10/2024', leaseEndDate: '10/10/2025' },
-    { tenant: { id: 'T021', name: 'Sazia Rahman', avatar: generateAvatar(), rating: 4.5 }, unit: 'A2', leaseStartDate: '10/15/2024', leaseEndDate: '10/15/2025' },
-    { tenant: { id: 'T022', name: 'Abdelaqadir Siraj', avatar: generateAvatar(), rating: 4.2 }, unit: 'A7', leaseStartDate: '9/26/2024', leaseEndDate: '9/26/2025' },
-    { tenant: { id: 'radhika-islam', name: 'Radhika Islam', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=200&auto=format&fit=crop', rating: 4.9 }, unit: 'B2', leaseStartDate: '9/31/2024', leaseEndDate: '9/31/2025' },
-    { tenant: { id: 'T023', name: 'Taki Chowdhury', avatar: generateAvatar(), rating: 3.8 }, unit: 'B9', leaseStartDate: '11/14/2024', leaseEndDate: '11/14/2025' },
-    { tenant: { id: 'T024', name: 'Ohin Chowdhury', avatar: generateAvatar(), rating: 4.4 }, unit: 'C3', leaseStartDate: '11/23/2024', leaseEndDate: '11/23/2025' },
-    { tenant: { id: 'T025', name: 'Famu Chowdhury', avatar: generateAvatar(), rating: 4.1 }, unit: 'C5', leaseStartDate: '12/14/2024', leaseEndDate: '12/14/2025' },
-    { tenant: { id: 'T026', name: 'Faisal Chowdhury', avatar: generateAvatar(), rating: 4.6 }, unit: 'C6', leaseStartDate: '12/24/2024', leaseEndDate: '12/24/2025' },
+    { tenant: { id: 'T002', name: 'Amrul Hoque', avatar: 'https://ui-avatars.com/api/?name=Amrul+Hoque&background=random', rating: 4.0 }, unit: '2A', leaseStartDate: '3/1/2025', leaseEndDate: '9/29/2025' },
+    { tenant: { id: 'T026', name: 'Abdul Malek', avatar: 'https://ui-avatars.com/api/?name=Abdul+Malek&background=random', rating: 4.3 }, unit: '2', leaseStartDate: '4/30/2025', leaseEndDate: '10/30/2025' },
+    { tenant: { id: 'T022', name: 'Arefin Chowdhury', avatar: 'https://ui-avatars.com/api/?name=Arefin+Chowdhury&background=random', rating: 4.2 }, unit: '3A', leaseStartDate: '5/9/2025', leaseEndDate: '11/9/2025' },
+    { tenant: { id: 'T009', name: 'Maruf Khan', avatar: 'https://ui-avatars.com/api/?name=Maruf+Khan&background=random', rating: 4.4 }, unit: '1C', leaseStartDate: '5/22/2025', leaseEndDate: '11/22/2025' },
+    { tenant: { id: 'T012', name: 'Javed Rahman', avatar: 'https://ui-avatars.com/api/?name=Javed+Rahman&background=random', rating: 4.2 }, unit: '4C', leaseStartDate: '6/19/2025', leaseEndDate: '12/19/2025' },
+    { tenant: { id: 'T020', name: 'Roksana Begum', avatar: 'https://ui-avatars.com/api/?name=Roksana+Begum&background=random', rating: 4.0 }, unit: '4B', leaseStartDate: '6/30/2025', leaseEndDate: '12/30/2025' },
 ];
 
 export const OVERDUE_RENT_DATA: OverdueRent[] = [
@@ -253,12 +266,12 @@ export const SPECIFIC_BUILDING_DOCUMENTS_DATA: { [buildingId: string]: Categoriz
             category: 'Leases',
             icon: HomeIcon,
             items: [
-                { name: 'Gulshan Towers Unit 4A Lease', date: 'September 19, 2025' },
-                { name: 'Basundhara Suites - Unit 15B Lease', date: 'September 15, 2025' },
-                { name: 'Dhaka Deluxe - Unit 47F Lease', date: 'September 8, 2025' },
-                { name: 'Gulshan Towers 24D Lease', date: 'September 2, 2025' },
-                { name: 'Basundhara Suites - Unit 56F Lease', date: 'August 19, 2025' },
-                { name: 'Dhaka Deluxe - Unit 21E Lease', date: 'August 15, 2025' },
+                { name: 'Lalmatia Court Unit 4A Lease', date: 'September 19, 2025' },
+                { name: 'Banani Heights - Unit 15B Lease', date: 'September 15, 2025' },
+                { name: 'Dhanmondi Residency - Unit 47F Lease', date: 'September 8, 2025' },
+                { name: 'Lalmatia Court 24D Lease', date: 'September 2, 2025' },
+                { name: 'Banani Heights - Unit 56F Lease', date: 'August 19, 2025' },
+                { name: 'Dhanmondi Residency - Unit 21E Lease', date: 'August 15, 2025' },
             ]
         },
         {
@@ -277,11 +290,11 @@ export const SPECIFIC_BUILDING_DOCUMENTS_DATA: { [buildingId: string]: Categoriz
             category: 'Income / Tax Documents',
             icon: FileText,
             items: [
-                { name: 'Gulshan Towers Income Statement Sept.', date: 'September 19, 2025' },
-                { name: 'Basundhara Suites Income Statement Sept.', date: 'September 15, 2025' },
-                { name: 'Dhaka Deluxe Income Statement Sept.', date: 'September 8, 2025' },
-                { name: 'Dhaka Towers Income Statement Sept.', date: 'September 2, 2025' },
-                { name: 'Jamuna Palaces Income Statement Sept.', date: 'August 19, 2025' },
+                { name: 'Lalmatia Court Income Statement Sept.', date: 'September 19, 2025' },
+                { name: 'Banani Heights Income Statement Sept.', date: 'September 15, 2025' },
+                { name: 'Dhanmondi Residency Income Statement Sept.', date: 'September 8, 2025' },
+                { name: 'Uttara Gardens Income Statement Sept.', date: 'September 2, 2025' },
+                { name: 'Uttara Gardens Income Statement Sept.', date: 'August 19, 2025' },
                 { name: 'Commercial Properties LLC. Income Statement Sept.', date: 'August 15, 2025' },
             ]
         },
@@ -291,7 +304,7 @@ export const SPECIFIC_BUILDING_DOCUMENTS_DATA: { [buildingId: string]: Categoriz
             items: [
                 { name: 'Baraka Svc Contract Invoice', date: 'September 19, 2025' },
                 { name: 'Dhaka Costruction LLC. Invoice', date: 'September 15, 2025' },
-                { name: 'Shakti Trades LLC. Invoice', date: 'September 8, 2025' },
+                { name: 'Dhanmondi Residency Service Invoice', date: 'September 8, 2025' },
                 { name: 'Chowdhury Cement September Invoice', date: 'September 2, 2025' },
                 { name: 'Baraka Power Ltd. Electric Installation Invoice', date: 'August 19, 2025' },
                 { name: 'Mitsubishi HVAC Services LLC.', date: 'August 15, 2025' },
@@ -322,122 +335,438 @@ export const SERVICE_REQUESTS_DATA: ServiceRequest[] = [
 
 // Mock Data for Specific Service Request Page
 export const SPECIFIC_SERVICE_REQUEST_DETAIL_DATA: { [id: string]: SpecificServiceRequestDetail } = {
-    'SR-001': {
-        id: 'SR-00001',
-        title: 'B1 Floor Leak',
-        status: RequestStatus.InProgress,
+    'SR-0001': {
+        id: 'SR-0001',
+        title: 'Leak under kitchen sink',
+        status: RequestStatus.Pending,
         requester: {
-            name: 'Naki Chowdhury',
-            avatar: 'https://i.pravatar.cc/40?u=naki',
-            rating: 4.5
+            name: 'Tania Akter',
+            avatar: 'https://ui-avatars.com/api/?name=Tania+Akter&background=random',
+            rating: 4.8
         },
-        requestDate: '09/12/2025',
-        buildingName: 'Bosundhara Suites A1',
-        category: 'General Repair',
-        priority: 'LOW',
-        description: 'The ceiling is leaking in my apartment, and water is dripping in. I tried containing the water, however the flow is too great. I spoke with the neighbor and it seems their tub is leaking down. This is damaging some of the kitchen cabinetry. Please update on this ASAP!',
+        requestDate: '09/20/2025',
+        buildingName: 'Lalmatia Court - Unit 4A',
+        category: 'Plumbing',
+        priority: 'HIGH',
+        description: 'Tenant reports water pooling under sink; cabinet getting damaged. The leak appears to be coming from the pipe connections and is causing damage to the kitchen cabinetry. Immediate attention required to prevent further property damage.',
         statusUpdates: [
-            { status: 'Request Created', date: '9/12/25' },
-            { status: 'Changed to "In Progress"', date: '9/16/25' }
+            { status: 'Request Created', date: '9/20/25' },
+            { status: 'Priority set to HIGH', date: '9/20/25' }
         ],
         comments: [
-            { sender: { name: 'Naki Chowdhury', avatar: 'https://i.pravatar.cc/40?u=naki' }, message: 'Hello, any update on this? The leak seems to be getting worse.', isSelf: false },
-            { sender: { name: 'Evans', avatar: 'https://picsum.photos/id/237/40/40' }, message: 'Hi Naki, we have a plumber scheduled to visit tomorrow morning between 9-11am. Will that work for you?', isSelf: true },
-            { sender: { name: 'Naki Chowdhury', avatar: 'https://i.pravatar.cc/40?u=naki' }, message: 'Yes, that works. Thank you for the quick response!', isSelf: false },
-            { sender: { name: 'Evans', avatar: 'https://picsum.photos/id/237/40/40' }, message: 'Great, I will confirm with the plumber and let you know if anything changes.', isSelf: true },
+            { sender: { name: 'Tania Akter', avatar: 'https://ui-avatars.com/api/?name=Tania+Akter&background=random' }, message: 'The water is pooling more each day. The cabinet door is starting to warp.', isSelf: false },
+            { sender: { name: 'Property Manager', avatar: 'https://ui-avatars.com/api/?name=PM&background=blue' }, message: 'Thank you for reporting this. We will schedule a plumber to assess the situation.', isSelf: true },
         ],
         media: [
-            { type: 'video', url: 'https://picsum.photos/seed/leak1/800/600' },
-            { type: 'image', url: 'https://picsum.photos/seed/leak2/800/600' },
-            { type: 'image', url: 'https://picsum.photos/seed/leak3/800/600' },
-            { type: 'image', url: 'https://picsum.photos/seed/leak4/800/600' },
-            { type: 'image', url: 'https://picsum.photos/seed/leak5/800/600' },
-            { type: 'image', url: 'https://picsum.photos/seed/leak6/800/600' },
+            { type: 'image', url: 'https://picsum.photos/seed/sink1/800/600' },
+            { type: 'image', url: 'https://picsum.photos/seed/sink2/800/600' },
         ],
         activityLog: [
-            { type: ActivityLogType.Scheduled, title: 'Contractor Scheduled', timestamp: 'Sep. 14, 2025 at 3:00 PM' },
-            { type: ActivityLogType.Arrived, title: 'Contractor Arrived', timestamp: 'Sep. 15, 2025 at 9:00 AM', description: 'Follow-up visit arranged for Sep. 16, 2025 at 9:00 AM' },
-            { type: ActivityLogType.Arrived, title: 'Contractor Arrived', timestamp: 'Sep. 16, 2025 at 9:10 AM', description: 'Performing the finishing touches!' },
-            { type: ActivityLogType.Completed, title: 'Work Completed!', timestamp: 'Sep. 16, 2025 at 2:00 PM', description: 'Work Completed as Planned' }
+            { type: ActivityLogType.Scheduled, title: 'Plumber Scheduled', timestamp: 'Sep. 20, 2025 at 2:00 PM' }
         ],
         requestInfo: {
-            timeOpen: 7,
-            updates: 4,
-            notes: 10,
+            timeOpen: 9,
+            updates: 2,
+            notes: 3,
         },
         notes: [
-            { text: 'Tenant will provide keys to contractor each morning upon arrival!' }
+            { text: 'Tenant available weekdays after 6 PM for repairs' }
         ],
         contactCards: [
             {
                 title: "Tenant's Primary Contact",
-                contacts: [{ name: 'Naki Chowdhury', avatar: 'https://i.pravatar.cc/40?u=naki', rating: 4.5, phone: '+880 1769-567515', email: 'nakichowdhury@sughar.com' }]
-            },
-            {
-                title: "Tenant's Secondary Contact",
-                contacts: [{ name: 'Taki Chowdhury', avatar: 'https://i.pravatar.cc/40?u=taki', rating: 4.5, phone: '+880 1799-567515', email: 'takichowdhury@sughar.com' }]
-            },
-            {
-                title: 'Building / Unit Manager',
-                contacts: [
-                    { name: 'Sonder Shohm', avatar: 'https://i.pravatar.cc/40?u=sonder', rating: 4.5, phone: '+880 2769-567515', email: 'shohm@sughar.com' },
-                    { name: 'Masum Shohm', avatar: 'https://i.pravatar.cc/40?u=masum', rating: 4.5, phone: '+880 2799-567515', email: 'Masum@gmail.com', role: 'Emergency Contact:' }
-                ]
-            },
-            {
-                title: 'Assistant Building Manager',
-                contacts: [
-                    { name: 'Badrul Miah', avatar: 'https://i.pravatar.cc/40?u=badrul', rating: 4.5, phone: '+880 2769-567515', email: 'Badrul@sughar.com' },
-                    { name: 'Mukhtar Miah', avatar: 'https://i.pravatar.cc/40?u=mukhtar-miah', rating: 4.5, phone: '+880 2799-567515', email: 'Mukhtar@gmail.com', role: 'Emergency Contact:' }
-                ]
-            },
-            {
-                title: 'Contracting Company',
-                contacts: [{ name: 'Quick Fix Plumbing', avatar: 'https://i.pravatar.cc/40?u=plumbing', rating: 2.8, phone: '+880 2799-567515', email: 'Mukhtar@gmail.com', id: 'Plumbing Company | CR-00001' }],
-                workScope: 'Leak Containment & Drywalling',
-                date: 'September 31, 2025',
-                projectEtc: 'Project ETC'
-            },
-            {
-                title: 'Primary Contractor',
-                contacts: [{ name: 'Salman Khan', avatar: 'https://i.pravatar.cc/40?u=salman', rating: 3.3, phone: '+880 2799-567515', email: 'Mukhtar@gmail.com', id: 'Employee ID: 1154' }]
+                contacts: [{ name: 'Tania Akter', avatar: 'https://ui-avatars.com/api/?name=Tania+Akter&background=random', rating: 4.8, phone: '+880 1769-567001', email: 'tania.akter@email.com' }]
             }
         ],
         suggestedVendors: [
-            { name: 'Star Contracting', logo: 'star', imageUrl: 'https://images.pexels.com/photos/159306/construction-site-build-construction-work-159306.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&dpr=1', rating: 2.9 },
-            { name: 'Gulshan General', logo: 'G', imageUrl: 'https://images.pexels.com/photos/585419/pexels-photo-585419.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&dpr=1', rating: 2.9 },
-            { name: 'Shakti Construction', logo: 'S', imageUrl: 'https://images.pexels.com/photos/2219024/pexels-photo-2219024.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&dpr=1', rating: 2.9 },
-            { name: 'Ghor General Svcs', logo: 'G', imageUrl: 'https://images.pexels.com/photos/8005398/pexels-photo-8005398.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&dpr=1', rating: 2.9 },
+            { name: 'Dhaka Plumbing Pro', logo: 'D', imageUrl: 'https://images.pexels.com/photos/1216589/pexels-photo-1216589.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&dpr=1', rating: 4.2 }
+        ]
+    },
+    'SR-0002': {
+        id: 'SR-0002',
+        title: 'Bathroom faucet dripping',
+        status: RequestStatus.Pending,
+        requester: {
+            name: 'Sumi Akhter',
+            avatar: 'https://ui-avatars.com/api/?name=Sumi+Akhter&background=random',
+            rating: 4.3
+        },
+        requestDate: '09/22/2025',
+        buildingName: 'Lalmatia Court - Unit 2B',
+        category: 'Plumbing',
+        priority: 'MEDIUM',
+        description: 'Constant dripping, wasting water and raising bill. The faucet has been dripping continuously for the past week, leading to water waste and increased utility costs.',
+        statusUpdates: [
+            { status: 'Request Created', date: '9/22/25' }
+        ],
+        comments: [
+            { sender: { name: 'Sumi Akhter', avatar: 'https://ui-avatars.com/api/?name=Sumi+Akhter&background=random' }, message: 'The dripping is getting worse and keeping me awake at night.', isSelf: false }
+        ],
+        media: [],
+        activityLog: [
+            { type: ActivityLogType.Scheduled, title: 'Maintenance Scheduled', timestamp: 'Sep. 22, 2025 at 4:00 PM' }
+        ],
+        requestInfo: {
+            timeOpen: 7,
+            updates: 1,
+            notes: 2,
+        },
+        notes: [
+            { text: 'Simple faucet repair - should be quick fix' }
+        ],
+        contactCards: [
+            {
+                title: "Tenant's Primary Contact",
+                contacts: [{ name: 'Sumi Akhter', avatar: 'https://ui-avatars.com/api/?name=Sumi+Akhter&background=random', rating: 4.3, phone: '+880 1769-567002', email: 'sumi.akhter@email.com' }]
+            }
+        ],
+        suggestedVendors: [
+            { name: 'Quick Fix Plumbing', logo: 'Q', imageUrl: 'https://images.pexels.com/photos/1216589/pexels-photo-1216589.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&dpr=1', rating: 3.8 }
+        ]
+    },
+    'SR-0003': {
+        id: 'SR-0003',
+        title: 'AC not cooling properly',
+        status: RequestStatus.Pending,
+        requester: {
+            name: 'Maruf Khan',
+            avatar: 'https://ui-avatars.com/api/?name=Maruf+Khan&background=random',
+            rating: 4.4
+        },
+        requestDate: '09/19/2025',
+        buildingName: 'Lalmatia Court - Unit 1C',
+        category: 'HVAC',
+        priority: 'HIGH',
+        description: 'AC blows warm air even after filter cleaning. The air conditioning unit is not providing adequate cooling despite recent filter maintenance. With the current weather, this is affecting tenant comfort significantly.',
+        statusUpdates: [
+            { status: 'Request Created', date: '9/19/25' },
+            { status: 'Priority set to HIGH', date: '9/19/25' }
+        ],
+        comments: [
+            { sender: { name: 'Maruf Khan', avatar: 'https://ui-avatars.com/api/?name=Maruf+Khan&background=random' }, message: 'I already cleaned the filter as suggested, but it is still not cooling.', isSelf: false },
+            { sender: { name: 'Property Manager', avatar: 'https://ui-avatars.com/api/?name=PM&background=blue' }, message: 'We will send an HVAC technician to diagnose the issue.', isSelf: true }
+        ],
+        media: [
+            { type: 'image', url: 'https://picsum.photos/seed/ac1/800/600' }
+        ],
+        activityLog: [
+            { type: ActivityLogType.Scheduled, title: 'HVAC Technician Scheduled', timestamp: 'Sep. 19, 2025 at 3:00 PM' }
+        ],
+        requestInfo: {
+            timeOpen: 10,
+            updates: 2,
+            notes: 4,
+        },
+        notes: [
+            { text: 'Tenant reports filter was cleaned recently' }
+        ],
+        contactCards: [
+            {
+                title: "Tenant's Primary Contact",
+                contacts: [{ name: 'Maruf Khan', avatar: 'https://ui-avatars.com/api/?name=Maruf+Khan&background=random', rating: 4.4, phone: '+880 1769-567003', email: 'maruf.khan@email.com' }]
+            }
+        ],
+        suggestedVendors: [
+            { name: 'Cool Air HVAC', logo: 'C', imageUrl: 'https://images.pexels.com/photos/1216589/pexels-photo-1216589.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&dpr=1', rating: 4.5 }
+        ]
+    },
+    'SR-0004': {
+        id: 'SR-0004',
+        title: 'Electrical outage in living room',
+        status: RequestStatus.InProgress,
+        requester: {
+            name: 'Kamal Uddin',
+            avatar: 'https://ui-avatars.com/api/?name=Kamal+Uddin&background=random',
+            rating: 4.3
+        },
+        requestDate: '09/18/2025',
+        buildingName: 'Banani Heights - Unit 2A',
+        category: 'Electrical',
+        priority: 'HIGH',
+        description: 'Circuit breaker keeps tripping, no power in living room. This is a safety concern as the repeated tripping indicates a potential electrical hazard that requires immediate professional attention.',
+        statusUpdates: [
+            { status: 'Request Created', date: '9/18/25' },
+            { status: 'Changed to "In Progress"', date: '9/19/25' }
+        ],
+        comments: [
+            { sender: { name: 'Kamal Uddin', avatar: 'https://ui-avatars.com/api/?name=Kamal+Uddin&background=random' }, message: 'The breaker trips immediately when I try to reset it.', isSelf: false },
+            { sender: { name: 'Property Manager', avatar: 'https://ui-avatars.com/api/?name=PM&background=blue' }, message: 'Electrician is on the way. Do not attempt to reset the breaker again.', isSelf: true }
+        ],
+        media: [
+            { type: 'image', url: 'https://picsum.photos/seed/electrical1/800/600' }
+        ],
+        activityLog: [
+            { type: ActivityLogType.Scheduled, title: 'Electrician Scheduled', timestamp: 'Sep. 18, 2025 at 5:00 PM' },
+            { type: ActivityLogType.Arrived, title: 'Electrician Arrived', timestamp: 'Sep. 19, 2025 at 9:00 AM' }
+        ],
+        requestInfo: {
+            timeOpen: 11,
+            updates: 3,
+            notes: 5,
+        },
+        notes: [
+            { text: 'URGENT: Do not reset breaker - safety hazard' }
+        ],
+        contactCards: [
+            {
+                title: "Tenant's Primary Contact",
+                contacts: [{ name: 'Kamal Uddin', avatar: 'https://ui-avatars.com/api/?name=Kamal+Uddin&background=random', rating: 4.3, phone: '+880 1769-567004', email: 'kamal.uddin@email.com' }]
+            }
+        ],
+        suggestedVendors: [
+            { name: 'Pro Electric Solutions', logo: 'P', imageUrl: 'https://images.pexels.com/photos/1216589/pexels-photo-1216589.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&dpr=1', rating: 4.7 }
+        ]
+    },
+    'SR-0005': {
+        id: 'SR-0005',
+        title: 'Window glass cracked',
+        status: RequestStatus.Pending,
+        requester: {
+            name: 'Tanvir Ahmed',
+            avatar: 'https://ui-avatars.com/api/?name=Tanvir+Ahmed&background=random',
+            rating: 4.1
+        },
+        requestDate: '09/23/2025',
+        buildingName: 'Banani Heights - Unit 4A',
+        category: 'Maintenance',
+        priority: 'MEDIUM',
+        description: 'Small crack in bedroom window, risk of shattering. The crack is small but growing, and there is concern it could shatter completely if not addressed soon.',
+        statusUpdates: [
+            { status: 'Request Created', date: '9/23/25' }
+        ],
+        comments: [
+            { sender: { name: 'Tanvir Ahmed', avatar: 'https://ui-avatars.com/api/?name=Tanvir+Ahmed&background=random' }, message: 'The crack seems to be spreading slowly.', isSelf: false }
+        ],
+        media: [
+            { type: 'image', url: 'https://picsum.photos/seed/window1/800/600' }
+        ],
+        activityLog: [
+            { type: ActivityLogType.Scheduled, title: 'Glass Repair Scheduled', timestamp: 'Sep. 23, 2025 at 1:00 PM' }
+        ],
+        requestInfo: {
+            timeOpen: 6,
+            updates: 1,
+            notes: 2,
+        },
+        notes: [
+            { text: 'Need measurements for replacement glass' }
+        ],
+        contactCards: [
+            {
+                title: "Tenant's Primary Contact",
+                contacts: [{ name: 'Tanvir Ahmed', avatar: 'https://ui-avatars.com/api/?name=Tanvir+Ahmed&background=random', rating: 4.1, phone: '+880 1769-567005', email: 'tanvir.ahmed@email.com' }]
+            }
+        ],
+        suggestedVendors: [
+            { name: 'Crystal Clear Glass', logo: 'C', imageUrl: 'https://images.pexels.com/photos/1216589/pexels-photo-1216589.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&dpr=1', rating: 4.0 }
+        ]
+    },
+    'SR-0006': {
+        id: 'SR-0006',
+        title: 'Clogged kitchen drain',
+        status: RequestStatus.Pending,
+        requester: {
+            name: 'Zahid Hasan',
+            avatar: 'https://ui-avatars.com/api/?name=Zahid+Hasan&background=random',
+            rating: 4.4
+        },
+        requestDate: '09/24/2025',
+        buildingName: 'Banani Heights - Unit 3B',
+        category: 'Plumbing',
+        priority: 'MEDIUM',
+        description: 'Water not draining; possible grease buildup. The kitchen sink is backing up and water is not draining properly, likely due to accumulated grease and food particles.',
+        statusUpdates: [
+            { status: 'Request Created', date: '9/24/25' }
+        ],
+        comments: [
+            { sender: { name: 'Zahid Hasan', avatar: 'https://ui-avatars.com/api/?name=Zahid+Hasan&background=random' }, message: 'Water is backing up completely now. Cannot use the sink.', isSelf: false }
+        ],
+        media: [],
+        activityLog: [
+            { type: ActivityLogType.Scheduled, title: 'Plumber Scheduled', timestamp: 'Sep. 24, 2025 at 2:30 PM' }
+        ],
+        requestInfo: {
+            timeOpen: 5,
+            updates: 1,
+            notes: 3,
+        },
+        notes: [
+            { text: 'Likely needs professional drain cleaning' }
+        ],
+        contactCards: [
+            {
+                title: "Tenant's Primary Contact",
+                contacts: [{ name: 'Zahid Hasan', avatar: 'https://ui-avatars.com/api/?name=Zahid+Hasan&background=random', rating: 4.4, phone: '+880 1769-567006', email: 'zahid.hasan@email.com' }]
+            }
+        ],
+        suggestedVendors: [
+            { name: 'Drain Master Pro', logo: 'D', imageUrl: 'https://images.pexels.com/photos/1216589/pexels-photo-1216589.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&dpr=1', rating: 4.1 }
+        ]
+    },
+    'SR-0007': {
+        id: 'SR-0007',
+        title: 'Bedroom light fixture sparking',
+        status: RequestStatus.Pending,
+        requester: {
+            name: 'Shila Rahman',
+            avatar: 'https://ui-avatars.com/api/?name=Shila+Rahman&background=random',
+            rating: 4.7
+        },
+        requestDate: '09/21/2025',
+        buildingName: 'Dhanmondi Residency - Unit 2A',
+        category: 'Electrical',
+        priority: 'HIGH',
+        description: 'Sparks seen when switching light on/off. This is a serious electrical safety hazard that requires immediate professional attention to prevent potential fire risk.',
+        statusUpdates: [
+            { status: 'Request Created', date: '9/21/25' },
+            { status: 'Priority set to HIGH - SAFETY URGENT', date: '9/21/25' }
+        ],
+        comments: [
+            { sender: { name: 'Shila Rahman', avatar: 'https://ui-avatars.com/api/?name=Shila+Rahman&background=random' }, message: 'I have stopped using that switch completely for safety.', isSelf: false },
+            { sender: { name: 'Property Manager', avatar: 'https://ui-avatars.com/api/?name=PM&background=blue' }, message: 'Good decision. Emergency electrician has been contacted.', isSelf: true }
+        ],
+        media: [
+            { type: 'video', url: 'https://picsum.photos/seed/sparks1/800/600' }
+        ],
+        activityLog: [
+            { type: ActivityLogType.Scheduled, title: 'Emergency Electrician Called', timestamp: 'Sep. 21, 2025 at 6:00 PM' }
+        ],
+        requestInfo: {
+            timeOpen: 8,
+            updates: 2,
+            notes: 4,
+        },
+        notes: [
+            { text: 'CRITICAL SAFETY ISSUE - Do not use switch' }
+        ],
+        contactCards: [
+            {
+                title: "Tenant's Primary Contact",
+                contacts: [{ name: 'Shila Rahman', avatar: 'https://ui-avatars.com/api/?name=Shila+Rahman&background=random', rating: 4.7, phone: '+880 1769-567007', email: 'shila.rahman@email.com' }]
+            }
+        ],
+        suggestedVendors: [
+            { name: 'Emergency Electric Care', logo: 'E', imageUrl: 'https://images.pexels.com/photos/1216589/pexels-photo-1216589.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&dpr=1', rating: 4.8 }
+        ]
+    },
+    'SR-0008': {
+        id: 'SR-0008',
+        title: 'Pest infestation (cockroaches)',
+        status: RequestStatus.Pending,
+        requester: {
+            name: 'Rezaul Karim',
+            avatar: 'https://ui-avatars.com/api/?name=Rezaul+Karim&background=random',
+            rating: 4.5
+        },
+        requestDate: '09/15/2025',
+        buildingName: 'Dhanmondi Residency - Unit 4A',
+        category: 'Maintenance',
+        priority: 'HIGH',
+        description: 'Cockroaches in kitchen; needs pest control service. There is a significant cockroach infestation in the kitchen area that requires professional pest control treatment.',
+        statusUpdates: [
+            { status: 'Request Created', date: '9/15/25' },
+            { status: 'Priority set to HIGH', date: '9/15/25' }
+        ],
+        comments: [
+            { sender: { name: 'Rezaul Karim', avatar: 'https://ui-avatars.com/api/?name=Rezaul+Karim&background=random' }, message: 'The problem is getting worse. I see them mainly at night in the kitchen.', isSelf: false },
+            { sender: { name: 'Property Manager', avatar: 'https://ui-avatars.com/api/?name=PM&background=blue' }, message: 'We will arrange professional pest control service immediately.', isSelf: true }
+        ],
+        media: [
+            { type: 'image', url: 'https://picsum.photos/seed/pest1/800/600' }
+        ],
+        activityLog: [
+            { type: ActivityLogType.Scheduled, title: 'Pest Control Scheduled', timestamp: 'Sep. 15, 2025 at 4:00 PM' }
+        ],
+        requestInfo: {
+            timeOpen: 14,
+            updates: 2,
+            notes: 5,
+        },
+        notes: [
+            { text: 'Schedule follow-up treatment in 2 weeks' }
+        ],
+        contactCards: [
+            {
+                title: "Tenant's Primary Contact",
+                contacts: [{ name: 'Rezaul Karim', avatar: 'https://ui-avatars.com/api/?name=Rezaul+Karim&background=random', rating: 4.5, phone: '+880 1769-567008', email: 'rezaul.karim@email.com' }]
+            }
+        ],
+        suggestedVendors: [
+            { name: 'Dhaka Pest Solutions', logo: 'D', imageUrl: 'https://images.pexels.com/photos/1216589/pexels-photo-1216589.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&dpr=1', rating: 4.3 }
+        ]
+    },
+    'SR-0009': {
+        id: 'SR-0009',
+        title: 'Water heater not working',
+        status: RequestStatus.Pending,
+        requester: {
+            name: 'Selina Yasmin',
+            avatar: 'https://ui-avatars.com/api/?name=Selina+Yasmin&background=random',
+            rating: 4.6
+        },
+        requestDate: '09/25/2025',
+        buildingName: 'Uttara Gardens - Unit 1',
+        category: 'Appliance',
+        priority: 'HIGH',
+        description: 'Tenant reports no hot water for past two days. The water heater has completely stopped working, leaving the tenant without hot water for essential daily activities.',
+        statusUpdates: [
+            { status: 'Request Created', date: '9/25/25' },
+            { status: 'Priority set to HIGH', date: '9/25/25' }
+        ],
+        comments: [
+            { sender: { name: 'Selina Yasmin', avatar: 'https://ui-avatars.com/api/?name=Selina+Yasmin&background=random' }, message: 'No hot water for two days now. This is very inconvenient.', isSelf: false },
+            { sender: { name: 'Property Manager', avatar: 'https://ui-avatars.com/api/?name=PM&background=blue' }, message: 'We understand the urgency. Appliance technician will be there today.', isSelf: true }
+        ],
+        media: [],
+        activityLog: [
+            { type: ActivityLogType.Scheduled, title: 'Appliance Repair Scheduled', timestamp: 'Sep. 25, 2025 at 11:00 AM' }
+        ],
+        requestInfo: {
+            timeOpen: 4,
+            updates: 2,
+            notes: 3,
+        },
+        notes: [
+            { text: 'Check if warranty is still valid' }
+        ],
+        contactCards: [
+            {
+                title: "Tenant's Primary Contact",
+                contacts: [{ name: 'Selina Yasmin', avatar: 'https://ui-avatars.com/api/?name=Selina+Yasmin&background=random', rating: 4.6, phone: '+880 1769-567009', email: 'selina.yasmin@email.com' }]
+            }
+        ],
+        suggestedVendors: [
+            { name: 'Home Appliance Experts', logo: 'H', imageUrl: 'https://images.pexels.com/photos/1216589/pexels-photo-1216589.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&dpr=1', rating: 4.4 }
         ]
     }
 };
 
 // Mock Data for Tenants Dashboard
 export const TENANT_DASHBOARD_STATS: TenantDashboardStat[] = [
-    { label: 'Total Tenants', value: '850', icon: Users, iconColor: 'text-green-600', bgColor: 'bg-green-100' },
-    { label: 'Vacant Units', value: '200', icon: X, iconColor: 'text-red-600', bgColor: 'bg-red-100' },
-    { label: 'Rental Applications', value: '312', icon: FileText, iconColor: 'text-yellow-600', bgColor: 'bg-yellow-100' },
-    { label: 'Total Units', value: '1,050', icon: HomeIcon, iconColor: 'text-orange-600', bgColor: 'bg-orange-100' },
-    { label: 'Service Requests', value: '120', icon: Settings, iconColor: 'text-blue-600', bgColor: 'bg-blue-100' },
+    { label: 'Total Tenants', value: '26', icon: Users, iconColor: 'text-green-600', bgColor: 'bg-green-100' },
+    { label: 'Vacant Units', value: '2', icon: X, iconColor: 'text-red-600', bgColor: 'bg-red-100' },
+    { label: 'Rental Applications', value: '5', icon: FileText, iconColor: 'text-yellow-600', bgColor: 'bg-yellow-100' },
+    { label: 'Total Units', value: '28', icon: HomeIcon, iconColor: 'text-orange-600', bgColor: 'bg-orange-100' },
+    { label: 'Service Requests', value: '9', icon: Settings, iconColor: 'text-blue-600', bgColor: 'bg-blue-100' },
 ];
 
 export const TENANTS_DASHBOARD_TABLE_DATA: Tenant[] = [
-    { id: 'T020', name: 'Naki Chowdhury', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0015', leaseProgress: 80, rentStatus: RentStatus.Paid, requests: 8 },
-    { id: 'T021', name: 'Sazia Rahman', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0019', leaseProgress: 75, rentStatus: RentStatus.Paid, requests: 10 },
-    { id: 'T022', name: 'Abdelqadir Siraj', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0018', leaseProgress: 60, rentStatus: RentStatus.Overdue, requests: 6 },
-    { id: 'radhika-islam', name: 'Radlya Islam', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0045', leaseProgress: 90, rentStatus: RentStatus.Pending, requests: 21 },
-    { id: 'T023', name: 'Taki Chowdhury', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0015', leaseProgress: 50, rentStatus: RentStatus.Pending, requests: 8 },
-    { id: 'T024', name: 'Ohin Chowdhury', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0026', leaseProgress: 85, rentStatus: RentStatus.Paid, requests: 10 },
-    { id: 'T025', name: 'Famu Chowdhury', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0018', leaseProgress: 70, rentStatus: RentStatus.Paid, requests: 6 },
-    { id: 'T026', name: 'Faisal Chowdhury', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0045', leaseProgress: 40, rentStatus: RentStatus.Paid, requests: 21 },
-    { id: 'T027', name: 'Mukul Miyah', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0015', leaseProgress: 95, rentStatus: RentStatus.Pending, requests: 8 },
-    { id: 'T028', name: 'Lipi Choudhary', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0026', leaseProgress: 30, rentStatus: RentStatus.Overdue, requests: 10 },
-    { id: 'T029', name: 'Ariful Islam', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0018', leaseProgress: 80, rentStatus: RentStatus.Pending, requests: 6 },
-    { id: 'T030', name: 'Shohanur Rahman', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0045', leaseProgress: 75, rentStatus: RentStatus.Paid, requests: 21 },
-    { id: 'T031', name: 'Maisha Gulam', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0015', leaseProgress: 65, rentStatus: RentStatus.Pending, requests: 8 },
-    { id: 'T032', name: 'Saqib Khan', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0026', leaseProgress: 55, rentStatus: RentStatus.Paid, requests: 10 },
-    { id: 'T033', name: 'Shamu Abdullah', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0018', leaseProgress: 78, rentStatus: RentStatus.Pending, requests: 6 },
-    { id: 'T034', name: 'Tahmidur Hoque', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0045', leaseProgress: 88, rentStatus: RentStatus.Pending, requests: 21 },
+    { id: 'T020', name: 'Naki Chowdhury', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0001', leaseProgress: 80, rentStatus: RentStatus.Paid, requests: 8 },
+    { id: 'T021', name: 'Sazia Rahman', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0002', leaseProgress: 75, rentStatus: RentStatus.Paid, requests: 10 },
+    { id: 'T022', name: 'Abdelqadir Siraj', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0003', leaseProgress: 60, rentStatus: RentStatus.Overdue, requests: 6 },
+    { id: 'radhika-islam', name: 'Radlya Islam', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0004', leaseProgress: 90, rentStatus: RentStatus.Pending, requests: 21 },
+    { id: 'T023', name: 'Taki Chowdhury', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0001', leaseProgress: 50, rentStatus: RentStatus.Pending, requests: 8 },
+    { id: 'T024', name: 'Ohin Chowdhury', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0002', leaseProgress: 85, rentStatus: RentStatus.Paid, requests: 10 },
+    { id: 'T025', name: 'Famu Chowdhury', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0003', leaseProgress: 70, rentStatus: RentStatus.Paid, requests: 6 },
+    { id: 'T026', name: 'Faisal Chowdhury', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0004', leaseProgress: 40, rentStatus: RentStatus.Paid, requests: 21 },
+    { id: 'T027', name: 'Mukul Miyah', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0001', leaseProgress: 95, rentStatus: RentStatus.Pending, requests: 8 },
+    { id: 'T028', name: 'Lipi Choudhary', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0002', leaseProgress: 30, rentStatus: RentStatus.Overdue, requests: 10 },
+    { id: 'T029', name: 'Ariful Islam', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0003', leaseProgress: 80, rentStatus: RentStatus.Pending, requests: 6 },
+    { id: 'T030', name: 'Shohanur Rahman', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0004', leaseProgress: 75, rentStatus: RentStatus.Paid, requests: 21 },
+    { id: 'T031', name: 'Maisha Gulam', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0001', leaseProgress: 65, rentStatus: RentStatus.Pending, requests: 8 },
+    { id: 'T032', name: 'Saqib Khan', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0002', leaseProgress: 55, rentStatus: RentStatus.Paid, requests: 10 },
+    { id: 'T033', name: 'Shamu Abdullah', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0003', leaseProgress: 78, rentStatus: RentStatus.Pending, requests: 6 },
+    { id: 'T034', name: 'Tahmidur Hoque', avatar: generateAvatar(), rating: 4.5, building: 'BLDG-0004', leaseProgress: 88, rentStatus: RentStatus.Pending, requests: 21 },
 ];
 
 export const CURRENT_TENANTS_DATA: CurrentTenant[] = [
@@ -512,32 +841,32 @@ export const NEW_SUGHAR_VERIFIED_TENANTS_APPLICATIONS: VerifiedTenantApplication
 
 // Mock Data for Documents Dashboard
 export const DOCUMENT_DASHBOARD_STATS: DocumentDashboardStat[] = [
-    { label: 'Recent Documents', value: '450', icon: FileText, iconColor: 'text-orange-600', bgColor: 'bg-orange-100' },
-    { label: 'Active Lease Docs', value: '85', icon: HomeIcon, iconColor: 'text-red-600', bgColor: 'bg-red-100' },
-    { label: 'Income / Tax Docs', value: '65', icon: DollarSign, iconColor: 'text-green-600', bgColor: 'bg-green-100' },
-    { label: 'Recent Utilities / Bills', value: '120', icon: Zap, iconColor: 'text-yellow-600', bgColor: 'bg-yellow-100' },
-    { label: 'Service Invoices', value: '105', icon: Settings, iconColor: 'text-blue-600', bgColor: 'bg-blue-100' },
+    { label: 'Recent Documents', value: '28', icon: FileText, iconColor: 'text-orange-600', bgColor: 'bg-orange-100' },
+    { label: 'Active Lease Docs', value: '26', icon: HomeIcon, iconColor: 'text-red-600', bgColor: 'bg-red-100' },
+    { label: 'Income / Tax Docs', value: '8', icon: DollarSign, iconColor: 'text-green-600', bgColor: 'bg-green-100' },
+    { label: 'Recent Utilities / Bills', value: '7', icon: Zap, iconColor: 'text-yellow-600', bgColor: 'bg-yellow-100' },
+    { label: 'Service Invoices', value: '9', icon: Settings, iconColor: 'text-blue-600', bgColor: 'bg-blue-100' },
 ];
 
 export const MOST_RECENT_DOCUMENTS: Document[] = [
     { id: 'DOC001', name: 'Unit 12A Lease Agreement', building: 'BLDG-0001', unit: 'A1', type: DocumentType.Lease, uploadDate: '10/10/2025' },
-    { id: 'DOC002', name: 'Bosundhara Electric Invoice', building: 'BLDG-0001', unit: 'A2', type: DocumentType.Utilities, uploadDate: '10/15/2025' },
-    { id: 'DOC003', name: 'Gulshan Towers Water Bill', building: 'BLDG-0004', unit: 'A7', type: DocumentType.Utilities, uploadDate: '9/26/2025' },
-    { id: 'DOC004', name: 'Shakti Pest Svcs Contract', building: 'BLDG-0023', unit: 'B2', type: DocumentType.Service, uploadDate: '9/31/2025' },
-    { id: 'DOC005', name: 'Jamuna Palaces Income Statement', building: 'BLDG-0014', unit: 'B9', type: DocumentType.Income, uploadDate: '11/14/2025' },
-    { id: 'DOC006', name: 'Baridhara Court Compliance Certificate', building: 'BLDG-0009', unit: 'C3', type: DocumentType.Certifications, uploadDate: '11/23/2025' },
-    { id: 'DOC007', name: 'Green View Apartments Insurance Policy', building: 'BLDG-0003', unit: 'C5', type: DocumentType.Insurance, uploadDate: '12/14/2025' },
-    { id: 'DOC008', name: 'Mirpur Elevator Maintenance Contract', building: 'BLDG-0005', unit: 'C6', type: DocumentType.Service, uploadDate: '12/24/2025' },
-    { id: 'DOC009', name: 'Lakeview Residences Tax Receipt', building: 'BLDG-0009', unit: 'C11', type: DocumentType.Income, uploadDate: '12/27/2025' },
-    { id: 'DOC010', name: 'City Lights Plumbing Service Invoice', building: 'BLDG-0012', unit: 'D1', type: DocumentType.Service, uploadDate: '12/28/2025' },
-    { id: 'DOC011', name: 'Uttara Regency Renovation Permit', building: 'BLDG-0009', unit: 'D3', type: DocumentType.Certifications, uploadDate: '12/31/2025' },
+    { id: 'DOC002', name: 'Lalmatia Court Electric Invoice', building: 'BLDG-0001', unit: 'A2', type: DocumentType.Utilities, uploadDate: '10/15/2025' },
+    { id: 'DOC003', name: 'Banani Heights Water Bill', building: 'BLDG-0002', unit: 'A7', type: DocumentType.Utilities, uploadDate: '9/26/2025' },
+    { id: 'DOC004', name: 'Dhanmondi Residency Pest Svcs Contract', building: 'BLDG-0003', unit: 'B2', type: DocumentType.Service, uploadDate: '9/31/2025' },
+    { id: 'DOC005', name: 'Uttara Gardens Income Statement', building: 'BLDG-0004', unit: 'B9', type: DocumentType.Income, uploadDate: '11/14/2025' },
+    { id: 'DOC006', name: 'Lalmatia Court Compliance Certificate', building: 'BLDG-0001', unit: 'C3', type: DocumentType.Certifications, uploadDate: '11/23/2025' },
+    { id: 'DOC007', name: 'Banani Heights Insurance Policy', building: 'BLDG-0002', unit: 'C5', type: DocumentType.Insurance, uploadDate: '12/14/2025' },
+    { id: 'DOC008', name: 'Mirpur Elevator Maintenance Contract', building: 'BLDG-0001', unit: 'C6', type: DocumentType.Service, uploadDate: '12/24/2025' },
+    { id: 'DOC009', name: 'Lalmatia Court Tax Receipt', building: 'BLDG-0001', unit: 'C11', type: DocumentType.Income, uploadDate: '12/27/2025' },
+    { id: 'DOC010', name: 'City Lights Plumbing Service Invoice', building: 'BLDG-0004', unit: 'D1', type: DocumentType.Service, uploadDate: '12/28/2025' },
+    { id: 'DOC011', name: 'Uttara Gardens Renovation Permit', building: 'BLDG-0004', unit: 'D3', type: DocumentType.Certifications, uploadDate: '12/31/2025' },
 ];
 
 export const STARRED_DOCUMENTS: Document[] = [
     { id: 'DOC001', name: 'Unit 12A Lease Agreement', building: 'BLDG-0001', unit: 'A1', type: DocumentType.Lease, uploadDate: '10/10/2025' },
-    { id: 'DOC002', name: 'Bosundhara Electric Invoice', building: 'BLDG-0001', unit: 'A2', type: DocumentType.Utilities, uploadDate: '10/15/2025' },
-    { id: 'DOC003', name: 'Gulshan Towers Water Bill', building: 'BLDG-0004', unit: 'A7', type: DocumentType.Utilities, uploadDate: '9/26/2025' },
-    { id: 'DOC004', name: 'Shakti Pest Svcs Contract', building: 'BLDG-0023', unit: 'B2', type: DocumentType.Service, uploadDate: '9/31/2025' },
+    { id: 'DOC002', name: 'Lalmatia Court Electric Invoice', building: 'BLDG-0001', unit: 'A2', type: DocumentType.Utilities, uploadDate: '10/15/2025' },
+    { id: 'DOC003', name: 'Banani Heights Water Bill', building: 'BLDG-0002', unit: 'A7', type: DocumentType.Utilities, uploadDate: '9/26/2025' },
+    { id: 'DOC004', name: 'Dhanmondi Residency Pest Svcs Contract', building: 'BLDG-0003', unit: 'B2', type: DocumentType.Service, uploadDate: '9/31/2025' },
 ];
 
 export const DOCUMENT_TYPE_DISTRIBUTION_DATA: DocumentDistribution[] = [
@@ -564,31 +893,31 @@ export const DOCUMENTS_UPLOADED_DATA: UploadedDocumentData[] = [
 
 export const ALL_DOCUMENTS_DATA: Document[] = [
     ...MOST_RECENT_DOCUMENTS,
-    { id: 'DOC012', name: 'Mirpur Luxury Apts Water Bill', building: 'BLDG-0005', unit: 'C6', type: DocumentType.Utilities, uploadDate: '12/24/2025' },
-    { id: 'DOC013', name: 'Basundhara Suites Unit 15B Lease', building: 'BLDG-0001', unit: '15B', type: DocumentType.Lease, uploadDate: '12/23/2025' },
-    { id: 'DOC014', name: 'Dhaka Deluxe Unit 47F Lease', building: 'BLDG-0003', unit: '47F', type: DocumentType.Lease, uploadDate: '12/22/2025' },
+    { id: 'DOC012', name: 'Banani Heights Water Bill', building: 'BLDG-0002', unit: 'C6', type: DocumentType.Utilities, uploadDate: '12/24/2025' },
+    { id: 'DOC013', name: 'Lalmatia Court Unit 15B Lease', building: 'BLDG-0001', unit: '15B', type: DocumentType.Lease, uploadDate: '12/23/2025' },
+    { id: 'DOC014', name: 'Dhanmondi Residency Unit 47F Lease', building: 'BLDG-0003', unit: '47F', type: DocumentType.Lease, uploadDate: '12/22/2025' },
     { id: 'DOC015', name: 'Baraka Power Ltd. Electric Invoice', building: 'BLDG-0004', unit: 'A7', type: DocumentType.Utilities, uploadDate: '12/21/2025' },
-    { id: 'DOC016', name: 'Sweet Home Cleaning Svcs Invoice', building: 'BLDG-0009', unit: 'C3', type: DocumentType.Service, uploadDate: '12/20/2025' },
-    { id: 'DOC017', name: 'Laundronauts Svcs Invoice', building: 'BLDG-0014', unit: 'B9', type: DocumentType.Service, uploadDate: '12/19/2025' },
+    { id: 'DOC016', name: 'Sweet Home Cleaning Svcs Invoice', building: 'BLDG-0001', unit: 'C3', type: DocumentType.Service, uploadDate: '12/20/2025' },
+    { id: 'DOC017', name: 'Laundronauts Svcs Invoice', building: 'BLDG-0002', unit: 'B9', type: DocumentType.Service, uploadDate: '12/19/2025' },
     { id: 'DOC018', name: 'Dhaka Water Svcs Invoice', building: 'BLDG-0001', unit: 'A1', type: DocumentType.Utilities, uploadDate: '12/18/2025' },
-    { id: 'DOC019', name: 'Gulshan Towers Income Statement', building: 'BLDG-0004', unit: 'N/A', type: DocumentType.Income, uploadDate: '12/17/2025' },
-    { id: 'DOC020', name: 'Dhaka Construction LLC. Invoice', building: 'BLDG-0012', unit: 'D1', type: DocumentType.Service, uploadDate: '12/16/2025' },
-    { id: 'DOC021', name: 'Shakti Trades LLC. Invoice', building: 'BLDG-0023', unit: 'B2', type: DocumentType.Service, uploadDate: '12/15/2025' },
-    { id: 'DOC022', name: 'Chowdhury Cement September Invoice', building: 'BLDG-0005', unit: 'N/A', type: DocumentType.Service, uploadDate: '12/14/2025' },
+    { id: 'DOC019', name: 'Uttara Gardens Income Statement', building: 'BLDG-0004', unit: 'N/A', type: DocumentType.Income, uploadDate: '12/17/2025' },
+    { id: 'DOC020', name: 'Dhaka Construction LLC. Invoice', building: 'BLDG-0004', unit: 'D1', type: DocumentType.Service, uploadDate: '12/16/2025' },
+    { id: 'DOC021', name: 'Dhanmondi Residency Service Invoice', building: 'BLDG-0003', unit: 'B2', type: DocumentType.Service, uploadDate: '12/15/2025' },
+    { id: 'DOC022', name: 'Chowdhury Cement September Invoice', building: 'BLDG-0001', unit: 'N/A', type: DocumentType.Service, uploadDate: '12/14/2025' },
     { id: 'DOC023', 'name': 'Unit 1A Insurance Policy', 'building': 'BLDG-0001', 'unit': 'A1', 'type': DocumentType.Insurance, 'uploadDate': '12/13/2025' },
     { id: 'DOC024', 'name': 'Fire Safety Certificate', 'building': 'BLDG-0002', 'unit': 'N/A', 'type': DocumentType.Certifications, 'uploadDate': '12/12/2025' },
     { id: 'DOC025', 'name': 'Elevator Inspection Report', 'building': 'BLDG-0003', 'unit': 'N/A', 'type': DocumentType.Certifications, 'uploadDate': '12/11/2025' },
     { id: 'DOC026', 'name': 'Annual Tax Return 2024', 'building': 'N/A', 'unit': 'N/A', 'type': DocumentType.Income, 'uploadDate': '12/10/2025' },
-    { id: 'DOC027', 'name': 'Plumbing Repair Receipt Unit B2', 'building': 'BLDG-0023', 'unit': 'B2', 'type': DocumentType.Service, 'uploadDate': '12/09/2025' },
+    { id: 'DOC027', 'name': 'Plumbing Repair Receipt Unit B2', 'building': 'BLDG-0003', 'unit': 'B2', 'type': DocumentType.Service, 'uploadDate': '12/09/2025' },
     { id: 'DOC028', 'name': 'Unit C5 Internet Bill', 'building': 'BLDG-0003', 'unit': 'C5', 'type': DocumentType.Utilities, 'uploadDate': '12/08/2025' },
 ];
 
 // Mock Data for Home Dashboard
 export const HOME_STATS: HomeStat[] = [
-    { label: 'Open Service Requests', value: '50', icon: Wrench, color: 'orange' },
-    { label: 'Vacant Units', value: '25', icon: HomeIcon, color: 'red' },
-    { label: 'Overdue Rent', value: '12', icon: FileWarning, color: 'yellow' },
-    { label: 'New Applications', value: '30', icon: Users, color: 'green' },
+    { label: 'Open Service Requests', value: '9', icon: Wrench, color: 'orange' },
+    { label: 'Vacant Units', value: '2', icon: HomeIcon, color: 'red' },
+    { label: 'Overdue Rent', value: '3', icon: FileWarning, color: 'yellow' },
+    { label: 'New Applications', value: '5', icon: Users, color: 'green' },
 ];
 
 export const FINANCIAL_OVERVIEW_DATA: MonthlyProfitData[] = [
@@ -699,7 +1028,7 @@ export const TENANT_DETAIL_DATA: { [id: string]: TenantDetailData } = {
     'radhika-islam': {
         id: 'radhika-islam',
         name: 'Radhika Islam',
-        buildingName: 'Bosundhara Towers',
+        buildingName: 'Lalmatia Court',
         unitName: 'B1',
         avatarUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=200&auto=format&fit=crop',
         education: {

@@ -14,13 +14,13 @@ import {
 import { LeaseEndingSoon, OverdueRent, SpecificBuildingStat } from '../types';
 import { ArrowLeft, MoreHorizontal } from './icons';
 import { SpecificBuildingUnitsPage } from './SpecificBuildingUnitsPage';
-import { SpecificBuildingApplicationsPage } from './SpecificBuildingApplicationsPage';
 import { SpecificBuildingDocumentsPage } from './SpecificBuildingDocumentsPage';
 
 interface SpecificBuildingPageProps {
   buildingId: string;
   onBack: () => void;
   setViewingTenantId: (tenantId: string) => void;
+  onUnitClick?: (unitId: string) => void;
 }
 
 // FIX: Changed component to use React.FC to properly type props and resolve key assignment error.
@@ -145,7 +145,7 @@ const BuildingOverview: React.FC<{setViewingTenantId: (id: string) => void}> = (
     </>
 );
 
-export const SpecificBuildingPage: React.FC<SpecificBuildingPageProps> = ({ buildingId, onBack, setViewingTenantId }) => {
+export const SpecificBuildingPage: React.FC<SpecificBuildingPageProps> = ({ buildingId, onBack, setViewingTenantId, onUnitClick }) => {
   const [activeTab, setActiveTab] = useState('Overview');
   const buildingName = BUILDING_NAMES[buildingId] || "Building Details";
 
@@ -154,9 +154,7 @@ export const SpecificBuildingPage: React.FC<SpecificBuildingPageProps> = ({ buil
         case 'Overview':
             return <BuildingOverview setViewingTenantId={setViewingTenantId} />;
         case 'Units':
-            return <SpecificBuildingUnitsPage buildingId={buildingId} setViewingTenantId={setViewingTenantId} />;
-        case 'Applications':
-            return <SpecificBuildingApplicationsPage buildingId={buildingId} setViewingTenantId={setViewingTenantId} />;
+            return <SpecificBuildingUnitsPage buildingId={buildingId} setViewingTenantId={setViewingTenantId} onUnitClick={onUnitClick} />;
         case 'Documents':
             return <SpecificBuildingDocumentsPage buildingId={buildingId} />;
         default:
@@ -172,8 +170,8 @@ export const SpecificBuildingPage: React.FC<SpecificBuildingPageProps> = ({ buil
       </button>
 
       <Header 
-        title={`${buildingId} • ${buildingName}`}
-        tabs={['Overview', 'Units', 'Applications', 'Documents']}
+        title={buildingName}
+        tabs={['Overview', 'Units', 'Documents']}
         activeTab={activeTab}
         onTabChange={setActiveTab}
       />

@@ -15,14 +15,34 @@ import { SignUpPage } from './components/SignUpPage';
 import { AccountOverviewPage } from './components/AccountOverviewPage';
 import { SettingsPage } from './components/SettingsPage';
 import { TenantDetailPage } from './components/TenantDetailPage';
+import { SpecificUnitPage } from './components/SpecificUnitPage';
 
 const AppContent = () => {
   const { user, loading } = useAuth();
   const [currentPage, setCurrentPage] = useState('home');
   const [viewingTenantId, setViewingTenantId] = useState<string | null>(null);
   const [viewingBuildingId, setViewingBuildingId] = useState<string | null>(null);
+  const [viewingUnitId, setViewingUnitId] = useState<string | null>(null);
   const [showNewBuildingForm, setShowNewBuildingForm] = useState(false);
   const [showNewUnitForm, setShowNewUnitForm] = useState(false);
+  const [tenantsInitialTab, setTenantsInitialTab] = useState('Overview');
+
+  // Custom navigation function to handle tab-specific navigation
+  const handlePageNavigation = (page: string, options?: { tab?: string }) => {
+    setCurrentPage(page);
+    if (page === 'tenants' && options?.tab) {
+      setTenantsInitialTab(options.tab);
+    } else if (page === 'tenants' && !options?.tab) {
+      setTenantsInitialTab('Overview'); // Reset to overview when navigating normally
+    } else if (page !== 'tenants') {
+      setTenantsInitialTab('Overview'); // Reset tab when navigating away from tenants
+    }
+  };
+
+  // Wrapper for regular page navigation that also resets tabs
+  const handleRegularNavigation = (page: string) => {
+    handlePageNavigation(page);
+  };
 
   if (loading) {
     return (
@@ -40,12 +60,18 @@ const AppContent = () => {
   }
 
   return (
-    <Layout currentPage={currentPage} setCurrentPage={setCurrentPage}>
+    <Layout currentPage={currentPage} setCurrentPage={handleRegularNavigation}>
       {viewingTenantId ? (
         <TenantDetailPage tenantId={viewingTenantId} onBack={() => setViewingTenantId(null)} />
+      ) : viewingUnitId ? (
+        <SpecificUnitPage 
+          unitId={viewingUnitId} 
+          onBack={() => setViewingUnitId(null)}
+          setViewingTenantId={setViewingTenantId}
+        />
       ) : (
         <>
-          {currentPage === 'home' && <HomeDashboard setViewingTenantId={setViewingTenantId} setCurrentPage={setCurrentPage} />}
+          {currentPage === 'home' && <HomeDashboard setViewingTenantId={setViewingTenantId} setCurrentPage={handleRegularNavigation} handlePageNavigation={handlePageNavigation} />}
           {currentPage === 'financials' && <FinancialsDashboard />}
           {currentPage === 'buildings' && !viewingBuildingId && !showNewBuildingForm && !showNewUnitForm && (
             <BuildingsPage 
@@ -60,6 +86,7 @@ const AppContent = () => {
               buildingId={viewingBuildingId}
               onBack={() => setViewingBuildingId(null)}
               setViewingTenantId={setViewingTenantId}
+              onUnitClick={setViewingUnitId}
             />
           )}
           {currentPage === 'buildings' && showNewBuildingForm && (
@@ -75,8 +102,7 @@ const AppContent = () => {
                 setCurrentPage('buildings');
               }}
               onUnitClick={(buildingId: string, unitId: number) => {
-                setViewingBuildingId(buildingId);
-                setCurrentPage('buildings');
+                setViewingUnitId(`U${unitId.toString().padStart(3, '0')}`);
               }}
               setViewingTenantId={setViewingTenantId}
             />
@@ -84,25 +110,18 @@ const AppContent = () => {
           {currentPage === 'tenants' && (
             <TenantsDashboard 
               setViewingTenantId={setViewingTenantId}
-              onBuildingClick={(id: string) => {
-                setViewingBuildingId(id);
-                setCurrentPage('buildings');
-              }}
-              onUnitClick={(buildingId: string, unitId: string) => {
-                setViewingBuildingId(buildingId);
-                setCurrentPage('buildings');
-              }}
+              initialTab={tenantsInitialTab}
             />
           )}
           {currentPage === 'documents' && (
             <DocumentsDashboard 
               onBuildingClick={(id: string) => {
                 setViewingBuildingId(id);
-                setCurrentPage('buildings');
+                handleRegularNavigation('buildings');
               }}
               onUnitClick={(buildingId: string, unitId: string) => {
-                setViewingBuildingId(buildingId);
-                setCurrentPage('buildings');
+                setViewingUnitId(unitId);
+                handleRegularNavigation('buildings');
               }}
               setViewingTenantId={setViewingTenantId}
             />

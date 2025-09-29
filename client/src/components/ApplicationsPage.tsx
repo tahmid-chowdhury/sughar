@@ -3,6 +3,7 @@ import { Card } from './Card';
 import { Application, DashboardStats } from '../types';
 import { FileText, User, Calendar, Plus, Search, CheckCircle2, X, Filter } from './icons';
 import { dashboardAPI, rentalApplicationsAPI } from '../services/api';
+import { APPLICATIONS_PAGE_DATA, BUILDINGS_TABLE_DATA } from '../constants';
 
 interface ApplicationsPageProps {
   setViewingTenantId: (id: string) => void;
@@ -172,62 +173,45 @@ export const ApplicationsPage: React.FC<ApplicationsPageProps> = ({ setViewingTe
             setLoading(true);
             setError(null);
             
-            // Get comprehensive data from both APIs
-            const [dashboardStats, applicationsData] = await Promise.all([
-                dashboardAPI.getStats(),
-                rentalApplicationsAPI.getAll()
-            ]);
-            
-            console.log('Dashboard stats for applications:', dashboardStats);
-            console.log('Applications data:', applicationsData);
-            
-            if (!Array.isArray(applicationsData)) {
-                setApplications([]);
-                return;
-            }
-            
-            // Transform API data to Application format with real calculations
-            const transformedApps = applicationsData.map((app: any) => {
-                // Find unit rent for match percentage calculation
-                const unitDetails = dashboardStats?.units?.details?.find((unit: any) => {
-                    const unitId = unit._id || unit.id;
-                    const appUnitId = app.unitID?._id || app.unitID;
-                    return unitId === appUnitId;
-                });
+            // Use hardcoded data with enhanced properties for demo
+            const enhancedApplications = APPLICATIONS_PAGE_DATA.map((app, index) => {
+                // Generate realistic income and employment data
+                const incomes = [45000, 55000, 65000, 75000, 35000, 85000, 95000, 42000, 68000, 78000, 38000, 58000];
+                const employmentStatuses = ['Full-time employed', 'Self-employed', 'Part-time employed', 'Contract worker', 'Full-time employed'];
+                const statuses = ['pending', 'approved', 'rejected', 'pending'];
                 
-                const unitRent = unitDetails ? parseFloat(unitDetails.monthlyRent?.toString() || '0') : 1500; // Default rent for calculation
-                const matchData = calculateMatchPercentage(app, unitRent);
+                const monthlyIncome = incomes[index % incomes.length];
+                const employmentStatus = employmentStatuses[index % employmentStatuses.length];
+                const status = statuses[index % statuses.length];
                 
-                // Calculate a rating based on application quality
-                const rating = matchData.score >= 85 ? 5 : 
-                              matchData.score >= 75 ? 4.5 : 
-                              matchData.score >= 65 ? 4 : 
-                              matchData.score >= 55 ? 3.5 : 3;
+                // Map building IDs to names
+                const buildingMap: { [key: string]: string } = {
+                    'BLDG-001': 'Lalmatia Court',
+                    'BLDG-002': 'Banani Heights', 
+                    'BLDG-003': 'Dhanmondi Residency',
+                    'BLDG-004': 'Uttara Gardens'
+                };
+                
+                // Enhanced match percentage calculation based on income and other factors
+                const unitRent = 35000; // Average rent for calculation
+                const matchData = calculateMatchPercentage({
+                    monthlyIncome,
+                    employmentStatus,
+                    references: Array(Math.floor(Math.random() * 3) + 1).fill({}), // 1-3 references
+                }, unitRent);
                 
                 return {
-                    id: app._id || `app-${Math.random()}`,
-                    tenant: {
-                        id: app.userID?._id || app.userID || `tenant-${app._id}`,
-                        name: app.userID?.firstName && app.userID?.lastName 
-                            ? `${app.userID.firstName} ${app.userID.lastName}`
-                            : app.userID?.email || 'Unknown Applicant',
-                        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${app.userID?.email || app._id}`,
-                        rating: rating
-                    },
-                    unit: app.unitID?.unitNumber || unitDetails?.unitNumber || 'N/A',
-                    buildingId: app.unitID?.propertyID?.address?.split(',')[0] || 
-                               unitDetails?.property?.split(',')[0] || 
-                               'Unknown Building',
-                    matchPercentage: Math.round(matchData.score),
-                    submissionDate: new Date(app.submissionDate || app.createdAt).toLocaleDateString(),
-                    status: app.status || 'pending',
-                    monthlyIncome: app.monthlyIncome,
-                    employmentStatus: app.employmentStatus,
-                    matchCriteria: matchData.criteria
+                    ...app,
+                    status,
+                    monthlyIncome,
+                    employmentStatus,
+                    matchPercentage: Math.max(10, Math.min(95, matchData.score)), // Ensure reasonable range
+                    matchCriteria: matchData.criteria,
+                    buildingId: buildingMap[app.buildingId] || app.buildingId
                 };
             });
             
-            setApplications(transformedApps);
+            setApplications(enhancedApplications);
             setLastUpdated(new Date());
         } catch (err) {
             console.error('Error fetching applications:', err);

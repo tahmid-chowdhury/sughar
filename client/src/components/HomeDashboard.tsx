@@ -10,6 +10,7 @@ import { MonthlyProfitData, ServiceRequestVolume } from '../types';
 interface HomeDashboardProps {
   setViewingTenantId: (id: string) => void;
   setCurrentPage: (page: string) => void;
+  handlePageNavigation?: (page: string, options?: { tab?: string }) => void;
 }
 
 interface DashboardStats {
@@ -74,7 +75,7 @@ const formatRevenue = (amount: number): string => {
   return `৳${amount.toLocaleString()}`;
 };
 
-export const HomeDashboard: React.FC<HomeDashboardProps> = ({ setViewingTenantId, setCurrentPage }) => {
+export const HomeDashboard: React.FC<HomeDashboardProps> = ({ setViewingTenantId, setCurrentPage, handlePageNavigation }) => {
   const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
@@ -146,7 +147,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({ setViewingTenantId
             label: `${dashboardStats.applications.pending} Pending Applications`,
             icon: Users,
             isAlert: dashboardStats.applications.pending > 0,
-            onClick: () => setCurrentPage('applications')
+            onClick: () => handlePageNavigation ? handlePageNavigation('tenants', { tab: 'Applications' }) : setCurrentPage('tenants')
           }
         ];
         setActionItems(actionCenterItems);
@@ -267,24 +268,6 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({ setViewingTenantId
 
         <Card>
           <button 
-            onClick={() => setCurrentPage('buildings')}
-            className="w-full text-left transition-colors duration-200 rounded-lg p-1 -m-1 cursor-pointer"
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-text-secondary">Vacant Units</p>
-                <p className="text-3xl font-bold text-text-main mt-1">{stats.units.vacant}</p>
-                <p className="text-xs text-gray-500 mt-1">out of {stats.units.total} total</p>
-              </div>
-              <div className="p-3 rounded-lg bg-red-100 text-red-600 group-hover:bg-red-200 transition-colors">
-                <HomeIcon className="w-6 h-6" />
-              </div>
-            </div>
-          </button>
-        </Card>
-
-        <Card>
-          <button 
             onClick={() => setCurrentPage('service-requests')}
             className="w-full text-left transition-colors duration-200 rounded-lg p-1 -m-1 cursor-pointer"
           >
@@ -344,7 +327,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({ setViewingTenantId
         <Card>
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-sm text-text-secondary">Revenue Potential</p>
+              <p className="text-sm text-text-secondary">Revenue This Month</p>
               <p className="text-3xl font-bold text-text-main mt-1">{formatRevenue(stats.units.totalRevenue)}</p>
               <p className="text-xs text-gray-500 mt-1">monthly</p>
             </div>

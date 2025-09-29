@@ -7,6 +7,7 @@ import { SlidersHorizontal } from './icons';
 interface SpecificBuildingUnitsPageProps {
     buildingId: string;
     setViewingTenantId: (tenantId: string) => void;
+    onUnitClick?: (unitId: string) => void;
 }
 
 const CategoryPill = ({ category }: { category: BuildingCategory }) => {
@@ -32,10 +33,13 @@ const StatusPill = ({ status }: { status: UnitStatus | RentStatus | null }) => {
 };
 
 const TenantCell = ({ tenant, setViewingTenantId }: { tenant: UnitDetail['tenant'], setViewingTenantId: (tenantId: string) => void }) => {
-    if (!tenant) return <span className="text-gray-400">---</span>;
+    if (!tenant) return <span className="text-gray-400 italic">Vacant</span>;
     return (
         <button
-            onClick={() => setViewingTenantId(tenant.id)}
+            onClick={(e) => {
+                e.stopPropagation();
+                setViewingTenantId(tenant.id);
+            }}
             className="flex items-center text-left w-full p-1 rounded-md transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-accent-primary"
         >
             <img className="h-8 w-8 rounded-full object-cover" src={tenant.avatar} alt={tenant.name} />
@@ -56,51 +60,66 @@ const SortableHeader: React.FC<{ children: React.ReactNode }> = ({ children }) =
     </th>
 );
 
-export const SpecificBuildingUnitsPage: React.FC<SpecificBuildingUnitsPageProps> = ({ buildingId, setViewingTenantId }) => {
+export const SpecificBuildingUnitsPage: React.FC<SpecificBuildingUnitsPageProps> = ({ buildingId, setViewingTenantId, onUnitClick }) => {
     const buildingUnits = UNITS_PAGE_DATA.filter(unit => unit.buildingId === buildingId);
 
     return (
         <Card className="!p-0">
-             <div className="flex justify-end p-4">
+             <div className="flex justify-between items-center p-4">
+                <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Units</h3>
+                    <p className="text-sm text-gray-500">{buildingUnits.length} units found</p>
+                </div>
                 <button className="flex items-center text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg px-4 py-2 hover:bg-gray-50">
                     <SlidersHorizontal className="w-4 h-4 mr-2" />
                     Advanced filtering
                 </button>
             </div>
-            <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <SortableHeader>Unit</SortableHeader>
-                            <SortableHeader>Category</SortableHeader>
-                            <SortableHeader>Monthly Rent</SortableHeader>
-                            <SortableHeader>Status</SortableHeader>
-                            <SortableHeader>Tenant</SortableHeader>
-                            <SortableHeader>Rent Status</SortableHeader>
-                            <SortableHeader>Lease Start Date</SortableHeader>
-                            <SortableHeader>Lease End Date</SortableHeader>
-                            <SortableHeader>Requests</SortableHeader>
-                        </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                        {buildingUnits.map((unit: UnitDetail, index) => (
-                            <tr key={`${unit.unitNumber}-${index}`} className="hover:bg-gray-50">
-                                <td className="px-5 py-4 whitespace-nowrap text-sm font-bold text-gray-900">{unit.unitNumber}</td>
-                                <td className="px-5 py-4 whitespace-nowrap"><CategoryPill category={unit.category} /></td>
-                                <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {new Intl.NumberFormat('en-US').format(unit.monthlyRent)}
-                                </td>
-                                <td className="px-5 py-4 whitespace-nowrap"><StatusPill status={unit.status} /></td>
-                                <td className="px-5 py-4 whitespace-nowrap"><TenantCell tenant={unit.tenant} setViewingTenantId={setViewingTenantId} /></td>
-                                <td className="px-5 py-4 whitespace-nowrap"><StatusPill status={unit.rentStatus} /></td>
-                                <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-500">{unit.leaseStartDate || '---'}</td>
-                                <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-500">{unit.leaseEndDate || '---'}</td>
-                                <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-500">{unit.requests}</td>
+            {buildingUnits.length === 0 ? (
+                <div className="p-8 text-center">
+                    <div className="text-gray-400 text-lg mb-2">No units found for this building</div>
+                    <p className="text-gray-500 text-sm">Building ID: {buildingId}</p>
+                </div>
+            ) : (
+                <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                            <tr>
+                                <SortableHeader>Unit</SortableHeader>
+                                <SortableHeader>Category</SortableHeader>
+                                <SortableHeader>Monthly Rent</SortableHeader>
+                                <SortableHeader>Status</SortableHeader>
+                                <SortableHeader>Tenant</SortableHeader>
+                                <SortableHeader>Rent Status</SortableHeader>
+                                <SortableHeader>Lease Start Date</SortableHeader>
+                                <SortableHeader>Lease End Date</SortableHeader>
+                                <SortableHeader>Requests</SortableHeader>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {buildingUnits.map((unit: UnitDetail, index) => (
+                                <tr 
+                                    key={`${unit.unitNumber}-${index}`} 
+                                    className="hover:bg-gray-50 cursor-pointer" 
+                                    onClick={() => onUnitClick?.(unit.id)}
+                                >
+                                    <td className="px-5 py-4 whitespace-nowrap text-sm font-bold text-blue-600 hover:text-blue-800">{unit.unitNumber}</td>
+                                    <td className="px-5 py-4 whitespace-nowrap"><CategoryPill category={unit.category} /></td>
+                                    <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {new Intl.NumberFormat('en-US').format(unit.monthlyRent)}
+                                    </td>
+                                    <td className="px-5 py-4 whitespace-nowrap"><StatusPill status={unit.status} /></td>
+                                    <td className="px-5 py-4 whitespace-nowrap"><TenantCell tenant={unit.tenant} setViewingTenantId={setViewingTenantId} /></td>
+                                    <td className="px-5 py-4 whitespace-nowrap"><StatusPill status={unit.rentStatus} /></td>
+                                    <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-500">{unit.leaseStartDate || '---'}</td>
+                                    <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-500">{unit.leaseEndDate || '---'}</td>
+                                    <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-500">{unit.requests}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
         </Card>
     );
 };

@@ -17,6 +17,7 @@ import TenantApplicationsPage from './TenantApplicationsPage';
 
 interface TenantsDashboardProps {
   setViewingTenantId: (id: string) => void;
+  initialTab?: string;
 }
 
 const StatCard: React.FC<{ stat: TenantDashboardStat }> = ({ stat }) => (
@@ -115,8 +116,8 @@ const QuickViewCard: React.FC = () => (
     </Card>
 );
 
-export const TenantsDashboard: React.FC<TenantsDashboardProps> = ({ setViewingTenantId }) => {
-  const [activeTab, setActiveTab] = useState('Overview');
+export const TenantsDashboard: React.FC<TenantsDashboardProps> = ({ setViewingTenantId, initialTab = 'Overview' }) => {
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   // Hardcoded tenant data for Overview tab
   const hardcodedTenants = [
