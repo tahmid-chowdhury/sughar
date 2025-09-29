@@ -41,7 +41,7 @@ const RentStatusPill: React.FC<{ status: RentStatus }> = ({ status }) => {
 };
 
 const TenantTable: React.FC<{ tenants: Tenant[], setViewingTenantId: (id: string) => void, onViewAll?: () => void }> = ({ tenants, setViewingTenantId, onViewAll }) => {
-    const displayTenants = tenants.slice(0, 12); // Show only first 12 tenants
+    const displayTenants = tenants.slice(0, 13); // Show only first 13 tenants
     
     return (
         <Card className="!p-0 h-full flex flex-col">
@@ -81,7 +81,7 @@ const TenantTable: React.FC<{ tenants: Tenant[], setViewingTenantId: (id: string
                     </tbody>
                 </table>
             </div>
-            {tenants.length > 12 && onViewAll && (
+            {tenants.length > 13 && onViewAll && (
                 <div className="border-t border-gray-200 px-5 py-4">
                     <button 
                         onClick={onViewAll}
