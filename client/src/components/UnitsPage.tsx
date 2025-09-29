@@ -65,160 +65,49 @@ export const UnitsPage: React.FC<UnitsPageProps> = ({ setViewingTenantId, onAddN
             setLoading(true);
             setError(null);
 
-            // Get comprehensive data from multiple APIs
-            const [dashboardStats, leaseAgreements, serviceRequests, payments] = await Promise.all([
-                dashboardAPI.getStats(),
-                leaseAgreementsAPI.getAll().catch(() => []),
-                serviceRequestsAPI.getAll().catch(() => []),
-                paymentsAPI.getAll().catch(() => [])
-            ]);
+            // Hardcoded units data based on provided information
+            const hardcodedUnits: UnitDetail[] = [
+                // Building 1 – Lalmatia Court
+                { id: 'U001', unitNumber: '1A', buildingId: 'Lalmatia Court', category: BuildingCategory.Standard, bedrooms: 2, bathrooms: 1, sqft: 850, rent: 25000, monthlyRent: 25000, status: UnitStatus.Rented, rentStatus: RentStatus.Paid, tenant: { id: 'T001', name: 'Farzana Akhter', avatar: 'https://ui-avatars.com/api/?name=Farzana+Akhter&background=random' }, leaseStartDate: '7/14/2025', leaseEndDate: '1/14/2026', requests: 0 },
+                { id: 'U002', unitNumber: '2A', buildingId: 'Lalmatia Court', category: BuildingCategory.Standard, bedrooms: 2, bathrooms: 1, sqft: 850, rent: 25000, monthlyRent: 25000, status: UnitStatus.Vacant, rentStatus: null, tenant: null, leaseStartDate: '3/1/2025', leaseEndDate: '9/28/2025', requests: 0 },
+                { id: 'U003', unitNumber: '3A', buildingId: 'Lalmatia Court', category: BuildingCategory.Standard, bedrooms: 2, bathrooms: 1, sqft: 850, rent: 25000, monthlyRent: 25000, status: UnitStatus.Rented, rentStatus: RentStatus.Paid, tenant: { id: 'T003', name: 'Shahriar Karim', avatar: 'https://ui-avatars.com/api/?name=Shahriar+Karim&background=random' }, leaseStartDate: '9/2/2025', leaseEndDate: '3/2/2026', requests: 0 },
+                { id: 'U004', unitNumber: '4A', buildingId: 'Lalmatia Court', category: BuildingCategory.Standard, bedrooms: 2, bathrooms: 1, sqft: 850, rent: 25000, monthlyRent: 25000, status: UnitStatus.Rented, rentStatus: RentStatus.Pending, tenant: { id: 'T004', name: 'Tania Akter', avatar: 'https://ui-avatars.com/api/?name=Tania+Akter&background=random' }, leaseStartDate: '9/3/2025', leaseEndDate: '3/3/2026', requests: 1 },
+                { id: 'U005', unitNumber: '1B', buildingId: 'Lalmatia Court', category: BuildingCategory.Standard, bedrooms: 2, bathrooms: 1, sqft: 850, rent: 25000, monthlyRent: 25000, status: UnitStatus.Rented, rentStatus: RentStatus.Paid, tenant: { id: 'T005', name: 'Imran Chowdhury', avatar: 'https://ui-avatars.com/api/?name=Imran+Chowdhury&background=random' }, leaseStartDate: '11/11/2025', leaseEndDate: '5/11/2026', requests: 0 },
+                { id: 'U006', unitNumber: '2B', buildingId: 'Lalmatia Court', category: BuildingCategory.Standard, bedrooms: 2, bathrooms: 1, sqft: 850, rent: 25000, monthlyRent: 25000, status: UnitStatus.Rented, rentStatus: RentStatus.Overdue, tenant: { id: 'T006', name: 'Sumi Akhter', avatar: 'https://ui-avatars.com/api/?name=Sumi+Akhter&background=random' }, leaseStartDate: '10/28/2025', leaseEndDate: '4/28/2026', requests: 1 },
+                { id: 'U007', unitNumber: '3B', buildingId: 'Lalmatia Court', category: BuildingCategory.Standard, bedrooms: 2, bathrooms: 1, sqft: 850, rent: 25000, monthlyRent: 25000, status: UnitStatus.Rented, rentStatus: RentStatus.Paid, tenant: { id: 'T007', name: 'Hasan Mahmud', avatar: 'https://ui-avatars.com/api/?name=Hasan+Mahmud&background=random' }, leaseStartDate: '12/17/2025', leaseEndDate: '6/17/2026', requests: 0 },
+                { id: 'U008', unitNumber: '4B', buildingId: 'Lalmatia Court', category: BuildingCategory.Standard, bedrooms: 2, bathrooms: 1, sqft: 850, rent: 25000, monthlyRent: 25000, status: UnitStatus.Rented, rentStatus: RentStatus.Paid, tenant: { id: 'T008', name: 'Shuvo Islam', avatar: 'https://ui-avatars.com/api/?name=Shuvo+Islam&background=random' }, leaseStartDate: '8/9/2025', leaseEndDate: '2/9/2026', requests: 0 },
+                { id: 'U009', unitNumber: '1C', buildingId: 'Lalmatia Court', category: BuildingCategory.Standard, bedrooms: 2, bathrooms: 1, sqft: 850, rent: 25000, monthlyRent: 25000, status: UnitStatus.Rented, rentStatus: RentStatus.Paid, tenant: { id: 'T009', name: 'Maruf Khan', avatar: 'https://ui-avatars.com/api/?name=Maruf+Khan&background=random' }, leaseStartDate: '5/22/2025', leaseEndDate: '11/22/2025', requests: 1 },
+                { id: 'U010', unitNumber: '2C', buildingId: 'Lalmatia Court', category: BuildingCategory.Standard, bedrooms: 2, bathrooms: 1, sqft: 850, rent: 25000, monthlyRent: 25000, status: UnitStatus.Rented, rentStatus: RentStatus.Paid, tenant: { id: 'T010', name: 'Mahin Alam', avatar: 'https://ui-avatars.com/api/?name=Mahin+Alam&background=random' }, leaseStartDate: '2/15/2025', leaseEndDate: '8/15/2026', requests: 0 },
+                { id: 'U011', unitNumber: '3C', buildingId: 'Lalmatia Court', category: BuildingCategory.Standard, bedrooms: 2, bathrooms: 1, sqft: 850, rent: 25000, monthlyRent: 25000, status: UnitStatus.Rented, rentStatus: RentStatus.Paid, tenant: { id: 'T011', name: 'Saima Binte Noor', avatar: 'https://ui-avatars.com/api/?name=Saima+Binte+Noor&background=random' }, leaseStartDate: '1/5/2025', leaseEndDate: '7/5/2026', requests: 0 },
+                { id: 'U012', unitNumber: '4C', buildingId: 'Lalmatia Court', category: BuildingCategory.Standard, bedrooms: 2, bathrooms: 1, sqft: 850, rent: 25000, monthlyRent: 25000, status: UnitStatus.Rented, rentStatus: RentStatus.Pending, tenant: { id: 'T012', name: 'Javed Rahman', avatar: 'https://ui-avatars.com/api/?name=Javed+Rahman&background=random' }, leaseStartDate: '6/19/2025', leaseEndDate: '12/19/2025', requests: 0 },
+                
+                // Building 2 – Banani Heights
+                { id: 'U013', unitNumber: '1A', buildingId: 'Banani Heights', category: BuildingCategory.MidRange, bedrooms: 3, bathrooms: 2, sqft: 1100, rent: 35000, monthlyRent: 35000, status: UnitStatus.Rented, rentStatus: RentStatus.Paid, tenant: { id: 'T013', name: 'Sadia Hossain', avatar: 'https://ui-avatars.com/api/?name=Sadia+Hossain&background=random' }, leaseStartDate: '4/3/2025', leaseEndDate: '10/3/2026', requests: 0 },
+                { id: 'U014', unitNumber: '2A', buildingId: 'Banani Heights', category: BuildingCategory.MidRange, bedrooms: 3, bathrooms: 2, sqft: 1100, rent: 35000, monthlyRent: 35000, status: UnitStatus.Rented, rentStatus: RentStatus.Paid, tenant: { id: 'T014', name: 'Kamal Uddin', avatar: 'https://ui-avatars.com/api/?name=Kamal+Uddin&background=random' }, leaseStartDate: '3/2/2025', leaseEndDate: '9/2/2026', requests: 1 },
+                { id: 'U015', unitNumber: '3A', buildingId: 'Banani Heights', category: BuildingCategory.MidRange, bedrooms: 3, bathrooms: 2, sqft: 1100, rent: 35000, monthlyRent: 35000, status: UnitStatus.Rented, rentStatus: RentStatus.Paid, tenant: { id: 'T015', name: 'Mehnaz Sultana', avatar: 'https://ui-avatars.com/api/?name=Mehnaz+Sultana&background=random' }, leaseStartDate: '11/23/2025', leaseEndDate: '5/23/2026', requests: 0 },
+                { id: 'U016', unitNumber: '4A', buildingId: 'Banani Heights', category: BuildingCategory.MidRange, bedrooms: 3, bathrooms: 2, sqft: 1100, rent: 35000, monthlyRent: 35000, status: UnitStatus.Rented, rentStatus: RentStatus.Overdue, tenant: { id: 'T016', name: 'Tanvir Ahmed', avatar: 'https://ui-avatars.com/api/?name=Tanvir+Ahmed&background=random' }, leaseStartDate: '10/11/2025', leaseEndDate: '4/11/2026', requests: 1 },
+                { id: 'U017', unitNumber: '1B', buildingId: 'Banani Heights', category: BuildingCategory.MidRange, bedrooms: 3, bathrooms: 2, sqft: 1100, rent: 35000, monthlyRent: 35000, status: UnitStatus.Rented, rentStatus: RentStatus.Paid, tenant: { id: 'T017', name: 'Nasrin Akter', avatar: 'https://ui-avatars.com/api/?name=Nasrin+Akter&background=random' }, leaseStartDate: '9/29/2025', leaseEndDate: '3/29/2026', requests: 0 },
+                { id: 'U018', unitNumber: '2B', buildingId: 'Banani Heights', category: BuildingCategory.MidRange, bedrooms: 3, bathrooms: 2, sqft: 1100, rent: 35000, monthlyRent: 35000, status: UnitStatus.Rented, rentStatus: RentStatus.Paid, tenant: { id: 'T018', name: 'Mithun Das', avatar: 'https://ui-avatars.com/api/?name=Mithun+Das&background=random' }, leaseStartDate: '2/20/2025', leaseEndDate: '8/20/2026', requests: 0 },
+                { id: 'U019', unitNumber: '3B', buildingId: 'Banani Heights', category: BuildingCategory.MidRange, bedrooms: 3, bathrooms: 2, sqft: 1100, rent: 35000, monthlyRent: 35000, status: UnitStatus.Rented, rentStatus: RentStatus.Pending, tenant: { id: 'T019', name: 'Zahid Hasan', avatar: 'https://ui-avatars.com/api/?name=Zahid+Hasan&background=random' }, leaseStartDate: '12/8/2025', leaseEndDate: '6/8/2026', requests: 1 },
+                { id: 'U020', unitNumber: '4B', buildingId: 'Banani Heights', category: BuildingCategory.MidRange, bedrooms: 3, bathrooms: 2, sqft: 1100, rent: 35000, monthlyRent: 35000, status: UnitStatus.Rented, rentStatus: RentStatus.Paid, tenant: { id: 'T020', name: 'Roksana Begum', avatar: 'https://ui-avatars.com/api/?name=Roksana+Begum&background=random' }, leaseStartDate: '6/30/2025', leaseEndDate: '12/30/2025', requests: 0 },
+                
+                // Building 3 – Dhanmondi Residency
+                { id: 'U021', unitNumber: '1A', buildingId: 'Dhanmondi Residency', category: BuildingCategory.Luxury, bedrooms: 4, bathrooms: 3, sqft: 1400, rent: 45000, monthlyRent: 45000, status: UnitStatus.Vacant, rentStatus: null, tenant: null, leaseStartDate: null, leaseEndDate: null, requests: 0 },
+                { id: 'U022', unitNumber: '2A', buildingId: 'Dhanmondi Residency', category: BuildingCategory.Luxury, bedrooms: 4, bathrooms: 3, sqft: 1400, rent: 45000, monthlyRent: 45000, status: UnitStatus.Rented, rentStatus: RentStatus.Paid, tenant: { id: 'T021', name: 'Shila Rahman', avatar: 'https://ui-avatars.com/api/?name=Shila+Rahman&background=random' }, leaseStartDate: '8/13/2025', leaseEndDate: '2/13/2026', requests: 1 },
+                { id: 'U023', unitNumber: '3A', buildingId: 'Dhanmondi Residency', category: BuildingCategory.Luxury, bedrooms: 4, bathrooms: 3, sqft: 1400, rent: 45000, monthlyRent: 45000, status: UnitStatus.Rented, rentStatus: RentStatus.Paid, tenant: { id: 'T022', name: 'Arefin Chowdhury', avatar: 'https://ui-avatars.com/api/?name=Arefin+Chowdhury&background=random' }, leaseStartDate: '5/9/2025', leaseEndDate: '11/9/2025', requests: 0 },
+                { id: 'U024', unitNumber: '4A', buildingId: 'Dhanmondi Residency', category: BuildingCategory.Luxury, bedrooms: 4, bathrooms: 3, sqft: 1400, rent: 45000, monthlyRent: 45000, status: UnitStatus.Rented, rentStatus: RentStatus.Overdue, tenant: { id: 'T023', name: 'Rezaul Karim', avatar: 'https://ui-avatars.com/api/?name=Rezaul+Karim&background=random' }, leaseStartDate: '7/18/2025', leaseEndDate: '1/18/2026', requests: 1 },
+                { id: 'U025', unitNumber: '5A', buildingId: 'Dhanmondi Residency', category: BuildingCategory.Luxury, bedrooms: 4, bathrooms: 3, sqft: 1400, rent: 45000, monthlyRent: 45000, status: UnitStatus.Rented, rentStatus: RentStatus.Paid, tenant: { id: 'T024', name: 'Nadia Islam', avatar: 'https://ui-avatars.com/api/?name=Nadia+Islam&background=random' }, leaseStartDate: '1/27/2025', leaseEndDate: '7/27/2026', requests: 0 },
+                
+                // Building 4 – Uttara Gardens
+                { id: 'U026', unitNumber: '1', buildingId: 'Uttara Gardens', category: BuildingCategory.Luxury, bedrooms: 5, bathrooms: 4, sqft: 1800, rent: 60000, monthlyRent: 60000, status: UnitStatus.Rented, rentStatus: RentStatus.Paid, tenant: { id: 'T025', name: 'Selina Yasmin', avatar: 'https://ui-avatars.com/api/?name=Selina+Yasmin&background=random' }, leaseStartDate: '7/12/2025', leaseEndDate: '1/12/2026', requests: 1 },
+                { id: 'U027', unitNumber: '2', buildingId: 'Uttara Gardens', category: BuildingCategory.Luxury, bedrooms: 5, bathrooms: 4, sqft: 1800, rent: 60000, monthlyRent: 60000, status: UnitStatus.Rented, rentStatus: RentStatus.Paid, tenant: { id: 'T026', name: 'Abdul Malek', avatar: 'https://ui-avatars.com/api/?name=Abdul+Malek&background=random' }, leaseStartDate: '4/30/2025', leaseEndDate: '10/30/2025', requests: 0 },
+                { id: 'U028', unitNumber: '3', buildingId: 'Uttara Gardens', category: BuildingCategory.Luxury, bedrooms: 5, bathrooms: 4, sqft: 1800, rent: 60000, monthlyRent: 60000, status: UnitStatus.Rented, rentStatus: RentStatus.Paid, tenant: { id: 'T027', name: 'Rafsan Chowdhury', avatar: 'https://ui-avatars.com/api/?name=Rafsan+Chowdhury&background=random' }, leaseStartDate: '3/19/2025', leaseEndDate: '9/19/2026', requests: 0 }
+            ];
 
-            console.log('Dashboard stats for units:', dashboardStats);
-            console.log('Lease agreements:', leaseAgreements);
-            console.log('Service requests:', serviceRequests);
-            console.log('Payments:', payments);
-
-            // Validate dashboard stats structure
-            if (!dashboardStats?.units?.details) {
-                setUnits([]);
-                return;
-            }
-
-            // Transform API data to UnitDetail format
-            const transformedUnits: UnitDetail[] = dashboardStats.units.details.map((unit: any) => {
-                // Find lease agreement for this unit
-                const activeLeases = Array.isArray(leaseAgreements) 
-                    ? leaseAgreements.filter((lease: any) => {
-                        const leaseUnitId = lease.unitID?._id || lease.unitID;
-                        const unitId = unit._id || unit.id;
-                        return leaseUnitId === unitId;
-                    }) 
-                    : [];
-
-                // Get the most recent active lease
-                const currentDate = new Date();
-                const activeLease = activeLeases.find((lease: any) => {
-                    const startDate = new Date(lease.startDate);
-                    const endDate = new Date(lease.endDate);
-                    return startDate <= currentDate && endDate >= currentDate;
-                }) || activeLeases[activeLeases.length - 1]; // Fallback to most recent
-
-                // Count service requests for this unit
-                const unitServiceRequests = Array.isArray(serviceRequests) 
-                    ? serviceRequests.filter((sr: any) => {
-                        const srUnitId = sr.unitID?._id || sr.unitID;
-                        const unitId = unit._id || unit.id;
-                        return srUnitId === unitId;
-                    }).length
-                    : 0;
-
-                // Determine rent status based on lease and actual payments
-                let rentStatus: RentStatus | null = null;
-                if (unit.status === 'occupied' && activeLease) {
-                    // Get payments for this lease
-                    const leasePayments = Array.isArray(payments) 
-                        ? payments.filter((payment: any) => {
-                            const paymentLeaseId = payment.leaseID?._id || payment.leaseID;
-                            const currentLeaseId = activeLease._id || activeLease.id;
-                            return paymentLeaseId === currentLeaseId;
-                        })
-                        : [];
-
-                    // Check payment status for current month
-                    const currentMonth = new Date().getMonth();
-                    const currentYear = new Date().getFullYear();
-                    
-                    const currentMonthPayments = leasePayments.filter((payment: any) => {
-                        const paymentDate = new Date(payment.paymentDate || payment.createdAt);
-                        return paymentDate.getMonth() === currentMonth && 
-                               paymentDate.getFullYear() === currentYear;
-                    });
-
-                    if (currentMonthPayments.length === 0) {
-                        // Check if payment is overdue (more than 5 days past due)
-                        const today = new Date();
-                        const fifthOfMonth = new Date(currentYear, currentMonth, 5);
-                        rentStatus = today > fifthOfMonth ? RentStatus.Overdue : RentStatus.Pending;
-                    } else {
-                        // Check if any payment is completed
-                        const hasCompletedPayment = currentMonthPayments.some((payment: any) => 
-                            payment.status === 'completed'
-                        );
-                        const hasPendingPayment = currentMonthPayments.some((payment: any) => 
-                            payment.status === 'pending'
-                        );
-
-                        if (hasCompletedPayment) {
-                            rentStatus = RentStatus.Paid;
-                        } else if (hasPendingPayment) {
-                            rentStatus = RentStatus.Pending;
-                        } else {
-                            rentStatus = RentStatus.Overdue;
-                        }
-                    }
-                }
-
-                // Determine building category based on rent amount
-                const rentAmount = parseFloat(unit.monthlyRent?.toString() || '0') || 0;
-                let category = BuildingCategory.Standard;
-                if (rentAmount > 3000) {
-                    category = BuildingCategory.Luxury;
-                } else if (rentAmount > 1500) {
-                    category = BuildingCategory.MidRange;
-                }
-
-                // Format lease dates with better error handling
-                const leaseStartDate = activeLease?.startDate 
-                    ? (() => {
-                        try {
-                            return new Date(activeLease.startDate).toLocaleDateString();
-                        } catch {
-                            return activeLease.startDate;
-                        }
-                    })()
-                    : null;
-                    
-                const leaseEndDate = activeLease?.endDate 
-                    ? (() => {
-                        try {
-                            return new Date(activeLease.endDate).toLocaleDateString();
-                        } catch {
-                            return activeLease.endDate;
-                        }
-                    })()
-                    : null;
-
-                // Get tenant information from lease
-                const tenant = (unit.status === 'occupied' && activeLease?.userID) ? {
-                    id: activeLease.userID._id || activeLease.userID,
-                    name: activeLease.userID.firstName && activeLease.userID.lastName 
-                        ? `${activeLease.userID.firstName} ${activeLease.userID.lastName}`
-                        : activeLease.userID.email || 'Current Tenant',
-                    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${activeLease.userID.email || activeLease.userID._id}`
-                } : null;
-
-                return {
-                    id: unit._id || unit.id || `unit-${Math.random()}`,
-                    unitNumber: unit.unitNumber || 'N/A',
-                    buildingId: unit.property || 'Unknown Building',
-                    category,
-                    bedrooms: unit.bedrooms || 1,
-                    bathrooms: unit.bathrooms || 1,
-                    sqft: unit.squareFootage || 800, // Default reasonable size
-                    rent: rentAmount,
-                    monthlyRent: rentAmount,
-                    status: unit.status === 'occupied' ? UnitStatus.Rented : UnitStatus.Vacant,
-                    rentStatus,
-                    tenant,
-                    leaseStartDate,
-                    leaseEndDate,
-                    requests: unitServiceRequests
-                };
-            });
-
-            setUnits(transformedUnits);
+            console.log('Hardcoded units loaded:', hardcodedUnits.length, 'units');
+            setUnits(hardcodedUnits);
         } catch (err) {
-            console.error('Error fetching units:', err);
+            console.error('Error loading hardcoded units:', err);
             const errorMessage = err instanceof Error ? err.message : 'Failed to load units data';
             setError(errorMessage);
         } finally {

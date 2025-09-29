@@ -315,7 +315,9 @@ export const BuildingsUnitsDashboard: React.FC<BuildingsUnitsDashboardProps> = (
                     <Card className="p-6">
                         <h3 className="text-lg font-semibold mb-6">Vacant Units by Building</h3>
                         {chartData.vacantUnits.length > 0 ? (
-                            <VacantUnitsChart data={chartData.vacantUnits} />
+                            <div className="h-80">
+                                <VacantUnitsChart data={chartData.vacantUnits} />
+                            </div>
                         ) : (
                             <div className="h-64 flex items-center justify-center text-text-secondary">
                                 <div className="text-center">
@@ -329,7 +331,9 @@ export const BuildingsUnitsDashboard: React.FC<BuildingsUnitsDashboardProps> = (
                     <Card className="p-6">
                         <h3 className="text-lg font-semibold mb-6">Rent Collection Trends</h3>
                         {chartData.rentCollection.length > 0 ? (
-                            <RentCollectionChart data={chartData.rentCollection} />
+                            <div className="h-80">
+                                <RentCollectionChart data={chartData.rentCollection} />
+                            </div>
                         ) : (
                             <div className="h-64 flex items-center justify-center text-text-secondary">
                                 <div className="text-center">
