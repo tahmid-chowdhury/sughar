@@ -1989,28 +1989,60 @@ async function populateTestData(req, res) {
       // Create Asha Properties portfolio
       const properties = await Property.insertMany([
         {
-          userID: req.user.userId,
-          address: "Lalmatia, Dhaka, Bangladesh",
+          name: "Lalmatia Court",
+          address: {
+            street: "House 123, Road 5",
+            city: "Dhaka",
+            state: "Dhaka Division",
+            zipCode: "1205"
+          },
+          landlord: req.user.userId,
           propertyType: "apartment",
-          name: "Lalmatia Court"
+          totalUnits: 12,
+          yearBuilt: 2018,
+          description: "Modern apartment complex in Lalmatia with 12 residential units"
         },
         {
-          userID: req.user.userId,
-          address: "Banani, Dhaka, Bangladesh", 
+          name: "Banani Heights",
+          address: {
+            street: "Plot 45, Road 11",
+            city: "Dhaka",
+            state: "Dhaka Division",
+            zipCode: "1213"
+          },
+          landlord: req.user.userId,
           propertyType: "apartment",
-          name: "Banani Heights"
+          totalUnits: 8,
+          yearBuilt: 2020,
+          description: "Luxury apartment building in Banani commercial area"
         },
         {
-          userID: req.user.userId,
-          address: "Dhanmondi, Dhaka, Bangladesh",
-          propertyType: "apartment", 
-          name: "Dhanmondi Residency"
+          name: "Dhanmondi Residency",
+          address: {
+            street: "House 67, Road 15A",
+            city: "Dhaka",
+            state: "Dhaka Division",
+            zipCode: "1209"
+          },
+          landlord: req.user.userId,
+          propertyType: "apartment",
+          totalUnits: 5,
+          yearBuilt: 2019,
+          description: "Premium residential apartments in heart of Dhanmondi"
         },
         {
-          userID: req.user.userId,
-          address: "Uttara, Dhaka, Bangladesh",
+          name: "Uttara Gardens",
+          address: {
+            street: "Plot 12, Sector 7",
+            city: "Dhaka",
+            state: "Dhaka Division",
+            zipCode: "1230"
+          },
+          landlord: req.user.userId,
           propertyType: "apartment",
-          name: "Uttara Gardens"
+          totalUnits: 3,
+          yearBuilt: 2021,
+          description: "Family-friendly apartment complex in Uttara residential area"
         }
       ]);
       
@@ -2025,15 +2057,15 @@ async function populateTestData(req, res) {
       
       for (let i = 0; i < lalmatiaUnits.length; i++) {
         const unit = await Unit.create({
-          propertyID: properties[0]._id,
+          property: properties[0]._id,
           unitNumber: lalmatiaUnits[i],
           bedrooms: 2,
           bathrooms: 1,
-          rentAmount: 25000,
+          squareFootage: 900,
           monthlyRent: 25000,
-          size: "900 sq ft",
-          description: `2-bedroom apartment in Lalmatia Court`,
-          isOccupied: lalmatiaOccupancy[i]
+          securityDeposit: 50000,
+          isOccupied: lalmatiaOccupancy[i],
+          description: `2-bedroom apartment in Lalmatia Court`
         });
         units.push(unit);
       }
@@ -2042,15 +2074,15 @@ async function populateTestData(req, res) {
       const bananiUnits = ['1A', '2A', '3A', '4A', '1B', '2B', '3B', '4B'];
       for (let i = 0; i < bananiUnits.length; i++) {
         const unit = await Unit.create({
-          propertyID: properties[1]._id,
+          property: properties[1]._id,
           unitNumber: bananiUnits[i],
           bedrooms: 3,
           bathrooms: 2,
-          rentAmount: 35000,
+          squareFootage: 1200,
           monthlyRent: 35000,
-          size: "1200 sq ft",
-          description: `3-bedroom apartment in Banani Heights`,
-          isOccupied: true
+          securityDeposit: 70000,
+          isOccupied: true,
+          description: `3-bedroom apartment in Banani Heights`
         });
         units.push(unit);
       }
@@ -2060,15 +2092,15 @@ async function populateTestData(req, res) {
       const dhanmondiOccupancy = [false, true, true, true, true]; // 1A is vacant
       for (let i = 0; i < dhanmondiUnits.length; i++) {
         const unit = await Unit.create({
-          propertyID: properties[2]._id,
+          property: properties[2]._id,
           unitNumber: dhanmondiUnits[i],
           bedrooms: 3,
           bathrooms: 2,
-          rentAmount: 40000,
+          squareFootage: 1400,
           monthlyRent: 40000,
-          size: "1400 sq ft",
-          description: `3-bedroom apartment in Dhanmondi Residency`,
-          isOccupied: dhanmondiOccupancy[i]
+          securityDeposit: 80000,
+          isOccupied: dhanmondiOccupancy[i],
+          description: `3-bedroom apartment in Dhanmondi Residency`
         });
         units.push(unit);
       }
@@ -2076,15 +2108,15 @@ async function populateTestData(req, res) {
       // Uttara Gardens - 3 units
       for (let i = 1; i <= 3; i++) {
         const unit = await Unit.create({
-          propertyID: properties[3]._id,
+          property: properties[3]._id,
           unitNumber: i.toString(),
           bedrooms: 2,
           bathrooms: 1,
-          rentAmount: 30000,
+          squareFootage: 1000,
           monthlyRent: 30000,
-          size: "1000 sq ft",
-          description: `2-bedroom apartment in Uttara Gardens`,
-          isOccupied: true
+          securityDeposit: 60000,
+          isOccupied: true,
+          description: `2-bedroom apartment in Uttara Gardens`
         });
         units.push(unit);
       }
@@ -2136,13 +2168,18 @@ async function populateTestData(req, res) {
       
       for (let i = 0; i < Math.min(occupiedUnits.length, tenants.length); i++) {
         const lease = await LeaseAgreement.create({
+          userID: tenants[i]._id,
           unitID: occupiedUnits[i]._id,
-          tenantID: tenants[i]._id,
+          tenant: tenants[i]._id,
+          landlord: req.user.userId,
+          property: occupiedUnits[i].property,
+          unit: occupiedUnits[i]._id,
           startDate: new Date('2024-01-01'),
           endDate: new Date(leaseEndDates[i] || '2026-01-01'),
-          rentAmount: occupiedUnits[i].rentAmount,
-          securityDeposit: occupiedUnits[i].rentAmount * 2,
-          leaseTerms: "Standard lease agreement"
+          monthlyRent: occupiedUnits[i].monthlyRent,
+          securityDeposit: occupiedUnits[i].securityDeposit,
+          status: 'active',
+          terms: "Standard lease agreement for residential unit"
         });
         leases.push(lease);
       }
@@ -2236,18 +2273,25 @@ async function populateTestData(req, res) {
         const application = await RentalApplication.create({
           applicant: applicantUser._id,
           unit: targetUnit._id,
-          property: targetUnit.propertyID,
+          property: targetUnit.property,
           desiredMoveInDate: new Date(Date.now() + (15 + i * 5) * 24 * 60 * 60 * 1000),
           monthlyIncome: data.income,
           employmentStatus: data.employer.includes('Self-employed') ? 'Self-employed' : 'Full-time employed',
           previousAddress: `Previous Address ${i + 1}, Dhaka`,
-          references: [`${data.employer}`, `Reference ${i + 1}`],
+          references: [
+            {
+              name: data.employer,
+              relationship: 'Employer',
+              phoneNumber: '+880-1700-000000'
+            },
+            {
+              name: `Reference ${i + 1}`,
+              relationship: 'Personal Reference',
+              phoneNumber: '+880-1800-000000'
+            }
+          ],
           status: data.status,
-          applicationDate: new Date(Date.now() - (i + 1) * 24 * 60 * 60 * 1000),
-          occupation: data.occupation,
-          employer: data.employer,
-          yearsAtEmployer: data.yearsEmployed,
-          previousTenantRating: data.rating
+          applicationDate: new Date(Date.now() - (i + 1) * 24 * 60 * 60 * 1000)
         });
         applications.push(application);
       }
@@ -2256,11 +2300,11 @@ async function populateTestData(req, res) {
       
       // Create service requests
       const serviceRequestsData = [
-        { unitRef: 'Lalmatia Court-4A', title: 'Leak under kitchen sink', desc: 'Tenant reports water pooling under sink; cabinet getting damaged.', date: '2025-09-20', priority: 'high' },
-        { unitRef: 'Lalmatia Court-2B', title: 'Bathroom faucet dripping', desc: 'Constant dripping, wasting water and raising bill.', date: '2025-09-22', priority: 'medium' },
-        { unitRef: 'Lalmatia Court-1C', title: 'AC not cooling properly', desc: 'AC blows warm air even after filter cleaning.', date: '2025-09-19', priority: 'high' },
-        { unitRef: 'Banani Heights-2A', title: 'Electrical outage in living room', desc: 'Circuit breaker keeps tripping, no power in living room.', date: '2025-09-18', priority: 'high' },
-        { unitRef: 'Banani Heights-4A', title: 'Window glass cracked', desc: 'Small crack in bedroom window, risk of shattering.', date: '2025-09-23', priority: 'medium' }
+        { unitRef: 'Lalmatia Court-4A', title: 'Leak under kitchen sink', desc: 'Tenant reports water pooling under sink; cabinet getting damaged.', date: '2025-09-20', priority: 'high', category: 'plumbing' },
+        { unitRef: 'Lalmatia Court-2B', title: 'Bathroom faucet dripping', desc: 'Constant dripping, wasting water and raising bill.', date: '2025-09-22', priority: 'medium', category: 'plumbing' },
+        { unitRef: 'Lalmatia Court-1C', title: 'AC not cooling properly', desc: 'AC blows warm air even after filter cleaning.', date: '2025-09-19', priority: 'high', category: 'hvac' },
+        { unitRef: 'Banani Heights-2A', title: 'Electrical outage in living room', desc: 'Circuit breaker keeps tripping, no power in living room.', date: '2025-09-18', priority: 'high', category: 'electrical' },
+        { unitRef: 'Banani Heights-4A', title: 'Window glass cracked', desc: 'Small crack in bedroom window, risk of shattering.', date: '2025-09-23', priority: 'medium', category: 'structural' }
       ];
       
       const serviceRequests = [];
@@ -2270,23 +2314,19 @@ async function populateTestData(req, res) {
         
         // Find the corresponding unit and tenant
         const targetProperty = properties.find(p => p.name === propertyName);
-        const targetUnit = units.find(u => u.propertyID.equals(targetProperty._id) && u.unitNumber === unitNum);
-        const targetLease = leases.find(l => l.unitID.equals(targetUnit._id));
+        const targetUnit = units.find(u => u.property.equals(targetProperty._id) && u.unitNumber === unitNum);
+        const targetLease = leases.find(l => l.unit.equals(targetUnit._id));
         
         if (targetUnit && targetLease) {
           const serviceRequest = await ServiceRequest.create({
-            requestId: `SR-000${i + 1}`,
+            tenant: targetLease.tenant,
             property: targetProperty._id,
             unit: targetUnit._id,
-            tenant: targetLease.tenantID,
-            landlord: req.user.userId,
             title: srData.title,
             description: srData.desc,
-            status: i === 3 ? 'completed' : (i === 1 ? 'in_progress' : 'pending'),
+            category: srData.category,
             priority: srData.priority,
-            requestDate: new Date(srData.date),
-            createdAt: new Date(),
-            updatedAt: new Date()
+            status: i === 3 ? 'completed' : (i === 1 ? 'in-progress' : 'open')
           });
           serviceRequests.push(serviceRequest);
         }
@@ -2299,16 +2339,24 @@ async function populateTestData(req, res) {
       for (const lease of leases) {
         // Create 3 months of payment history
         for (let month = 0; month < 3; month++) {
-          const paymentDate = new Date();
-          paymentDate.setMonth(paymentDate.getMonth() - month);
+          const dueDate = new Date();
+          dueDate.setMonth(dueDate.getMonth() - month);
+          dueDate.setDate(1); // First of the month
+          
+          const paidDate = month < 2 ? new Date(dueDate.getTime() + (5 * 24 * 60 * 60 * 1000)) : null; // Paid 5 days after due date
           
           const payment = await Payment.create({
-            leaseAgreementID: lease._id,
-            amount: lease.rentAmount,
-            paymentDate: paymentDate,
-            dueDate: new Date(paymentDate.getFullYear(), paymentDate.getMonth(), 1),
+            tenant: lease.tenant,
+            landlord: req.user.userId,
+            property: lease.property,
+            unit: lease.unit,
+            amount: lease.monthlyRent,
+            dueDate: dueDate,
+            paidDate: paidDate,
+            paymentMethod: ["bank-transfer", "cash", "credit-card"][month % 3],
             status: month < 2 ? "paid" : "pending",
-            paymentMethod: ["bank_transfer", "mobile_banking", "cash"][month % 3]
+            type: "rent",
+            description: `Monthly rent for ${dueDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`
           });
           payments.push(payment);
         }
