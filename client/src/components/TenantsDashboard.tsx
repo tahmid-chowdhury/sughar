@@ -40,46 +40,61 @@ const RentStatusPill: React.FC<{ status: RentStatus }> = ({ status }) => {
     return <span className={`px-3 py-1 text-xs font-medium rounded-full ${styles[status]}`}>{status}</span>;
 };
 
-const TenantTable: React.FC<{ tenants: Tenant[], setViewingTenantId: (id: string) => void }> = ({ tenants, setViewingTenantId }) => (
-    <Card className="!p-0 h-full">
-        <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                    <tr>
-                        <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tenant</th>
-                        <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Building</th>
-                        <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lease Progress</th>
-                        <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rent Status</th>
-                        <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Requests</th>
-                    </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                    {tenants.map((tenant) => (
-                        <tr key={tenant.id} className="hover:bg-gray-50">
-                            <td className="px-5 py-3 whitespace-nowrap">
-                                <button onClick={() => setViewingTenantId(tenant.id)} className="flex items-center text-left">
-                                    <img className="h-8 w-8 rounded-full" src={tenant.avatar} alt={tenant.name} />
-                                    <div className="ml-3">
-                                        <div className="text-sm font-medium text-gray-900">{tenant.name}</div>
-                                    </div>
-                                    <span className="ml-2 px-2 py-0.5 text-xs font-semibold text-purple-800 bg-purple-100 rounded-full">{tenant.rating}</span>
-                                </button>
-                            </td>
-                            <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-500">{tenant.building}</td>
-                            <td className="px-5 py-3 whitespace-nowrap">
-                                <div className="w-24 bg-gray-200 rounded-full h-2">
-                                    <div className="bg-accent-primary h-2 rounded-full" style={{ width: `${tenant.leaseProgress}%` }}></div>
-                                </div>
-                            </td>
-                            <td className="px-5 py-3 whitespace-nowrap"><RentStatusPill status={tenant.rentStatus} /></td>
-                            <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-500 text-center">{tenant.requests}</td>
+const TenantTable: React.FC<{ tenants: Tenant[], setViewingTenantId: (id: string) => void, onViewAll?: () => void }> = ({ tenants, setViewingTenantId, onViewAll }) => {
+    const displayTenants = tenants.slice(0, 12); // Show only first 12 tenants
+    
+    return (
+        <Card className="!p-0 h-full flex flex-col">
+            <div className="overflow-x-auto flex-1">
+                <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                        <tr>
+                            <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tenant</th>
+                            <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Building</th>
+                            <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lease Progress</th>
+                            <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rent Status</th>
+                            <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">Requests</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    </Card>
-);
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                        {displayTenants.map((tenant) => (
+                            <tr key={tenant.id} className="hover:bg-gray-50">
+                                <td className="px-5 py-3 whitespace-nowrap">
+                                    <button onClick={() => setViewingTenantId(tenant.id)} className="flex items-center text-left">
+                                        <img className="h-8 w-8 rounded-full" src={tenant.avatar} alt={tenant.name} />
+                                        <div className="ml-3">
+                                            <div className="text-sm font-medium text-gray-900">{tenant.name}</div>
+                                        </div>
+                                        <span className="ml-2 px-2 py-0.5 text-xs font-semibold text-purple-800 bg-purple-100 rounded-full">{tenant.rating}</span>
+                                    </button>
+                                </td>
+                                <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-500">{tenant.building}</td>
+                                <td className="px-5 py-3 whitespace-nowrap">
+                                    <div className="w-24 bg-gray-200 rounded-full h-2">
+                                        <div className="bg-accent-primary h-2 rounded-full" style={{ width: `${tenant.leaseProgress}%` }}></div>
+                                    </div>
+                                </td>
+                                <td className="px-5 py-3 whitespace-nowrap"><RentStatusPill status={tenant.rentStatus} /></td>
+                                <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-500 text-center">{tenant.requests}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+            {tenants.length > 12 && onViewAll && (
+                <div className="border-t border-gray-200 px-5 py-4">
+                    <button 
+                        onClick={onViewAll}
+                        className="w-full text-center text-sm text-accent-primary hover:text-accent-primary-dark font-medium flex items-center justify-center gap-2 py-2"
+                    >
+                        View all {tenants.length} tenants
+                        <ChevronRight className="w-4 h-4" />
+                    </button>
+                </div>
+            )}
+        </Card>
+    );
+};
 
 const QuickViewCard: React.FC = () => (
     <Card className="h-full flex flex-col">
@@ -152,7 +167,11 @@ export const TenantsDashboard: React.FC<TenantsDashboardProps> = ({ setViewingTe
             </div>
             <div className="grid grid-cols-12 gap-8">
                 <div className="col-span-12 lg:col-span-6 xl:col-span-7">
-                    <TenantTable tenants={hardcodedTenants} setViewingTenantId={setViewingTenantId} />
+                    <TenantTable 
+                        tenants={hardcodedTenants} 
+                        setViewingTenantId={setViewingTenantId}
+                        onViewAll={() => setActiveTab('Current Tenants')}
+                    />
                 </div>
                 <div className="col-span-12 lg:col-span-6 xl:col-span-5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-8">
                     <div className="md:col-span-2 lg:col-span-1 grid grid-cols-1 md:grid-cols-2 gap-8">
