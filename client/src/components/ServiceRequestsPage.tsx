@@ -307,7 +307,46 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
             setDashboardStats(dashboardData);
             
             if (!Array.isArray(serviceRequestsData)) {
+                console.warn('Service requests data is not an array:', serviceRequestsData);
                 setServiceRequests([]);
+                return;
+            }
+            
+            // Handle empty array case - but check if dashboard has service request data
+            if (serviceRequestsData.length === 0) {
+                console.log('No service requests from API, checking dashboard stats');
+                
+                // If dashboard stats show service requests exist, try to use that data
+                if (dashboardData?.serviceRequests?.recent && dashboardData.serviceRequests.recent.length > 0) {
+                    console.log('Using service requests from dashboard stats:', dashboardData.serviceRequests.recent);
+                    
+                    // Transform dashboard service request data
+                    const dashboardServiceRequests = dashboardData.serviceRequests.recent.map((sr: any, index: number) => ({
+                        id: sr._id || `sr-dashboard-${index}`,
+                        building: sr.unitID?.propertyID?.address?.split(',')[0] || 'Unknown Building',
+                        unit: sr.unitID?.unitNumber || 'Unknown Unit',
+                        requestDate: new Date(sr.dateCreated || sr.createdAt || Date.now()).toLocaleDateString(),
+                        assignedContact: {
+                            name: sr.contractorID?.companyName || 
+                                  (sr.tenantID?.firstName && sr.tenantID?.lastName ? 
+                                   `${sr.tenantID.firstName} ${sr.tenantID.lastName}` : 
+                                   sr.tenantID?.email || 'Unassigned'),
+                            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${sr.tenantID?.email || sr._id || index}`
+                        },
+                        status: mapApiStatusToRequestStatus(sr.status),
+                        description: sr.description || 'No description provided',
+                        category: sr.category || 'General',
+                        priority: sr.priority || 'medium',
+                        urgencyScore: calculateUrgencyScore(sr),
+                        requests: 1
+                    }));
+                    
+                    setServiceRequests(dashboardServiceRequests);
+                } else {
+                    console.log('No service requests found anywhere, setting empty array');
+                    setServiceRequests([]);
+                }
+                setLastUpdated(new Date());
                 return;
             }
             
@@ -391,6 +430,11 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
     };
 
     const filteredAndSortedData = useMemo(() => {
+        // Safety check for empty or invalid data
+        if (!Array.isArray(serviceRequests) || serviceRequests.length === 0) {
+            return [];
+        }
+        
         let filtered = serviceRequests.filter((request: any) => {
             // Status filter
             if (filters.status !== 'all' && request.status !== filters.status) return false;
@@ -456,7 +500,7 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
         });
 
         return filtered;
-    }, [serviceRequests, sortConfig, filters]);
+    }, [serviceRequests, sortConfig, filters.status, filters.building, filters.assignedContact, filters.priority, filters.category, filters.searchTerm]);
 
     const handleRequestClick = (id: string) => {
         setSelectedRequestId(id);
@@ -531,6 +575,20 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
 
     // Calculate summary statistics
     const summaryStats = useMemo(() => {
+        // Safety check for empty or invalid data
+        if (!Array.isArray(serviceRequests) || serviceRequests.length === 0) {
+            return {
+                total: 0,
+                pending: 0,
+                inProgress: 0,
+                completed: 0,
+                highPriority: 0,
+                urgent: 0,
+                averageUrgencyScore: 0,
+                categoryBreakdown: {}
+            };
+        }
+        
         const totalRequests = serviceRequests.length;
         const pendingRequests = serviceRequests.filter(req => req.status === RequestStatus.Pending).length;
         const inProgressRequests = serviceRequests.filter(req => req.status === RequestStatus.InProgress).length;
