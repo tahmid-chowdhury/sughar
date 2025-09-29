@@ -2124,7 +2124,6 @@ async function populateTestData(req, res) {
       console.log('Created units:', units.length);
       
       // Create tenant users based on sample data
-      const bcrypt = require('bcryptjs');
       const passwordHash = await bcrypt.hash("password123", 10);
       
       const tenantNames = [
