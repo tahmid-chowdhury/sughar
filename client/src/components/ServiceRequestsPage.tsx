@@ -55,12 +55,13 @@ const SortableHeader: React.FC<{
 const ContactCell: React.FC<{ 
     contact: { name: string; avatar: string; };
     setViewingTenantId?: (tenantId: string) => void;
-}> = ({ contact, setViewingTenantId }) => (
+    onContactClick?: (contactName: string) => void;
+}> = ({ contact, setViewingTenantId, onContactClick }) => (
     <div className="flex items-center">
         <img className="h-8 w-8 rounded-full object-cover" src={contact.avatar} alt={contact.name} />
         {setViewingTenantId ? (
             <button 
-                onClick={() => setViewingTenantId(contact.name.toLowerCase().replace(/\s+/g, '-'))}
+                onClick={() => onContactClick?.(contact.name)}
                 className="ml-3 font-medium text-blue-600 hover:underline bg-gray-100 rounded-full px-3 py-1 text-sm"
             >
                 {contact.name}
@@ -128,14 +129,26 @@ const FilterPanel: React.FC<{
     onClose: () => void;
     serviceRequests: ServiceRequest[];
 }> = ({ filters, onFilterChange, onClose, serviceRequests }) => {
-    const uniqueBuildings = [...new Set(serviceRequests.map((req: any) => req.building))].sort();
-    const uniqueContacts = [...new Set(serviceRequests.map((req: any) => req.assignedContact.name))].sort();
-    const uniquePriorities = [...new Set(serviceRequests.map((req: any) => req.priority).filter(Boolean))].sort();
-    const uniqueCategories = [...new Set(serviceRequests.map((req: any) => req.category).filter(Boolean))].sort();
+    const uniqueBuildings = useMemo(() => 
+        [...new Set(serviceRequests.map((req: any) => req.building))].sort(), 
+        [serviceRequests]
+    );
+    const uniqueContacts = useMemo(() => 
+        [...new Set(serviceRequests.map((req: any) => req.assignedContact.name))].sort(), 
+        [serviceRequests]
+    );
+    const uniquePriorities = useMemo(() => 
+        [...new Set(serviceRequests.map((req: any) => req.priority).filter(Boolean))].sort(), 
+        [serviceRequests]
+    );
+    const uniqueCategories = useMemo(() => 
+        [...new Set(serviceRequests.map((req: any) => req.category).filter(Boolean))].sort(), 
+        [serviceRequests]
+    );
 
-    const handleFilterUpdate = (field: keyof FilterState, value: any) => {
+    const handleFilterUpdate = useCallback((field: keyof FilterState, value: any) => {
         onFilterChange({ ...filters, [field]: value });
-    };
+    }, [filters, onFilterChange]);
 
     return (
         <Card className="mb-4">
@@ -379,6 +392,14 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
         }
     }, []);
 
+    const handleFilterChange = useCallback((newFilters: FilterState) => {
+        setFilters(newFilters);
+    }, []);
+
+    const handleCloseFilters = useCallback(() => {
+        setShowFilters(false);
+    }, []);
+
     useEffect(() => {
         fetchServiceRequests();
     }, [fetchServiceRequests]);
@@ -422,14 +443,14 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
         
         // Sort by urgency score by default for better prioritization
         return transformedData.sort((a, b) => b.urgencyScore! - a.urgencyScore!);
-    }, [rawServiceRequestsData, dashboardStats]);
+    }, [rawServiceRequestsData, dashboardStats?.units?.details]);
 
-    const handleSort = (field: SortField) => {
+    const handleSort = useCallback((field: SortField) => {
         setSortConfig(prev => ({
             field,
             direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc'
         }));
-    };
+    }, []);
 
     const filteredAndSortedData = useMemo(() => {
         // Safety check for empty or invalid data
@@ -504,13 +525,41 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
         return filtered;
     }, [transformedServiceRequests, sortConfig.field, sortConfig.direction, filters.status, filters.building, filters.assignedContact, filters.priority, filters.category, filters.searchTerm]);
 
-    const handleRequestClick = (id: string) => {
+    const handleRequestClick = useCallback((id: string) => {
         setSelectedRequestId(id);
-    };
+    }, []);
 
-    const handleBack = () => {
+    const handleBack = useCallback(() => {
         setSelectedRequestId(null);
-    };
+    }, []);
+
+    const handleToggleFilters = useCallback(() => {
+        setShowFilters(!showFilters);
+    }, [showFilters]);
+
+    const handleResetFilters = useCallback(() => {
+        setFilters({
+            status: 'all',
+            building: '',
+            assignedContact: '',
+            priority: '',
+            category: '',
+            dateRange: { start: '', end: '' },
+            searchTerm: ''
+        });
+    }, []);
+
+    const handleBuildingClick = useCallback((buildingId: string) => {
+        onBuildingClick?.(buildingId);
+    }, [onBuildingClick]);
+
+    const handleUnitClick = useCallback((buildingId: string, unitId: string) => {
+        onUnitClick?.(buildingId, unitId as any);
+    }, [onUnitClick]);
+
+    const handleViewingTenant = useCallback((tenantName: string) => {
+        setViewingTenantId?.(tenantName.toLowerCase().replace(/\s+/g, '-'));
+    }, [setViewingTenantId]);
 
     if (selectedRequestId) {
         return <SpecificServiceRequestPage serviceRequestId={selectedRequestId} onBack={handleBack} />;
@@ -683,8 +732,8 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
             {showFilters && (
                 <FilterPanel 
                     filters={filters}
-                    onFilterChange={setFilters}
-                    onClose={() => setShowFilters(false)}
+                    onFilterChange={handleFilterChange}
+                    onClose={handleCloseFilters}
                     serviceRequests={transformedServiceRequests}
                 />
             )}
@@ -701,7 +750,7 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
                         )}
                     </div>
                     <button 
-                        onClick={() => setShowFilters(!showFilters)}
+                        onClick={handleToggleFilters}
                         className={`flex items-center text-sm font-medium rounded-lg px-4 py-2 transition-colors ${
                             showFilters 
                                 ? 'text-white bg-blue-600 hover:bg-blue-700' 
@@ -760,7 +809,7 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
                                     <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {onBuildingClick ? (
                                             <button 
-                                                onClick={() => onBuildingClick(request.building)}
+                                                onClick={() => handleBuildingClick(request.building)}
                                                 className="text-blue-600 hover:underline"
                                             >
                                                 {request.building}
@@ -772,7 +821,7 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
                                     <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {onUnitClick ? (
                                             <button 
-                                                onClick={() => onUnitClick(request.building, request.unit)}
+                                                onClick={() => handleUnitClick(request.building, request.unit)}
                                                 className="text-blue-600 hover:underline"
                                             >
                                                 Unit {request.unit}
@@ -803,6 +852,7 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
                                         <ContactCell 
                                             contact={request.assignedContact} 
                                             setViewingTenantId={setViewingTenantId}
+                                            onContactClick={handleViewingTenant}
                                         />
                                     </td>
                                     <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -825,15 +875,7 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
                             <h3 className="text-lg font-medium mb-2">No requests found</h3>
                             <p>Try adjusting your filters or search terms</p>
                             <button
-                                onClick={() => setFilters({
-                                    status: 'all',
-                                    building: '',
-                                    assignedContact: '',
-                                    priority: '',
-                                    category: '',
-                                    dateRange: { start: '', end: '' },
-                                    searchTerm: ''
-                                })}
+                                onClick={handleResetFilters}
                                 className="mt-4 px-4 py-2 text-sm bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
                             >
                                 Clear All Filters
