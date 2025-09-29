@@ -8,6 +8,9 @@ interface CurrentTenantsPageProps {
   setViewingTenantId: (id: string) => void;
   onBuildingClick?: (buildingId: string) => void;
   onUnitClick?: (buildingId: string, unitId: string) => void;
+  initialData?: CurrentTenant[];
+  loading?: boolean;
+  error?: string | null;
 }
 
 type SortField = 'name' | 'building' | 'unit' | 'leaseProgress' | 'rentStatus' | 'requests';
@@ -168,7 +171,14 @@ const FilterPanel: React.FC<{
   );
 };
 
-export const CurrentTenantsPage: React.FC<CurrentTenantsPageProps> = ({ setViewingTenantId, onBuildingClick, onUnitClick }) => {
+export const CurrentTenantsPage: React.FC<CurrentTenantsPageProps> = ({ 
+  setViewingTenantId, 
+  onBuildingClick, 
+  onUnitClick, 
+  initialData, 
+  loading: parentLoading, 
+  error: parentError 
+}) => {
     const [showFilters, setShowFilters] = useState(false);
     const [sortConfig, setSortConfig] = useState<{ field: SortField; direction: SortDirection }>({
         field: 'name',
@@ -180,12 +190,20 @@ export const CurrentTenantsPage: React.FC<CurrentTenantsPageProps> = ({ setViewi
         searchTerm: '',
         leaseProgressRange: { min: 0, max: 100 }
     });
-    const [tenantsData, setTenantsData] = useState<CurrentTenant[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [tenantsData, setTenantsData] = useState<CurrentTenant[]>(initialData || []);
+    const [loading, setLoading] = useState(parentLoading !== undefined ? parentLoading : !initialData);
+    const [error, setError] = useState<string | null>(parentError !== undefined ? parentError : null);
 
-    // Fetch tenants data on component mount
+    // Fetch tenants data on component mount only if no initial data provided
     useEffect(() => {
+        if (initialData) {
+            // Use the passed initial data
+            setTenantsData(initialData);
+            setLoading(parentLoading || false);
+            setError(parentError || null);
+            return;
+        }
+
         const fetchTenants = async () => {
             try {
                 setLoading(true);
@@ -201,7 +219,9 @@ export const CurrentTenantsPage: React.FC<CurrentTenantsPageProps> = ({ setViewi
         };
 
         fetchTenants();
-    }, []);    const handleSort = (field: SortField) => {
+    }, [initialData, parentLoading, parentError]);
+
+    const handleSort = (field: SortField) => {
         setSortConfig(prev => ({
             field,
             direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc'

@@ -62,7 +62,17 @@ const TenantTable: React.FC<{
                     </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                    {tenants.map((tenant) => (
+                    {tenants.length === 0 ? (
+                        <tr>
+                            <td colSpan={6} className="px-5 py-12 text-center">
+                                <div className="text-gray-500">
+                                    <p className="text-lg mb-2">No current tenants found</p>
+                                    <p className="text-sm">Current tenants with active leases will appear here</p>
+                                </div>
+                            </td>
+                        </tr>
+                    ) : (
+                        tenants.map((tenant) => (
                         <tr key={tenant.id} className="hover:bg-gray-50">
                             <td className="px-5 py-3 whitespace-nowrap">
                                 <button onClick={() => setViewingTenantId(tenant.id)} className="flex items-center text-left">
@@ -112,7 +122,8 @@ const TenantTable: React.FC<{
                             <td className="px-5 py-3 whitespace-nowrap"><RentStatusPill status={tenant.rentStatus} /></td>
                             <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-500 text-center">{tenant.requests}</td>
                         </tr>
-                    ))}
+                        ))
+                    )}
                 </tbody>
             </table>
         </div>
@@ -177,6 +188,12 @@ export const TenantsDashboard: React.FC<TenantsDashboardProps> = ({
           units: units.length,
           properties: properties.length
         });
+
+        // Log the actual data structure to debug
+        console.log('Current tenants data:', currentTenants);
+        console.log('Applications data:', applications);
+        console.log('Units data:', units);
+        console.log('Properties data:', properties);
 
         // Calculate stats
         const totalApplications = applications.length;
@@ -277,6 +294,32 @@ export const TenantsDashboard: React.FC<TenantsDashboardProps> = ({
   }, []);
 
   const renderContent = () => {
+    // Show loading state for Overview tab
+    if (loading && activeTab === 'Overview') {
+      return (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-500">Loading tenant dashboard...</div>
+        </div>
+      );
+    }
+
+    // Show error state for Overview tab
+    if (error && activeTab === 'Overview') {
+      return (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="text-red-500 mb-4">{error}</div>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     switch(activeTab) {
       case 'Overview':
         return (
@@ -320,6 +363,9 @@ export const TenantsDashboard: React.FC<TenantsDashboardProps> = ({
           setViewingTenantId={setViewingTenantId}
           onBuildingClick={onBuildingClick}
           onUnitClick={onUnitClick}
+          initialData={tenants}
+          loading={loading}
+          error={error}
         />;
       case 'Applications':
         return <TenantApplicationsPage 
