@@ -1986,14 +1986,35 @@ async function populateTestData(req, res) {
     try {
       console.log('Populating Asha Properties test data for user:', req.user.userId);
       
-      // Clean up existing test data for this user first
-      console.log('Cleaning up existing data...');
-      await Payment.deleteMany({ landlord: req.user.userId });
-      await ServiceRequest.deleteMany({ tenant: { $in: await User.find({ role: 'tenant' }).select('_id') } });
-      await RentalApplication.deleteMany({});
-      await LeaseAgreement.deleteMany({ landlord: req.user.userId });
-      await Unit.deleteMany({ property: { $in: await Property.find({ landlord: req.user.userId }).select('_id') } });
-      await Property.deleteMany({ landlord: req.user.userId });
+      // Clean up existing test data for this user first (only Asha Properties test data)
+      console.log('Cleaning up existing Asha Properties test data...');
+      
+      // Find Asha Properties test properties
+      const testPropertyNames = ['Lalmatia Court', 'Banani Heights', 'Dhanmondi Residency', 'Uttara Gardens'];
+      const testProperties = await Property.find({ 
+        landlord: req.user.userId, 
+        name: { $in: testPropertyNames } 
+      });
+      const testPropertyIds = testProperties.map(p => p._id);
+      
+      if (testPropertyIds.length > 0) {
+        // Clean up related data for test properties only
+        await Payment.deleteMany({ property: { $in: testPropertyIds } });
+        
+        // Find units in test properties
+        const testUnits = await Unit.find({ property: { $in: testPropertyIds } });
+        const testUnitIds = testUnits.map(u => u._id);
+        
+        if (testUnitIds.length > 0) {
+          await ServiceRequest.deleteMany({ unit: { $in: testUnitIds } });
+          await RentalApplication.deleteMany({ unit: { $in: testUnitIds } });
+          await LeaseAgreement.deleteMany({ unit: { $in: testUnitIds } });
+        }
+        
+        // Remove test units and properties
+        await Unit.deleteMany({ property: { $in: testPropertyIds } });
+        await Property.deleteMany({ _id: { $in: testPropertyIds } });
+      }
       
       // Clean up test tenant users (those with specific email patterns)
       const testEmails = [
