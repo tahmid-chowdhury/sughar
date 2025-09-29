@@ -12,6 +12,7 @@ import ServiceRequest from './models/ServiceRequest.js';
 import LeaseAgreement from './models/LeaseAgreement.js';
 import RentalApplication from './models/RentalApplication.js';
 import Payment from './models/Payment.js';
+import Rating from './models/Rating.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
@@ -120,7 +121,7 @@ export default async function handler(req, res) {
       // Handle direct auth endpoints
       await connectToDatabase();
       return await handleAuth(req, res, [null, resource]); // Pass resource as endpoint
-    } else if (resource && (resource === 'properties' || resource === 'units' || resource === 'service-requests' || resource === 'rental-applications' || resource === 'lease-agreements' || resource === 'payments' || resource === 'dashboard')) {
+    } else if (resource && (resource === 'properties' || resource === 'units' || resource === 'service-requests' || resource === 'rental-applications' || resource === 'lease-agreements' || resource === 'payments' || resource === 'dashboard' || resource === 'current-tenants' || resource === 'debug')) {
       await connectToDatabase();
       return await handleAPI(req, res, urlParts);
     } else {
@@ -609,6 +610,18 @@ async function handleAPI(req, res, urlParts) {
       return await getDashboardFinancialStats(req, res);
     }
   }
+  // Current tenants route
+  else if (resource === 'current-tenants') {
+    if (method === 'GET' && !id) {
+      return await getCurrentTenants(req, res);
+    }
+  }
+  // Debug routes
+  else if (resource === 'debug') {
+    if (method === 'GET' && id === 'lease-agreements') {
+      return await debugLeaseAgreements(req, res);
+    }
+  }
   else {
     return res.status(404).json({ error: 'Route not found' });
   }
@@ -1059,26 +1072,68 @@ async function updateRentalApplication(req, res, id) {
 async function getLeaseAgreements(req, res) {
   authenticateToken(req, res, async () => {
     try {
-      const leases = await LeaseAgreement.find()
-        .populate('userID', 'firstName lastName email phoneNumber')
-        .populate({
-          path: 'unitID',
-          select: 'unitNumber monthlyRent propertyID',
-          populate: {
-            path: 'propertyID',
-            select: 'address userID'
+      console.log('Fetching lease agreements for user:', req.user.userId);
+      
+      // First, get all lease agreements with basic population
+      let leases;
+      try {
+        leases = await LeaseAgreement.find()
+          .populate('userID', 'firstName lastName email phoneNumber')
+          .populate('unitID', 'unitNumber monthlyRent propertyID');
+        console.log('Found leases with basic population:', leases.length);
+      } catch (populateError) {
+        console.error('Error with basic population:', populateError);
+        // Fallback: get without population
+        leases = await LeaseAgreement.find();
+        console.log('Fallback: Found raw leases:', leases.length);
+      }
+      
+      // If we have leases, try to populate properties
+      const leasesWithProperties = [];
+      for (const lease of leases) {
+        let enhancedLease = lease.toObject ? lease.toObject() : lease;
+        
+        // Try to get property info if unitID exists and is populated
+        if (lease.unitID && lease.unitID.propertyID) {
+          try {
+            const property = await Property.findById(lease.unitID.propertyID);
+            if (property) {
+              enhancedLease.unitID.propertyID = property;
+            }
+          } catch (propError) {
+            console.warn('Could not populate property for unit:', lease.unitID._id);
           }
-        });
+        }
         
+        leasesWithProperties.push(enhancedLease);
+      }
+      
       // Filter leases for properties owned by the authenticated user
-      const userLeases = leases.filter(lease => 
-        lease.unitID?.propertyID?.userID?.toString() === req.user.userId
-      );
-        
+      // Also filter out leases with missing references
+      const userLeases = leasesWithProperties.filter(lease => {
+        if (!lease.unitID) {
+          console.warn('Lease missing unitID:', lease._id);
+          return false;
+        }
+        if (!lease.unitID.propertyID) {
+          console.warn('Unit missing propertyID:', lease.unitID._id || lease.unitID);
+          return false;
+        }
+        if (!lease.unitID.propertyID.userID) {
+          console.warn('Property missing userID:', lease.unitID.propertyID._id || lease.unitID.propertyID);
+          return false;
+        }
+        return lease.unitID.propertyID.userID.toString() === req.user.userId;
+      });
+      
+      console.log('Filtered user leases:', userLeases.length);
       res.json(userLeases);
     } catch (error) {
       console.error('Error fetching lease agreements:', error);
-      res.status(500).json({ error: 'Error fetching lease agreements' });
+      res.status(500).json({ 
+        error: 'Error fetching lease agreements',
+        details: error.message 
+      });
     }
   });
 }
@@ -1668,4 +1723,227 @@ async function handleCompleteFix(req, res) {
       error: error.message
     });
   }
+}
+
+// Get current tenants with lease and payment information
+async function getCurrentTenants(req, res) {
+  authenticateToken(req, res, async () => {
+    try {
+      console.log('Fetching current tenants for user:', req.user.userId);
+      
+      // Get user's properties
+      const properties = await Property.find({ userID: req.user.userId });
+      console.log('Found properties:', properties.length);
+      
+      if (properties.length === 0) {
+        console.log('No properties found for user, returning empty array');
+        return res.json([]);
+      }
+      
+      const propertyIds = properties.map(prop => prop._id);
+      
+      // Get units for these properties
+      const units = await Unit.find({ propertyID: { $in: propertyIds } });
+      console.log('Found units:', units.length);
+      
+      if (units.length === 0) {
+        console.log('No units found for properties, returning empty array');
+        return res.json([]);
+      }
+      
+      const unitIds = units.map(unit => unit._id);
+      
+      // Get active lease agreements for these units
+      const currentDate = new Date();
+      const leases = await LeaseAgreement.find({
+        unitID: { $in: unitIds },
+        startDate: { $lte: currentDate },
+        endDate: { $gte: currentDate }
+      })
+      .populate('userID', 'firstName lastName email phoneNumber')
+      .populate('unitID', 'unitNumber monthlyRent propertyID');
+      
+      console.log('Found active leases:', leases.length);
+      
+      if (leases.length === 0) {
+        console.log('No active leases found, returning empty array');
+        return res.json([]);
+      }
+      
+      // Get recent payments for rent status calculation
+      const payments = await Payment.find({
+        leaseID: { $in: leases.map(lease => lease._id) }
+      }).sort({ paymentDate: -1 });
+      
+      console.log('Found payments:', payments.length);
+      
+      // Get service requests counts for each user
+      const serviceRequests = await ServiceRequest.find({
+        unitID: { $in: unitIds }
+      }).populate('userID', '_id');
+      
+      console.log('Found service requests:', serviceRequests.length);
+      
+      // Get ratings for tenants (if available) - skip if collection doesn't exist
+      let ratings = [];
+      try {
+        ratings = await Rating.find({
+          userID: { $in: leases.map(lease => lease.userID?._id).filter(id => id) }
+        });
+        console.log('Found ratings:', ratings.length);
+      } catch (ratingError) {
+        console.log('Ratings collection not available or empty, using default ratings');
+        ratings = [];
+      }
+      
+      // Transform data to match frontend CurrentTenant interface
+      const currentTenants = leases
+        .filter(lease => {
+          // Filter out leases with missing required data
+          if (!lease.userID) {
+            console.warn('Lease missing tenant (userID):', lease._id);
+            return false;
+          }
+          if (!lease.unitID) {
+            console.warn('Lease missing unit (unitID):', lease._id);
+            return false;
+          }
+          return true;
+        })
+        .map(lease => {
+          const tenant = lease.userID;
+          const unit = lease.unitID;
+          
+          // Find property for this unit
+          const property = properties.find(prop => 
+            prop._id.toString() === unit.propertyID?.toString()
+          );
+          
+          // Calculate lease progress (percentage of lease term completed)
+          const leaseStart = new Date(lease.startDate);
+          const leaseEnd = new Date(lease.endDate);
+          const today = new Date();
+          const totalDays = (leaseEnd - leaseStart) / (1000 * 60 * 60 * 24);
+          const daysPassed = (today - leaseStart) / (1000 * 60 * 60 * 24);
+          const progressPercentage = Math.min(100, Math.max(0, (daysPassed / totalDays) * 100));
+          
+          // Determine rent status based on recent payments
+          const tenantPayments = payments.filter(payment => 
+            payment.leaseID?.toString() === lease._id.toString()
+          );
+          
+          let rentStatus = 'Pending';
+          const thisMonth = new Date();
+          thisMonth.setDate(1);
+          thisMonth.setHours(0, 0, 0, 0);
+          
+          const thisMonthPayment = tenantPayments.find(payment => 
+            payment.paymentDate >= thisMonth && payment.status === 'completed'
+          );
+          
+          if (thisMonthPayment) {
+            rentStatus = 'Paid';
+          } else {
+            // Check if payment is overdue (after 5th of the month)
+            const fifthOfMonth = new Date();
+            fifthOfMonth.setDate(5);
+            if (currentDate > fifthOfMonth) {
+              rentStatus = 'Overdue';
+            }
+          }
+          
+          // Count service requests for this tenant
+          const tenantServiceRequests = serviceRequests.filter(sr => 
+            sr.userID && sr.userID._id.toString() === tenant._id.toString()
+          ).length;
+          
+          // Get tenant rating
+          const tenantRating = ratings.find(rating => 
+            rating.userID.toString() === tenant._id.toString()
+          );
+          const rating = tenantRating ? tenantRating.rating : 4.0;
+          
+          // Generate avatar (placeholder for now)
+          const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(tenant.firstName + ' ' + tenant.lastName)}&background=random`;
+          
+          return {
+            id: tenant._id.toString(),
+            name: `${tenant.firstName} ${tenant.lastName}`,
+            avatar: avatarUrl,
+            rating: rating,
+            building: property?.address?.split(',')[0] || `Building ${unit.unitNumber}`,
+            unit: parseInt(unit.unitNumber) || 1,
+            leaseProgress: {
+              value: Math.round(progressPercentage),
+              variant: progressPercentage > 50 ? 'dark' : 'light'
+            },
+            rentStatus: rentStatus,
+            requests: tenantServiceRequests
+          };
+        });
+      
+      console.log('Returning current tenants:', currentTenants.length);
+      res.json(currentTenants);
+    } catch (error) {
+      console.error('Error fetching current tenants:', error);
+      console.error('Error stack:', error.stack);
+      res.status(500).json({ 
+        error: 'Error fetching current tenants', 
+        details: error.message 
+      });
+    }
+  });
+}
+
+// Debug endpoint for lease agreements
+async function debugLeaseAgreements(req, res) {
+  authenticateToken(req, res, async () => {
+    try {
+      console.log('DEBUG: Starting lease agreements debug check');
+      console.log('DEBUG: User ID:', req.user.userId);
+      
+      // Check collections exist and have data
+      const leaseCount = await LeaseAgreement.countDocuments();
+      const unitCount = await Unit.countDocuments();
+      const propertyCount = await Property.countDocuments();
+      const userCount = await User.countDocuments();
+      
+      console.log('DEBUG: Collection counts:', {
+        leases: leaseCount,
+        units: unitCount,
+        properties: propertyCount,
+        users: userCount
+      });
+      
+      // Get all leases without population first
+      const rawLeases = await LeaseAgreement.find();
+      console.log('DEBUG: Raw leases found:', rawLeases.length);
+      console.log('DEBUG: First raw lease:', rawLeases[0]);
+      
+      // Try population step by step
+      try {
+        const leasesWithUsers = await LeaseAgreement.find().populate('userID', 'firstName lastName email phoneNumber');
+        console.log('DEBUG: Leases with users populated:', leasesWithUsers.length);
+      } catch (err) {
+        console.log('DEBUG: Error populating users:', err.message);
+      }
+      
+      try {
+        const leasesWithUnits = await LeaseAgreement.find().populate('unitID', 'unitNumber monthlyRent propertyID');
+        console.log('DEBUG: Leases with units populated:', leasesWithUnits.length);
+      } catch (err) {
+        console.log('DEBUG: Error populating units:', err.message);
+      }
+      
+      res.json({
+        message: 'Debug info logged to console',
+        counts: { leases: leaseCount, units: unitCount, properties: propertyCount, users: userCount },
+        userId: req.user.userId
+      });
+      
+    } catch (error) {
+      console.error('DEBUG: Error in debug endpoint:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
 }
