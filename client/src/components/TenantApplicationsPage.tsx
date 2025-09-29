@@ -38,7 +38,8 @@ const TenantApplicationsPage: React.FC<TenantApplicationsPageProps> = ({
   const populateTestData = async () => {
     try {
       setPopulating(true);
-      const token = localStorage.getItem('token');
+      // Use the same token key as the API service
+      const token = localStorage.getItem('authToken');
       console.log('Token from localStorage:', token ? 'Present' : 'Missing');
       console.log('Token preview:', token ? token.substring(0, 20) + '...' : 'N/A');
       
