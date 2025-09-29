@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Card } from './Card';
 import { Header } from './Header';
-import { ServiceRequest, RequestStatus } from '../types';
-import { SlidersHorizontal, ArrowDown, ArrowUp, Search, X } from './icons';
+import { ServiceRequest, RequestStatus, DashboardStats } from '../types';
+import { SlidersHorizontal, ArrowDown, ArrowUp, Search, X, Calendar, Users, Wrench, CheckCircle2, Bell } from './icons';
 import { SpecificServiceRequestPage } from './SpecificServiceRequestPage';
-import { serviceRequestsAPI } from '../services/api';
+import { serviceRequestsAPI, dashboardAPI } from '../services/api';
 
 interface ServiceRequestsPageProps {
     onBuildingClick?: (buildingId: string) => void;
@@ -12,13 +12,15 @@ interface ServiceRequestsPageProps {
     setViewingTenantId?: (tenantId: string) => void;
 }
 
-type SortField = 'id' | 'building' | 'unit' | 'assignedContact' | 'requestDate' | 'status';
+type SortField = 'id' | 'building' | 'unit' | 'assignedContact' | 'requestDate' | 'status' | 'priority' | 'category' | 'urgencyScore';
 type SortDirection = 'asc' | 'desc';
 
 interface FilterState {
     status: RequestStatus | 'all';
     building: string;
     assignedContact: string;
+    priority: string;
+    category: string;
     dateRange: { start: string; end: string };
     searchTerm: string;
 }
@@ -71,11 +73,53 @@ const ContactCell: React.FC<{
 
 const StatusPill = ({ status }: { status: RequestStatus }) => {
     const styles = {
-        [RequestStatus.Complete]: 'bg-status-success text-status-success-text',
-        [RequestStatus.InProgress]: 'bg-status-warning text-status-warning-text',
-        [RequestStatus.Pending]: 'bg-status-error text-status-error-text',
+        [RequestStatus.Complete]: 'bg-green-100 text-green-800',
+        [RequestStatus.InProgress]: 'bg-yellow-100 text-yellow-800', 
+        [RequestStatus.Pending]: 'bg-red-100 text-red-800',
     };
-    return <span className={`px-3 py-1 text-xs font-medium rounded-full ${styles[status]}`}>{status}</span>;
+    const icons = {
+        [RequestStatus.Complete]: CheckCircle2,
+        [RequestStatus.InProgress]: Calendar,
+        [RequestStatus.Pending]: Bell,
+    };
+    const Icon = icons[status];
+    return (
+        <span className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-full ${styles[status]}`}>
+            <Icon className="w-3 h-3 mr-1" />
+            {status}
+        </span>
+    );
+};
+
+const PriorityPill = ({ priority }: { priority: string }) => {
+    const styles = {
+        high: 'bg-red-100 text-red-800',
+        medium: 'bg-yellow-100 text-yellow-800',
+        low: 'bg-green-100 text-green-800',
+    };
+    const priorityLevel = priority?.toLowerCase() || 'medium';
+    return (
+        <span className={`px-2 py-1 text-xs font-medium rounded-full ${styles[priorityLevel as keyof typeof styles] || styles.medium}`}>
+            {priority || 'Medium'}
+        </span>
+    );
+};
+
+const CategoryPill = ({ category }: { category: string }) => {
+    const categoryColors = {
+        'plumbing': 'bg-blue-100 text-blue-800',
+        'electrical': 'bg-purple-100 text-purple-800',
+        'hvac': 'bg-orange-100 text-orange-800',
+        'appliance': 'bg-green-100 text-green-800',
+        'maintenance': 'bg-gray-100 text-gray-800',
+        'general': 'bg-indigo-100 text-indigo-800',
+    };
+    const categoryKey = category?.toLowerCase() || 'general';
+    return (
+        <span className={`px-2 py-1 text-xs font-medium rounded-full ${categoryColors[categoryKey as keyof typeof categoryColors] || categoryColors.general}`}>
+            {category || 'General'}
+        </span>
+    );
 };
 
 const FilterPanel: React.FC<{
@@ -84,8 +128,10 @@ const FilterPanel: React.FC<{
     onClose: () => void;
     serviceRequests: ServiceRequest[];
 }> = ({ filters, onFilterChange, onClose, serviceRequests }) => {
-    const uniqueBuildings = [...new Set(serviceRequests.map((req: ServiceRequest) => req.building))].sort();
-    const uniqueContacts = [...new Set(serviceRequests.map((req: ServiceRequest) => req.assignedContact.name))].sort();
+    const uniqueBuildings = [...new Set(serviceRequests.map((req: any) => req.building))].sort();
+    const uniqueContacts = [...new Set(serviceRequests.map((req: any) => req.assignedContact.name))].sort();
+    const uniquePriorities = [...new Set(serviceRequests.map((req: any) => req.priority).filter(Boolean))].sort();
+    const uniqueCategories = [...new Set(serviceRequests.map((req: any) => req.category).filter(Boolean))].sort();
 
     const handleFilterUpdate = (field: keyof FilterState, value: any) => {
         onFilterChange({ ...filters, [field]: value });
@@ -100,7 +146,7 @@ const FilterPanel: React.FC<{
                 </button>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                     <select 
@@ -112,6 +158,34 @@ const FilterPanel: React.FC<{
                         <option value={RequestStatus.Pending}>Pending</option>
                         <option value={RequestStatus.InProgress}>In Progress</option>
                         <option value={RequestStatus.Complete}>Complete</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                    <select 
+                        value={filters.priority}
+                        onChange={(e) => handleFilterUpdate('priority', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                        <option value="">All Priorities</option>
+                        {uniquePriorities.map((priority: string) => (
+                            <option key={priority} value={priority}>{priority.charAt(0).toUpperCase() + priority.slice(1)}</option>
+                        ))}
+                    </select>
+                </div>
+                
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                    <select 
+                        value={filters.category}
+                        onChange={(e) => handleFilterUpdate('category', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                        <option value="">All Categories</option>
+                        {uniqueCategories.map((category: string) => (
+                            <option key={category} value={category}>{category.charAt(0).toUpperCase() + category.slice(1)}</option>
+                        ))}
                     </select>
                 </div>
                 
@@ -166,11 +240,13 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
     onUnitClick, 
     setViewingTenantId 
 }) => {
-    const [serviceRequests, setServiceRequests] = useState<ServiceRequest[]>([]);
+    const [serviceRequests, setServiceRequests] = useState<(ServiceRequest & { priority?: string; category?: string; description?: string; urgencyScore?: number })[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
     const [showFilters, setShowFilters] = useState(false);
+    const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+    const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
     const [sortConfig, setSortConfig] = useState<{ field: SortField; direction: SortDirection }>({ 
         field: 'requestDate', 
         direction: 'desc' 
@@ -179,41 +255,114 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
         status: 'all',
         building: '',
         assignedContact: '',
+        priority: '',
+        category: '',
         dateRange: { start: '', end: '' },
         searchTerm: ''
     });
 
-    useEffect(() => {
-        const fetchServiceRequests = async () => {
-            try {
-                setLoading(true);
-                const data = await serviceRequestsAPI.getAll();
+    // Calculate urgency score for prioritization
+    const calculateUrgencyScore = (request: any) => {
+        let score = 0;
+        
+        // Priority weight (40%)
+        const priority = request.priority?.toLowerCase() || 'medium';
+        if (priority === 'high') score += 40;
+        else if (priority === 'medium') score += 20;
+        else score += 10;
+        
+        // Age of request (30%)
+        const daysSinceCreated = Math.floor((Date.now() - new Date(request.dateCreated || request.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+        if (daysSinceCreated >= 7) score += 30;
+        else if (daysSinceCreated >= 3) score += 20;
+        else score += 10;
+        
+        // Category urgency (20%)
+        const category = request.category?.toLowerCase() || 'general';
+        if (category === 'electrical' || category === 'plumbing') score += 20;
+        else if (category === 'hvac' || category === 'appliance') score += 15;
+        else score += 10;
+        
+        // Status urgency (10%)
+        if (request.status === 'pending') score += 10;
+        else if (request.status === 'in-progress') score += 5;
+        
+        return Math.min(score, 100);
+    };
+
+    const fetchServiceRequests = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            
+            // Get both service requests and dashboard stats for comprehensive data
+            const [serviceRequestsData, dashboardData] = await Promise.all([
+                serviceRequestsAPI.getAll(),
+                dashboardAPI.getStats()
+            ]);
+            
+            console.log('Service requests data:', serviceRequestsData);
+            console.log('Dashboard stats for service requests:', dashboardData);
+            
+            setDashboardStats(dashboardData);
+            
+            if (!Array.isArray(serviceRequestsData)) {
+                setServiceRequests([]);
+                return;
+            }
+            
+            // Transform API data with enhanced calculations and real data
+            const transformedData = serviceRequestsData.map((sr: any) => {
+                const urgencyScore = calculateUrgencyScore(sr);
                 
-                // Transform API data to match ServiceRequest interface
-                const transformedData = data.map((sr: any) => ({
-                    id: sr._id,
-                    building: sr.unitID?.propertyID?.address?.split(',')[0] || 'Unknown Building',
-                    unit: sr.unitID?.unitNumber || 'Unknown Unit',
+                // Try to get tenant info from dashboard data if available
+                const tenantInfo = dashboardData?.tenants?.details?.find((tenant: any) => 
+                    tenant._id === sr.tenantID?._id || tenant.email === sr.tenantID?.email
+                );
+                
+                // Try to get unit info from dashboard data
+                const unitInfo = dashboardData?.units?.details?.find((unit: any) => 
+                    unit._id === sr.unitID?._id
+                );
+                
+                return {
+                    id: sr._id || `sr-${Math.random()}`,
+                    building: sr.unitID?.propertyID?.address?.split(',')[0] || 
+                             unitInfo?.property?.split(',')[0] || 
+                             'Unknown Building',
+                    unit: sr.unitID?.unitNumber || unitInfo?.unitNumber || 'Unknown Unit',
                     requestDate: new Date(sr.dateCreated || sr.createdAt).toLocaleDateString(),
                     assignedContact: {
-                        name: sr.contractorID?.companyName || sr.tenantID?.firstName + ' ' + sr.tenantID?.lastName || 'Unassigned',
-                        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${sr.tenantID?.email || 'default'}`
+                        name: sr.contractorID?.companyName || 
+                              (sr.tenantID?.firstName && sr.tenantID?.lastName ? 
+                               `${sr.tenantID.firstName} ${sr.tenantID.lastName}` : 
+                               tenantInfo?.name || sr.tenantID?.email || 'Unassigned'),
+                        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${sr.tenantID?.email || sr._id}`
                     },
                     status: mapApiStatusToRequestStatus(sr.status),
-                    description: sr.description || 'No description',
+                    description: sr.description || 'No description provided',
                     category: sr.category || 'General',
-                    priority: sr.priority || 'medium'
-                }));
-                
-                setServiceRequests(transformedData);
-            } catch (err) {
-                console.error('Error fetching service requests:', err);
-                setError('Failed to load service requests');
-            } finally {
-                setLoading(false);
-            }
-        };
+                    priority: sr.priority || 'medium',
+                    urgencyScore,
+                    requests: 1 // This could be calculated from multiple related requests
+                };
+            });
+            
+            // Sort by urgency score by default for better prioritization
+            const sortedData = transformedData.sort((a, b) => b.urgencyScore! - a.urgencyScore!);
+            
+            setServiceRequests(sortedData);
+            setLastUpdated(new Date());
+        } catch (err) {
+            console.error('Error fetching service requests:', err);
+            const errorMessage = err instanceof Error ? err.message : 'Failed to load service requests data';
+            setError(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    useEffect(() => {
         fetchServiceRequests();
     }, []);
 
@@ -242,7 +391,7 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
     };
 
     const filteredAndSortedData = useMemo(() => {
-        let filtered = serviceRequests.filter((request: ServiceRequest) => {
+        let filtered = serviceRequests.filter((request: any) => {
             // Status filter
             if (filters.status !== 'all' && request.status !== filters.status) return false;
             
@@ -252,19 +401,28 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
             // Contact filter
             if (filters.assignedContact && request.assignedContact.name !== filters.assignedContact) return false;
             
-            // Search filter
+            // Priority filter
+            if (filters.priority && request.priority !== filters.priority) return false;
+            
+            // Category filter
+            if (filters.category && request.category !== filters.category) return false;
+            
+            // Search filter - enhanced to include category, priority, and description
             if (filters.searchTerm) {
                 const term = filters.searchTerm.toLowerCase();
                 return request.id.toLowerCase().includes(term) ||
                        request.building.toLowerCase().includes(term) ||
-                       request.assignedContact.name.toLowerCase().includes(term);
+                       request.assignedContact.name.toLowerCase().includes(term) ||
+                       (request.category || '').toLowerCase().includes(term) ||
+                       (request.priority || '').toLowerCase().includes(term) ||
+                       (request.description || '').toLowerCase().includes(term);
             }
             
             return true;
         });
 
-        // Sort the filtered data
-        filtered.sort((a: ServiceRequest, b: ServiceRequest) => {
+        // Sort the filtered data with enhanced sorting options
+        filtered.sort((a: any, b: any) => {
             const { field, direction } = sortConfig;
             let aValue: any = a[field];
             let bValue: any = b[field];
@@ -278,6 +436,18 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
             if (field === 'requestDate') {
                 aValue = new Date(aValue);
                 bValue = new Date(bValue);
+            }
+
+            // Add priority and urgency sorting
+            if (field === 'priority') {
+                const priorityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
+                aValue = priorityOrder[aValue?.toLowerCase() as keyof typeof priorityOrder] || 1;
+                bValue = priorityOrder[bValue?.toLowerCase() as keyof typeof priorityOrder] || 1;
+            }
+
+            if (field === 'urgencyScore') {
+                aValue = a.urgencyScore || 0;
+                bValue = b.urgencyScore || 0;
             }
             
             if (aValue < bValue) return direction === 'asc' ? -1 : 1;
@@ -302,11 +472,31 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
 
     if (loading) {
         return (
-            <div className="container mx-auto">
-                <Header title="Service Requests" />
+            <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h2 className="text-2xl font-bold text-text-main">Service Requests</h2>
+                        <div className="animate-pulse bg-gray-200 h-4 w-48 rounded mt-2"></div>
+                    </div>
+                </div>
+                
+                {/* Loading stats cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {[1, 2, 3, 4].map((i) => (
+                        <Card key={i} className="p-4">
+                            <div className="animate-pulse">
+                                <div className="bg-gray-200 h-8 w-16 rounded mb-2"></div>
+                                <div className="bg-gray-200 h-4 w-20 rounded"></div>
+                            </div>
+                        </Card>
+                    ))}
+                </div>
+                
+                {/* Loading table */}
                 <Card className="p-8 text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary mx-auto"></div>
-                    <p className="mt-2 text-gray-600">Loading service requests...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-primary mx-auto mb-4"></div>
+                    <p className="text-lg font-medium text-text-main">Loading Service Requests...</p>
+                    <p className="text-sm text-text-secondary mt-2">Fetching request data and calculating priorities</p>
                 </Card>
             </div>
         );
@@ -314,25 +504,122 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
 
     if (error) {
         return (
-            <div className="container mx-auto">
-                <Header title="Service Requests" />
-                <Card className="p-8 text-center">
-                    <p className="text-red-600">{error}</p>
-                    <button 
-                        onClick={() => window.location.reload()}
-                        className="mt-2 px-4 py-2 bg-accent-primary text-white rounded hover:bg-accent-primary/90"
-                    >
-                        Retry
-                    </button>
+            <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold text-text-main">Service Requests</h2>
+                </div>
+                <Card className="flex-1">
+                    <div className="p-8 text-center">
+                        <div className="text-red-500 mb-4">
+                            <svg className="w-16 h-16 mx-auto opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h3 className="text-xl font-semibold text-text-main mb-4">Failed to Load Service Requests</h3>
+                        <p className="text-text-secondary mb-6">{error}</p>
+                        <button 
+                            onClick={fetchServiceRequests}
+                            className="px-6 py-3 bg-accent-primary text-white rounded-lg hover:bg-accent-secondary transition-colors"
+                        >
+                            Try Again
+                        </button>
+                    </div>
                 </Card>
             </div>
         );
     }
 
+    // Calculate summary statistics
+    const summaryStats = useMemo(() => {
+        const totalRequests = serviceRequests.length;
+        const pendingRequests = serviceRequests.filter(req => req.status === RequestStatus.Pending).length;
+        const inProgressRequests = serviceRequests.filter(req => req.status === RequestStatus.InProgress).length;
+        const completedRequests = serviceRequests.filter(req => req.status === RequestStatus.Complete).length;
+        const highPriorityRequests = serviceRequests.filter(req => req.priority === 'high').length;
+        const urgentRequests = serviceRequests.filter(req => req.urgencyScore! >= 70).length;
+        const averageUrgencyScore = totalRequests > 0 ? 
+            Math.round(serviceRequests.reduce((sum, req) => sum + (req.urgencyScore || 0), 0) / totalRequests) : 0;
+        
+        // Category breakdown
+        const categoryBreakdown = serviceRequests.reduce((acc: any, req) => {
+            const category = req.category || 'General';
+            acc[category] = (acc[category] || 0) + 1;
+            return acc;
+        }, {});
+        
+        return {
+            total: totalRequests,
+            pending: pendingRequests,
+            inProgress: inProgressRequests,
+            completed: completedRequests,
+            highPriority: highPriorityRequests,
+            urgent: urgentRequests,
+            averageUrgencyScore,
+            categoryBreakdown
+        };
+    }, [serviceRequests]);
+
     return (
-        <div className="container mx-auto">
-            <Header title="Service Requests" />
-            
+        <div className="space-y-6">
+            {/* Header with summary and refresh */}
+            <div className="flex items-center justify-between">
+                <div>
+                    <h2 className="text-2xl font-bold text-text-main">Service Requests</h2>
+                    <p className="text-text-secondary">
+                        {summaryStats.total} total request{summaryStats.total !== 1 ? 's' : ''} 
+                        • {summaryStats.pending} pending
+                        • {summaryStats.inProgress} in progress
+                        • {summaryStats.completed} completed
+                        {lastUpdated && (
+                            <span className="ml-2 text-xs">
+                                • Updated: {lastUpdated.toLocaleTimeString()}
+                            </span>
+                        )}
+                    </p>
+                </div>
+                <button 
+                    onClick={fetchServiceRequests}
+                    disabled={loading}
+                    className="flex items-center gap-2 px-4 py-2 bg-accent-primary text-white rounded-lg hover:bg-accent-secondary transition-colors disabled:opacity-50"
+                >
+                    <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    {loading ? 'Loading...' : 'Refresh'}
+                </button>
+            </div>
+
+            {/* Summary Statistics Cards */}
+            {serviceRequests.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <div className="bg-red-50 px-4 py-3 rounded-lg">
+                        <div className="text-2xl font-bold text-red-600">{summaryStats.pending}</div>
+                        <div className="text-sm text-red-600">Pending</div>
+                    </div>
+                    <div className="bg-yellow-50 px-4 py-3 rounded-lg">
+                        <div className="text-2xl font-bold text-yellow-600">{summaryStats.inProgress}</div>
+                        <div className="text-sm text-yellow-600">In Progress</div>
+                    </div>
+                    <div className="bg-green-50 px-4 py-3 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600">{summaryStats.completed}</div>
+                        <div className="text-sm text-green-600">Completed</div>
+                    </div>
+                    <div className="bg-purple-50 px-4 py-3 rounded-lg">
+                        <div className="text-2xl font-bold text-purple-600">{summaryStats.urgent}</div>
+                        <div className="text-sm text-purple-600">Urgent</div>
+                    </div>
+                    <div className="bg-orange-50 px-4 py-3 rounded-lg">
+                        <div className="text-2xl font-bold text-orange-600">{summaryStats.highPriority}</div>
+                        <div className="text-sm text-orange-600">High Priority</div>
+                    </div>
+                    <div className="bg-blue-50 px-4 py-3 rounded-lg">
+                        <div className="text-2xl font-bold text-blue-600">{summaryStats.averageUrgencyScore}%</div>
+                        <div className="text-sm text-blue-600">Avg Urgency</div>
+                    </div>
+                </div>
+            )}
+
+            {/* Filters Panel */}
             {showFilters && (
                 <FilterPanel 
                     filters={filters}
@@ -342,10 +629,16 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
                 />
             )}
             
+            {/* Enhanced Service Requests Table */}
             <Card className="!p-0">
                 <div className="flex justify-between items-center p-4">
                     <div className="text-sm text-gray-600">
                         Showing {filteredAndSortedData.length} of {serviceRequests.length} requests
+                        {filteredAndSortedData.length > 0 && (
+                            <span className="ml-2 text-xs text-gray-500">
+                                • Top priority: {Math.max(...filteredAndSortedData.map(req => req.urgencyScore || 0))}% urgency
+                            </span>
+                        )}
                     </div>
                     <button 
                         onClick={() => setShowFilters(!showFilters)}
@@ -372,32 +665,39 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
                                 <SortableHeader field="unit" currentSort={sortConfig} onSort={handleSort}>
                                     Unit
                                 </SortableHeader>
+                                <th scope="col" className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Category
+                                </th>
+                                <th scope="col" className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Priority
+                                </th>
+                                <th scope="col" className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Urgency
+                                </th>
                                 <SortableHeader field="assignedContact" currentSort={sortConfig} onSort={handleSort}>
                                     Assigned Contact
                                 </SortableHeader>
-                                <th scope="col" className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Requests
-                                </th>
                                 <SortableHeader field="requestDate" currentSort={sortConfig} onSort={handleSort}>
                                     Request Date
                                 </SortableHeader>
                                 <SortableHeader field="status" currentSort={sortConfig} onSort={handleSort}>
-                                    Request Status
+                                    Status
                                 </SortableHeader>
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {filteredAndSortedData.map((request: ServiceRequest) => (
+                            {filteredAndSortedData.map((request: any) => (
                                 <tr key={request.id} className="hover:bg-gray-50">
-                                    <td className="px-5 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
+                                    <td className="px-5 py-4 whitespace-nowrap">
                                         <button 
                                             onClick={() => handleRequestClick(request.id)} 
-                                            className="text-blue-600 hover:underline"
+                                            className="text-blue-600 hover:underline font-medium"
+                                            title={request.description}
                                         >
-                                            {request.id}
+                                            #{request.id.slice(-6).toUpperCase()}
                                         </button>
                                     </td>
-                                    <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {onBuildingClick ? (
                                             <button 
                                                 onClick={() => onBuildingClick(request.building)}
@@ -415,20 +715,35 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
                                                 onClick={() => onUnitClick(request.building, request.unit)}
                                                 className="text-blue-600 hover:underline"
                                             >
-                                                {request.unit}
+                                                Unit {request.unit}
                                             </button>
                                         ) : (
-                                            request.unit
+                                            `Unit ${request.unit}`
                                         )}
+                                    </td>
+                                    <td className="px-5 py-4 whitespace-nowrap">
+                                        <CategoryPill category={request.category} />
+                                    </td>
+                                    <td className="px-5 py-4 whitespace-nowrap">
+                                        <PriorityPill priority={request.priority} />
+                                    </td>
+                                    <td className="px-5 py-4 whitespace-nowrap">
+                                        <div className="flex items-center">
+                                            <div className={`w-2 h-2 rounded-full mr-2 ${
+                                                (request.urgencyScore || 0) >= 80 ? 'bg-red-500' :
+                                                (request.urgencyScore || 0) >= 60 ? 'bg-yellow-500' :
+                                                'bg-green-500'
+                                            }`}></div>
+                                            <span className="text-sm font-medium">
+                                                {request.urgencyScore || 0}%
+                                            </span>
+                                        </div>
                                     </td>
                                     <td className="px-5 py-4 whitespace-nowrap">
                                         <ContactCell 
                                             contact={request.assignedContact} 
                                             setViewingTenantId={setViewingTenantId}
                                         />
-                                    </td>
-                                    <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                        {request.requests}
                                     </td>
                                     <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-500">
                                         {request.requestDate}
@@ -442,13 +757,45 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
                     </table>
                 </div>
                 
-                {filteredAndSortedData.length === 0 && (
+                {/* Enhanced empty state */}
+                {filteredAndSortedData.length === 0 && serviceRequests.length > 0 && (
                     <div className="text-center py-12">
                         <div className="text-gray-500">
                             <SlidersHorizontal className="w-12 h-12 mx-auto mb-4 opacity-50" />
                             <h3 className="text-lg font-medium mb-2">No requests found</h3>
                             <p>Try adjusting your filters or search terms</p>
+                            <button
+                                onClick={() => setFilters({
+                                    status: 'all',
+                                    building: '',
+                                    assignedContact: '',
+                                    priority: '',
+                                    category: '',
+                                    dateRange: { start: '', end: '' },
+                                    searchTerm: ''
+                                })}
+                                className="mt-4 px-4 py-2 text-sm bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                            >
+                                Clear All Filters
+                            </button>
                         </div>
+                    </div>
+                )}
+
+                {/* Complete empty state */}
+                {serviceRequests.length === 0 && !loading && (
+                    <div className="text-center py-12">
+                        <Wrench className="w-16 h-16 mx-auto text-gray-400 mb-6" />
+                        <h3 className="text-xl font-semibold text-text-main mb-4">No Service Requests</h3>
+                        <p className="text-text-secondary mb-6 max-w-md mx-auto">
+                            When tenants submit service requests, they'll appear here for tracking and management.
+                        </p>
+                        <button 
+                            onClick={fetchServiceRequests}
+                            className="px-6 py-3 bg-accent-primary text-white rounded-lg hover:bg-accent-secondary transition-colors"
+                        >
+                            Refresh Requests
+                        </button>
                     </div>
                 )}
             </Card>
