@@ -235,6 +235,35 @@ const FilterPanel: React.FC<{
     );
 };
 
+// Helper function to calculate urgency score for prioritization (moved outside component to prevent hoisting issues)
+const calculateUrgencyScore = (request: any) => {
+    let score = 0;
+    
+    // Priority weight (40%)
+    const priority = request.priority?.toLowerCase() || 'medium';
+    if (priority === 'high') score += 40;
+    else if (priority === 'medium') score += 20;
+    else score += 10;
+    
+    // Age of request (30%)
+    const daysSinceCreated = Math.floor((Date.now() - new Date(request.dateCreated || request.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+    if (daysSinceCreated >= 7) score += 30;
+    else if (daysSinceCreated >= 3) score += 20;
+    else score += 10;
+    
+    // Category urgency (20%)
+    const category = request.category?.toLowerCase() || 'general';
+    if (category === 'electrical' || category === 'plumbing') score += 20;
+    else if (category === 'hvac' || category === 'appliance') score += 15;
+    else score += 10;
+    
+    // Status urgency (10%)
+    if (request.status === 'pending') score += 10;
+    else if (request.status === 'in-progress') score += 5;
+    
+    return Math.min(score, 100);
+};
+
 export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({ 
     onBuildingClick, 
     onUnitClick, 
@@ -260,35 +289,6 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
         dateRange: { start: '', end: '' },
         searchTerm: ''
     });
-
-    // Calculate urgency score for prioritization
-    const calculateUrgencyScore = (request: any) => {
-        let score = 0;
-        
-        // Priority weight (40%)
-        const priority = request.priority?.toLowerCase() || 'medium';
-        if (priority === 'high') score += 40;
-        else if (priority === 'medium') score += 20;
-        else score += 10;
-        
-        // Age of request (30%)
-        const daysSinceCreated = Math.floor((Date.now() - new Date(request.dateCreated || request.createdAt).getTime()) / (1000 * 60 * 60 * 24));
-        if (daysSinceCreated >= 7) score += 30;
-        else if (daysSinceCreated >= 3) score += 20;
-        else score += 10;
-        
-        // Category urgency (20%)
-        const category = request.category?.toLowerCase() || 'general';
-        if (category === 'electrical' || category === 'plumbing') score += 20;
-        else if (category === 'hvac' || category === 'appliance') score += 15;
-        else score += 10;
-        
-        // Status urgency (10%)
-        if (request.status === 'pending') score += 10;
-        else if (request.status === 'in-progress') score += 5;
-        
-        return Math.min(score, 100);
-    };
 
     const fetchServiceRequests = useCallback(async () => {
         try {
