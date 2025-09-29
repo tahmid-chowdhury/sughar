@@ -13,7 +13,7 @@ import { VacantUnitsChart } from './charts/VacantUnitsChart';
 import { RentStatusChart } from './charts/RentStatusChart';
 import { ChevronRight } from './icons';
 import { CurrentTenantsPage } from './CurrentTenantsPage';
-import { TenantApplicationsPage } from './TenantApplicationsPage';
+import TenantApplicationsPage from './TenantApplicationsPage';
 
 interface TenantsDashboardProps {
   setViewingTenantId: (id: string) => void;
