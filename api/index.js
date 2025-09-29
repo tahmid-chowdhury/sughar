@@ -1810,6 +1810,17 @@ async function getAllTenants(req, res) {
       
       console.log('Found tenants:', tenants.length);
       
+      // Check for duplicate emails in the database
+      const emails = tenants.map(t => t.email);
+      const uniqueEmails = [...new Set(emails)];
+      if (emails.length !== uniqueEmails.length) {
+        console.warn('Duplicate tenant emails detected in database!', {
+          totalTenants: emails.length,
+          uniqueEmails: uniqueEmails.length,
+          duplicateEmails: emails.filter((email, index) => emails.indexOf(email) !== index)
+        });
+      }
+      
       // Transform to include additional info
       const tenantsWithInfo = tenants.map(tenant => ({
         id: tenant._id.toString(),
@@ -1821,6 +1832,7 @@ async function getAllTenants(req, res) {
       }));
       
       console.log('Returning tenants:', tenantsWithInfo.length);
+      console.log('First few tenant IDs:', tenantsWithInfo.slice(0, 5).map(t => ({ id: t.id, name: t.name })));
       res.json(tenantsWithInfo);
     } catch (error) {
       console.error('Error fetching tenants:', error);

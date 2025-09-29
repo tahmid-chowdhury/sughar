@@ -21,41 +21,45 @@ interface FilterState {
   joinDateRange: 'all' | 'last-month' | 'last-3-months' | 'last-year';
 }
 
-const TenantCard: React.FC<{ tenant: TenantUser; onClick: () => void }> = ({ tenant, onClick }) => (
-  <div 
-    className="cursor-pointer"
-    onClick={onClick}
-  >
-    <Card className="p-4 hover:shadow-md transition-shadow">
-      <div className="flex items-center space-x-4">
-        <img 
-          src={tenant.avatar} 
-          alt={tenant.name}
-          className="w-12 h-12 rounded-full object-cover"
-        />
-        <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-semibold text-gray-900 truncate">{tenant.name}</h3>
-          <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
-            <div className="flex items-center space-x-1">
-              <Mail className="w-4 h-4" />
-              <span className="truncate">{tenant.email}</span>
-            </div>
-            {tenant.phoneNumber && (
+const TenantCard: React.FC<{ tenant: TenantUser; onClick: () => void }> = React.memo(({ tenant, onClick }) => {
+  console.log('Rendering TenantCard for:', tenant.name, 'ID:', tenant.id);
+  
+  return (
+    <div
+      className="cursor-pointer hover:shadow-md transition-shadow"
+      onClick={onClick}
+    >
+      <Card className="p-4">
+        <div className="flex items-center space-x-4">
+          <img 
+            src={tenant.avatar} 
+            alt={tenant.name}
+            className="w-12 h-12 rounded-full object-cover"
+          />
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg font-semibold text-gray-900 truncate">{tenant.name}</h3>
+            <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
               <div className="flex items-center space-x-1">
-                <Phone className="w-4 h-4" />
-                <span>{tenant.phoneNumber}</span>
+                <Mail className="w-4 h-4" />
+                <span className="truncate">{tenant.email}</span>
               </div>
-            )}
-          </div>
-          <div className="flex items-center space-x-1 text-xs text-gray-400 mt-2">
-            <Calendar className="w-3 h-3" />
-            <span>Joined {new Date(tenant.joinDate).toLocaleDateString()}</span>
+              {tenant.phoneNumber && (
+                <div className="flex items-center space-x-1">
+                  <Phone className="w-4 h-4" />
+                  <span>{tenant.phoneNumber}</span>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center space-x-1 text-xs text-gray-400 mt-2">
+              <Calendar className="w-3 h-3" />
+              <span>Joined {new Date(tenant.joinDate).toLocaleDateString()}</span>
+            </div>
           </div>
         </div>
-      </div>
-    </Card>
-  </div>
-);
+      </Card>
+    </div>
+  );
+});
 
 const AllTenantsPage: React.FC<AllTenantsPageProps> = ({ setViewingTenantId }) => {
   const [tenants, setTenants] = useState<TenantUser[]>([]);
@@ -72,8 +76,25 @@ const AllTenantsPage: React.FC<AllTenantsPageProps> = ({ setViewingTenantId }) =
       try {
         setLoading(true);
         setError(null);
+        console.log('Fetching tenants from API...');
         const data = await tenantsAPI.getAll();
-        setTenants(data);
+        console.log('Received tenant data:', data);
+        console.log('Number of tenants received:', data.length);
+        
+        // Check for duplicates in the received data
+        const uniqueData = data.filter((tenant: TenantUser, index: number, self: TenantUser[]) => 
+          index === self.findIndex(t => t.id === tenant.id)
+        );
+        console.log('Number of unique tenants:', uniqueData.length);
+        
+        if (data.length !== uniqueData.length) {
+          console.warn('Duplicate tenants detected in API response!', {
+            originalCount: data.length,
+            uniqueCount: uniqueData.length
+          });
+        }
+        
+        setTenants(uniqueData);
       } catch (err) {
         console.error('Error fetching tenants:', err);
         setError('Failed to load tenants. Please try again.');
@@ -82,7 +103,21 @@ const AllTenantsPage: React.FC<AllTenantsPageProps> = ({ setViewingTenantId }) =
       }
     };
 
-    fetchTenants();
+    let isCancelled = false;
+    
+    const runFetch = async () => {
+      await fetchTenants();
+      if (!isCancelled) {
+        console.log('Tenant fetch completed successfully');
+      }
+    };
+
+    runFetch();
+    
+    return () => {
+      isCancelled = true;
+      console.log('AllTenantsPage cleanup - cancelling any pending operations');
+    };
   }, []);
 
   // Filter and search tenants
@@ -227,13 +262,18 @@ const AllTenantsPage: React.FC<AllTenantsPageProps> = ({ setViewingTenantId }) =
       {/* Tenants Grid */}
       {filteredTenants.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredTenants.map(tenant => (
-            <TenantCard 
-              key={tenant.id}
-              tenant={tenant}
-              onClick={() => setViewingTenantId(tenant.id)}
-            />
-          ))}
+          {(() => {
+            console.log('About to render filtered tenants:', filteredTenants.length);
+            console.log('Filtered tenant IDs:', filteredTenants.map(t => ({ id: t.id, name: t.name })));
+            
+            return filteredTenants.map(tenant => (
+              <TenantCard 
+                key={`tenant-${tenant.id}`}
+                tenant={tenant}
+                onClick={() => setViewingTenantId(tenant.id)}
+              />
+            ));
+          })()}
         </div>
       ) : (
         <Card className="p-12 text-center">
