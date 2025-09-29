@@ -12,7 +12,7 @@ import { VacantUnitsChart } from './charts/VacantUnitsChart';
 import { RentStatusChart } from './charts/RentStatusChart';
 import { ChevronRight } from './icons';
 import { CurrentTenantsPage } from './CurrentTenantsPage';
-import { TenantApplicationsPage } from './TenantApplicationsPage';
+import TenantApplicationsPage from './TenantApplicationsPage';
 import { rentalApplicationsAPI, currentTenantsAPI, unitsAPI, propertiesAPI } from '../services/api';
 
 interface TenantsDashboardProps {
