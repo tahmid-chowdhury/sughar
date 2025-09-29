@@ -955,40 +955,69 @@ async function updateServiceRequest(req, res, id) {
 async function getRentalApplications(req, res) {
   authenticateToken(req, res, async () => {
     try {
+      console.log('Fetching rental applications for user:', req.user.userId, 'role:', req.user.role);
+      
       let rentalApplications;
       
       if (req.user.role === 'tenant') {
-        rentalApplications = await RentalApplication.find({ applicantID: req.user.userId })
-          .populate('unitID', 'unitNumber rentAmount')
+        // For tenants, get their own applications
+        rentalApplications = await RentalApplication.find({ applicant: req.user.userId })
+          .populate('applicant', 'firstName lastName email phoneNumber')
+          .populate('unit', 'unitNumber monthlyRent')
           .populate({
-            path: 'unitID',
-            populate: {
-              path: 'propertyID',
-              select: 'address'
-            }
+            path: 'property',
+            select: 'address userID'
           });
       } else {
+        // For landlords, get applications for their properties
         const userProperties = await Property.find({ userID: req.user.userId });
-        const propertyIds = userProperties.map(p => p._id);
-        const userUnits = await Unit.find({ propertyID: { $in: propertyIds } });
-        const unitIds = userUnits.map(u => u._id);
+        console.log('Found user properties:', userProperties.length);
         
-        rentalApplications = await RentalApplication.find({ unitID: { $in: unitIds } })
-          .populate('applicantID', 'firstName lastName email phoneNumber')
-          .populate('unitID', 'unitNumber rentAmount')
+        if (userProperties.length === 0) {
+          console.log('No properties found for user, returning empty array');
+          return res.json([]);
+        }
+        
+        const propertyIds = userProperties.map(p => p._id);
+        
+        rentalApplications = await RentalApplication.find({ property: { $in: propertyIds } })
+          .populate('applicant', 'firstName lastName email phoneNumber')
+          .populate('unit', 'unitNumber monthlyRent')
           .populate({
-            path: 'unitID',
-            populate: {
-              path: 'propertyID',
-              select: 'address'
-            }
+            path: 'property',
+            select: 'address userID'
           });
       }
       
-      res.json(rentalApplications);
+      console.log('Found rental applications:', rentalApplications.length);
+      
+      // Transform data to be more frontend-friendly
+      const transformedApplications = rentalApplications.map(app => ({
+        _id: app._id,
+        applicantID: app.applicant, // Keep both naming conventions for compatibility
+        applicant: app.applicant,
+        unitID: app.unit, // Keep both naming conventions for compatibility
+        unit: app.unit,
+        propertyID: app.property, // Keep both naming conventions for compatibility
+        property: app.property,
+        desiredMoveInDate: app.desiredMoveInDate,
+        monthlyIncome: app.monthlyIncome,
+        employmentStatus: app.employmentStatus,
+        previousAddress: app.previousAddress,
+        references: app.references,
+        status: app.status,
+        applicationDate: app.applicationDate,
+        createdAt: app.createdAt,
+        updatedAt: app.updatedAt
+      }));
+      
+      res.json(transformedApplications);
     } catch (error) {
       console.error('Error fetching rental applications:', error);
-      res.status(500).json({ error: 'Error fetching rental applications' });
+      res.status(500).json({ 
+        error: 'Error fetching rental applications',
+        details: error.message 
+      });
     }
   });
 }
