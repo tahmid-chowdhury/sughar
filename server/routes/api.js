@@ -748,4 +748,127 @@ router.get('/dashboard/financial-stats', authenticateToken, async (req, res) => 
     }
 });
 
+// CURRENT TENANTS ROUTES
+// Get current tenants with lease and payment information
+router.get('/current-tenants', authenticateToken, async (req, res) => {
+    try {
+        // Get user's properties
+        const properties = await Property.find({ userID: req.user.userId });
+        const propertyIds = properties.map(prop => prop._id);
+        
+        // Get units for these properties
+        const units = await Unit.find({ propertyID: { $in: propertyIds } });
+        const unitIds = units.map(unit => unit._id);
+        
+        // Get active lease agreements for these units
+        const currentDate = new Date();
+        const leases = await LeaseAgreement.find({
+            unitID: { $in: unitIds },
+            startDate: { $lte: currentDate },
+            endDate: { $gte: currentDate }
+        })
+        .populate('userID', 'firstName lastName email phoneNumber')
+        .populate({
+            path: 'unitID',
+            select: 'unitNumber monthlyRent propertyID',
+            populate: {
+                path: 'propertyID',
+                select: 'address userID'
+            }
+        });
+        
+        // Get recent payments for rent status calculation
+        const payments = await Payment.find({
+            leaseID: { $in: leases.map(lease => lease._id) }
+        }).sort({ paymentDate: -1 });
+        
+        // Get service requests counts for each user
+        const serviceRequests = await ServiceRequest.find({
+            unitID: { $in: unitIds }
+        }).populate('userID', '_id');
+        
+        // Get ratings for tenants (if available)
+        const ratings = await Rating.find({
+            userID: { $in: leases.map(lease => lease.userID._id) }
+        });
+        
+        // Transform data to match frontend CurrentTenant interface
+        const currentTenants = leases.map(lease => {
+            const tenant = lease.userID;
+            const unit = lease.unitID;
+            const property = unit.propertyID;
+            
+            // Calculate lease progress (percentage of lease term completed)
+            const leaseStart = new Date(lease.startDate);
+            const leaseEnd = new Date(lease.endDate);
+            const today = new Date();
+            const totalDays = (leaseEnd - leaseStart) / (1000 * 60 * 60 * 24);
+            const daysPassed = (today - leaseStart) / (1000 * 60 * 60 * 24);
+            const progressPercentage = Math.min(100, Math.max(0, (daysPassed / totalDays) * 100));
+            
+            // Determine rent status based on recent payments
+            const tenantPayments = payments.filter(payment => 
+                payment.leaseID.toString() === lease._id.toString()
+            );
+            
+            let rentStatus = 'Pending';
+            const thisMonth = new Date();
+            thisMonth.setDate(1);
+            thisMonth.setHours(0, 0, 0, 0);
+            
+            const thisMonthPayment = tenantPayments.find(payment => 
+                payment.paymentDate >= thisMonth && payment.status === 'completed'
+            );
+            
+            if (thisMonthPayment) {
+                rentStatus = 'Paid';
+            } else {
+                // Check if payment is overdue (after 5th of the month)
+                const fifthOfMonth = new Date();
+                fifthOfMonth.setDate(5);
+                if (currentDate > fifthOfMonth) {
+                    rentStatus = 'Overdue';
+                }
+            }
+            
+            // Count service requests for this tenant
+            const tenantServiceRequests = serviceRequests.filter(sr => 
+                sr.userID && sr.userID._id.toString() === tenant._id.toString()
+            ).length;
+            
+            // Get tenant rating
+            const tenantRating = ratings.find(rating => 
+                rating.userID.toString() === tenant._id.toString()
+            );
+            const rating = tenantRating ? tenantRating.rating : 4.0;
+            
+            // Generate avatar (placeholder for now)
+            const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(tenant.firstName + ' ' + tenant.lastName)}&background=random`;
+            
+            return {
+                id: tenant._id.toString(),
+                name: `${tenant.firstName} ${tenant.lastName}`,
+                avatar: avatarUrl,
+                rating: rating,
+                building: property.address.split(',')[0] || `Building ${unit.unitNumber}`,
+                unit: parseInt(unit.unitNumber) || 1,
+                leaseProgress: {
+                    value: Math.round(progressPercentage),
+                    variant: progressPercentage > 50 ? 'dark' : 'light'
+                },
+                rentStatus: rentStatus,
+                requests: tenantServiceRequests
+            };
+        });
+        
+        res.json(currentTenants);
+    } catch (error) {
+        console.error('Error fetching current tenants:', error);
+        res.status(500).json({ 
+            error: 'Error fetching current tenants', 
+            details: error.message 
+        });
+    }
+});
+
 export default router;

@@ -169,6 +169,11 @@ export const dashboardAPI = {
   getBuildingsOverview: (): Promise<any> => apiRequest('/api/dashboard/stats'),
 };
 
+// Current Tenants API
+export const currentTenantsAPI = {
+  getAll: (): Promise<any> => apiRequest('/api/current-tenants'),
+};
+
 // Helper functions to calculate dashboard stats
 const calculateBuildingStats = (properties: any[]) => {
   return properties.map((property, index) => ({
@@ -200,4 +205,5 @@ export default {
   leaseAgreementsAPI,
   paymentsAPI,
   dashboardAPI,
+  currentTenantsAPI,
 };

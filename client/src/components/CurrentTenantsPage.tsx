@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card } from './Card';
-import { CURRENT_TENANTS_DATA } from '../constants';
+import { currentTenantsAPI } from '../services/api';
 import { CurrentTenant, RentStatus } from '../types';
 import { SlidersHorizontal, ArrowDown, ArrowUp, Search, X } from './icons';
 
@@ -80,8 +80,9 @@ const FilterPanel: React.FC<{
   filters: FilterState;
   onFilterChange: (filters: FilterState) => void;
   onClose: () => void;
-}> = ({ filters, onFilterChange, onClose }) => {
-  const uniqueBuildings = [...new Set(CURRENT_TENANTS_DATA.map(tenant => tenant.building))].sort();
+  tenants: CurrentTenant[];
+}> = ({ filters, onFilterChange, onClose, tenants }) => {
+  const uniqueBuildings = [...new Set(tenants.map((tenant: CurrentTenant) => tenant.building))].sort();
 
   const handleFilterUpdate = (field: keyof FilterState, value: any) => {
     onFilterChange({ ...filters, [field]: value });
@@ -169,9 +170,9 @@ const FilterPanel: React.FC<{
 
 export const CurrentTenantsPage: React.FC<CurrentTenantsPageProps> = ({ setViewingTenantId, onBuildingClick, onUnitClick }) => {
     const [showFilters, setShowFilters] = useState(false);
-    const [sortConfig, setSortConfig] = useState<{ field: SortField; direction: SortDirection }>({ 
-        field: 'name', 
-        direction: 'asc' 
+    const [sortConfig, setSortConfig] = useState<{ field: SortField; direction: SortDirection }>({
+        field: 'name',
+        direction: 'asc'
     });
     const [filters, setFilters] = useState<FilterState>({
         building: '',
@@ -179,8 +180,28 @@ export const CurrentTenantsPage: React.FC<CurrentTenantsPageProps> = ({ setViewi
         searchTerm: '',
         leaseProgressRange: { min: 0, max: 100 }
     });
+    const [tenantsData, setTenantsData] = useState<CurrentTenant[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    const handleSort = (field: SortField) => {
+    // Fetch tenants data on component mount
+    useEffect(() => {
+        const fetchTenants = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                const data = await currentTenantsAPI.getAll();
+                setTenantsData(data);
+            } catch (err) {
+                console.error('Error fetching tenants:', err);
+                setError('Failed to load tenants data');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchTenants();
+    }, []);    const handleSort = (field: SortField) => {
         setSortConfig(prev => ({
             field,
             direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc'
@@ -188,7 +209,7 @@ export const CurrentTenantsPage: React.FC<CurrentTenantsPageProps> = ({ setViewi
     };
 
     const filteredAndSortedData = useMemo(() => {
-        let filtered = CURRENT_TENANTS_DATA.filter(tenant => {
+        let filtered = tenantsData.filter((tenant: CurrentTenant) => {
             // Building filter
             if (filters.building && tenant.building !== filters.building) return false;
             
@@ -211,7 +232,7 @@ export const CurrentTenantsPage: React.FC<CurrentTenantsPageProps> = ({ setViewi
         });
 
         // Sort the filtered data
-        filtered.sort((a, b) => {
+        filtered.sort((a: CurrentTenant, b: CurrentTenant) => {
             const { field, direction } = sortConfig;
             let aValue: any;
             let bValue: any;
@@ -252,22 +273,49 @@ export const CurrentTenantsPage: React.FC<CurrentTenantsPageProps> = ({ setViewi
         });
 
         return filtered;
-    }, [sortConfig, filters]);
+    }, [sortConfig, filters, tenantsData]);
+
+    if (loading) {
+        return (
+            <Card className="p-6">
+                <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <span className="ml-3 text-gray-600">Loading tenants data...</span>
+                </div>
+            </Card>
+        );
+    }
+
+    if (error) {
+        return (
+            <Card className="p-6">
+                <div className="text-center text-red-600">
+                    <div className="text-lg font-medium mb-2">Error Loading Data</div>
+                    <div className="text-sm">{error}</div>
+                    <button 
+                        onClick={() => window.location.reload()} 
+                        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                    >
+                        Retry
+                    </button>
+                </div>
+            </Card>
+        );
+    }
 
     return (
         <>
             {showFilters && (
-                <FilterPanel 
+                <FilterPanel
                     filters={filters}
                     onFilterChange={setFilters}
                     onClose={() => setShowFilters(false)}
+                    tenants={tenantsData}
                 />
-            )}
-            
-            <Card className="!p-0">
+            )}            <Card className="!p-0">
                 <div className="flex justify-between items-center p-4">
                     <div className="text-sm text-gray-600">
-                        Showing {filteredAndSortedData.length} of {CURRENT_TENANTS_DATA.length} tenants
+                        Showing {filteredAndSortedData.length} of {tenantsData.length} tenants
                     </div>
                     <button 
                         onClick={() => setShowFilters(!showFilters)}
@@ -306,7 +354,7 @@ export const CurrentTenantsPage: React.FC<CurrentTenantsPageProps> = ({ setViewi
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {filteredAndSortedData.map((tenant) => (
+                            {filteredAndSortedData.map((tenant: CurrentTenant) => (
                                 <tr key={tenant.id} className="hover:bg-gray-50">
                                     <td className="px-5 py-4 whitespace-nowrap">
                                         <TenantCell tenant={tenant} setViewingTenantId={setViewingTenantId} />
