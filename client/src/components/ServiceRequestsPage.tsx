@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Card } from './Card';
 import { Header } from './Header';
 import { ServiceRequest, RequestStatus, DashboardStats } from '../types';
@@ -240,7 +240,7 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
     onUnitClick, 
     setViewingTenantId 
 }) => {
-    const [serviceRequests, setServiceRequests] = useState<(ServiceRequest & { priority?: string; category?: string; description?: string; urgencyScore?: number })[]>([]);
+    const [rawServiceRequestsData, setRawServiceRequestsData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
@@ -290,7 +290,7 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
         return Math.min(score, 100);
     };
 
-    const fetchServiceRequests = async () => {
+    const fetchServiceRequests = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -308,7 +308,7 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
             
             if (!Array.isArray(serviceRequestsData)) {
                 console.warn('Service requests data is not an array:', serviceRequestsData);
-                setServiceRequests([]);
+                setRawServiceRequestsData([]);
                 return;
             }
             
@@ -341,56 +341,17 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
                         requests: 1
                     }));
                     
-                    setServiceRequests(dashboardServiceRequests);
+                    setRawServiceRequestsData(dashboardServiceRequests);
                 } else {
                     console.log('No service requests found anywhere, setting empty array');
-                    setServiceRequests([]);
+                    setRawServiceRequestsData([]);
                 }
                 setLastUpdated(new Date());
                 return;
             }
             
-            // Transform API data with enhanced calculations and real data
-            const transformedData = serviceRequestsData.map((sr: any) => {
-                const urgencyScore = calculateUrgencyScore(sr);
-                
-                // Try to get tenant info from dashboard data if available
-                const tenantInfo = dashboardData?.tenants?.details?.find((tenant: any) => 
-                    tenant._id === sr.tenantID?._id || tenant.email === sr.tenantID?.email
-                );
-                
-                // Try to get unit info from dashboard data
-                const unitInfo = dashboardData?.units?.details?.find((unit: any) => 
-                    unit._id === sr.unitID?._id
-                );
-                
-                return {
-                    id: sr._id || `sr-${Math.random()}`,
-                    building: sr.unitID?.propertyID?.address?.split(',')[0] || 
-                             unitInfo?.property?.split(',')[0] || 
-                             'Unknown Building',
-                    unit: sr.unitID?.unitNumber || unitInfo?.unitNumber || 'Unknown Unit',
-                    requestDate: new Date(sr.dateCreated || sr.createdAt).toLocaleDateString(),
-                    assignedContact: {
-                        name: sr.contractorID?.companyName || 
-                              (sr.tenantID?.firstName && sr.tenantID?.lastName ? 
-                               `${sr.tenantID.firstName} ${sr.tenantID.lastName}` : 
-                               tenantInfo?.name || sr.tenantID?.email || 'Unassigned'),
-                        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${sr.tenantID?.email || sr._id}`
-                    },
-                    status: mapApiStatusToRequestStatus(sr.status),
-                    description: sr.description || 'No description provided',
-                    category: sr.category || 'General',
-                    priority: sr.priority || 'medium',
-                    urgencyScore,
-                    requests: 1 // This could be calculated from multiple related requests
-                };
-            });
-            
-            // Sort by urgency score by default for better prioritization
-            const sortedData = transformedData.sort((a, b) => b.urgencyScore! - a.urgencyScore!);
-            
-            setServiceRequests(sortedData);
+            // Store raw data for memoized transformation
+            setRawServiceRequestsData(serviceRequestsData);
             setLastUpdated(new Date());
         } catch (err) {
             console.error('Error fetching service requests:', err);
@@ -399,11 +360,52 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchServiceRequests();
-    }, []);
+    }, [fetchServiceRequests]);
+
+    // Memoized data transformation to prevent unnecessary re-renders
+    const transformedServiceRequests = useMemo(() => {
+        if (!Array.isArray(rawServiceRequestsData) || rawServiceRequestsData.length === 0) {
+            return [];
+        }
+
+        const transformedData = rawServiceRequestsData.map((sr: any) => {
+            const urgencyScore = calculateUrgencyScore(sr);
+            
+            // Try to get unit info from dashboard data
+            const unitInfo = dashboardStats?.units?.details?.find((unit: any) => 
+                unit._id === sr.unitID?._id
+            );
+            
+            return {
+                id: sr._id || `sr-${Math.random()}`,
+                building: sr.unitID?.propertyID?.address?.split(',')[0] || 
+                         unitInfo?.property?.split(',')[0] || 
+                         'Unknown Building',
+                unit: sr.unitID?.unitNumber || unitInfo?.unitNumber || 'Unknown Unit',
+                requestDate: new Date(sr.dateCreated || sr.createdAt).toLocaleDateString(),
+                assignedContact: {
+                    name: sr.contractorID?.companyName || 
+                          (sr.tenantID?.firstName && sr.tenantID?.lastName ? 
+                           `${sr.tenantID.firstName} ${sr.tenantID.lastName}` : 
+                           sr.tenantID?.email || 'Unassigned'),
+                    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${sr.tenantID?.email || sr._id}`
+                },
+                status: mapApiStatusToRequestStatus(sr.status),
+                description: sr.description || 'No description provided',
+                category: sr.category || 'General',
+                priority: sr.priority || 'medium',
+                urgencyScore,
+                requests: 1
+            };
+        });
+        
+        // Sort by urgency score by default for better prioritization
+        return transformedData.sort((a, b) => b.urgencyScore! - a.urgencyScore!);
+    }, [rawServiceRequestsData, dashboardStats]);
 
     // Helper function to map API status to RequestStatus enum
     const mapApiStatusToRequestStatus = (apiStatus: string): RequestStatus => {
@@ -431,11 +433,11 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
 
     const filteredAndSortedData = useMemo(() => {
         // Safety check for empty or invalid data
-        if (!Array.isArray(serviceRequests) || serviceRequests.length === 0) {
+        if (!Array.isArray(transformedServiceRequests) || transformedServiceRequests.length === 0) {
             return [];
         }
         
-        let filtered = serviceRequests.filter((request: any) => {
+        let filtered = transformedServiceRequests.filter((request: any) => {
             // Status filter
             if (filters.status !== 'all' && request.status !== filters.status) return false;
             
@@ -500,7 +502,7 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
         });
 
         return filtered;
-    }, [serviceRequests, sortConfig, filters.status, filters.building, filters.assignedContact, filters.priority, filters.category, filters.searchTerm]);
+    }, [transformedServiceRequests, sortConfig.field, sortConfig.direction, filters.status, filters.building, filters.assignedContact, filters.priority, filters.category, filters.searchTerm]);
 
     const handleRequestClick = (id: string) => {
         setSelectedRequestId(id);
@@ -576,7 +578,7 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
     // Calculate summary statistics
     const summaryStats = useMemo(() => {
         // Safety check for empty or invalid data
-        if (!Array.isArray(serviceRequests) || serviceRequests.length === 0) {
+        if (!Array.isArray(transformedServiceRequests) || transformedServiceRequests.length === 0) {
             return {
                 total: 0,
                 pending: 0,
@@ -589,17 +591,17 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
             };
         }
         
-        const totalRequests = serviceRequests.length;
-        const pendingRequests = serviceRequests.filter(req => req.status === RequestStatus.Pending).length;
-        const inProgressRequests = serviceRequests.filter(req => req.status === RequestStatus.InProgress).length;
-        const completedRequests = serviceRequests.filter(req => req.status === RequestStatus.Complete).length;
-        const highPriorityRequests = serviceRequests.filter(req => req.priority === 'high').length;
-        const urgentRequests = serviceRequests.filter(req => req.urgencyScore! >= 70).length;
+        const totalRequests = transformedServiceRequests.length;
+        const pendingRequests = transformedServiceRequests.filter((req: any) => req.status === RequestStatus.Pending).length;
+        const inProgressRequests = transformedServiceRequests.filter((req: any) => req.status === RequestStatus.InProgress).length;
+        const completedRequests = transformedServiceRequests.filter((req: any) => req.status === RequestStatus.Complete).length;
+        const highPriorityRequests = transformedServiceRequests.filter((req: any) => req.priority === 'high').length;
+        const urgentRequests = transformedServiceRequests.filter((req: any) => req.urgencyScore! >= 70).length;
         const averageUrgencyScore = totalRequests > 0 ? 
-            Math.round(serviceRequests.reduce((sum, req) => sum + (req.urgencyScore || 0), 0) / totalRequests) : 0;
+            Math.round(transformedServiceRequests.reduce((sum: number, req: any) => sum + (req.urgencyScore || 0), 0) / totalRequests) : 0;
         
         // Category breakdown
-        const categoryBreakdown = serviceRequests.reduce((acc: any, req) => {
+        const categoryBreakdown = transformedServiceRequests.reduce((acc: any, req: any) => {
             const category = req.category || 'General';
             acc[category] = (acc[category] || 0) + 1;
             return acc;
@@ -615,7 +617,7 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
             averageUrgencyScore,
             categoryBreakdown
         };
-    }, [serviceRequests]);
+    }, [transformedServiceRequests]);
 
     return (
         <div className="space-y-6">
@@ -648,7 +650,7 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
             </div>
 
             {/* Summary Statistics Cards */}
-            {serviceRequests.length > 0 && (
+            {transformedServiceRequests.length > 0 && (
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                     <div className="bg-red-50 px-4 py-3 rounded-lg">
                         <div className="text-2xl font-bold text-red-600">{summaryStats.pending}</div>
@@ -683,7 +685,7 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
                     filters={filters}
                     onFilterChange={setFilters}
                     onClose={() => setShowFilters(false)}
-                    serviceRequests={serviceRequests}
+                    serviceRequests={transformedServiceRequests}
                 />
             )}
             
@@ -691,7 +693,7 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
             <Card className="!p-0">
                 <div className="flex justify-between items-center p-4">
                     <div className="text-sm text-gray-600">
-                        Showing {filteredAndSortedData.length} of {serviceRequests.length} requests
+                        Showing {filteredAndSortedData.length} of {transformedServiceRequests.length} requests
                         {filteredAndSortedData.length > 0 && (
                             <span className="ml-2 text-xs text-gray-500">
                                 • Top priority: {Math.max(...filteredAndSortedData.map(req => req.urgencyScore || 0))}% urgency
@@ -816,7 +818,7 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
                 </div>
                 
                 {/* Enhanced empty state */}
-                {filteredAndSortedData.length === 0 && serviceRequests.length > 0 && (
+                {filteredAndSortedData.length === 0 && transformedServiceRequests.length > 0 && (
                     <div className="text-center py-12">
                         <div className="text-gray-500">
                             <SlidersHorizontal className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -841,7 +843,7 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
                 )}
 
                 {/* Complete empty state */}
-                {serviceRequests.length === 0 && !loading && (
+                {transformedServiceRequests.length === 0 && !loading && (
                     <div className="text-center py-12">
                         <Wrench className="w-16 h-16 mx-auto text-gray-400 mb-6" />
                         <h3 className="text-xl font-semibold text-text-main mb-4">No Service Requests</h3>
