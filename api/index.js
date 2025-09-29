@@ -2209,7 +2209,7 @@ async function populateTestData(req, res) {
           income: 45000,
           yearsEmployed: 2,
           rating: null,
-          status: 'under_review'
+          status: 'pending'
         },
         {
           name: 'Arif Mahmud',
