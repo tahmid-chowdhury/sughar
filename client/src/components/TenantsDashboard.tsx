@@ -14,7 +14,6 @@ import { ChevronRight } from './icons';
 import { CurrentTenantsPage } from './CurrentTenantsPage';
 import TenantApplicationsPage from './TenantApplicationsPage';
 import AllTenantsPage from './AllTenantsPage';
-import DataPopulator from './DataPopulator';
 import { rentalApplicationsAPI, currentTenantsAPI, unitsAPI, propertiesAPI, getAuthToken } from '../services/api';
 
 interface TenantsDashboardProps {
@@ -373,11 +372,6 @@ export const TenantsDashboard: React.FC<TenantsDashboardProps> = ({
                 <StatCard key={stat.label} stat={stat} />
               ))}
             </div>
-            
-            {/* Show data populator if no current tenants */}
-            {tenants.length === 0 && (
-              <DataPopulator />
-            )}
             
             <div className="grid grid-cols-12 gap-8">
                 <div className="col-span-12 lg:col-span-6 xl:col-span-7">
