@@ -18,21 +18,32 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 // Authentication middleware
 function authenticateToken(req, res, next) {
+  console.log('=== AUTHENTICATION DEBUG ===');
+  console.log('Headers:', req.headers);
+  
   const authHeader = req.headers['authorization'];
+  console.log('Auth header:', authHeader);
+  
   const token = authHeader && authHeader.split(' ')[1];
+  console.log('Token:', token ? 'Present' : 'Missing');
   
   if (!token) {
+    console.log('No token provided');
     return res.status(401).json({ error: 'Access token required' });
   }
+  
+  console.log('JWT_SECRET:', JWT_SECRET ? 'Present' : 'Missing');
   
   jwt.verify(token, JWT_SECRET, (err, user) => {
     if (err) {
       console.error('JWT verification error:', err);
-      return res.status(403).json({ error: 'Invalid or expired token' });
+      console.error('Error type:', err.name);
+      console.error('Error message:', err.message);
+      return res.status(403).json({ error: 'Invalid or expired token', details: err.message });
     }
-//   console.log('JWT decoded user:', user);
-//   console.log('User ID from token:', user.userId);
-//   console.log('User ID type:', typeof user.userId);
+    console.log('JWT decoded user:', user);
+    console.log('User ID from token:', user.userId);
+    console.log('User ID type:', typeof user.userId);
     req.user = user;
     next();
   });

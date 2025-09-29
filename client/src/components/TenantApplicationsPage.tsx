@@ -39,6 +39,9 @@ const TenantApplicationsPage: React.FC<TenantApplicationsPageProps> = ({
     try {
       setPopulating(true);
       const token = localStorage.getItem('token');
+      console.log('Token from localStorage:', token ? 'Present' : 'Missing');
+      console.log('Token preview:', token ? token.substring(0, 20) + '...' : 'N/A');
+      
       const response = await fetch('/api/populate-test-data', {
         method: 'POST',
         headers: {
@@ -47,12 +50,17 @@ const TenantApplicationsPage: React.FC<TenantApplicationsPageProps> = ({
         }
       });
       
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+      
       if (response.ok) {
         const result = await response.json();
         console.log('Test data populated:', result);
         // Refresh the applications after populating
         window.location.reload();
       } else {
+        const errorText = await response.text();
+        console.error('Response error:', errorText);
         throw new Error('Failed to populate test data');
       }
     } catch (err) {
