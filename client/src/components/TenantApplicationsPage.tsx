@@ -23,6 +23,13 @@ interface TenantApplication {
   rating?: number;
   verified?: boolean;
   matchPercentage?: number;
+  age?: number;
+  dateOfBirth?: string;
+  employer?: string;
+  yearsAtEmployer?: number;
+  occupation?: string;
+  tenantRating?: string;
+  isIncomeConsistent?: boolean;
 }
 
 const TenantApplicationsPage: React.FC<TenantApplicationsPageProps> = ({ 
@@ -37,47 +44,160 @@ const TenantApplicationsPage: React.FC<TenantApplicationsPageProps> = ({
 
 
   useEffect(() => {
-    const fetchApplications = async () => {
+    const loadHardcodedApplications = () => {
       try {
         setLoading(true);
-        const response = await rentalApplicationsAPI.getAll();
         
-        // Transform API data to frontend format
-        const transformedApplications = response.map((app: any): TenantApplication => {
-          return {
-            id: app._id,
-            applicantName: app.userID ? 
-              `${app.userID.firstName} ${app.userID.lastName}` : 
-              'Unknown Applicant',
-            unit: app.unitID ? 
-              app.unitID.unitNumber : 
-              'Unknown Unit',
-            property: app.unitID?.propertyID ? 
-              app.unitID.propertyID.address : 
-              'Unknown Property',
-            monthlyIncome: app.monthlyIncome || 0,
-            desiredMoveInDate: app.desiredMoveInDate || 'Not specified',
-            employmentStatus: app.employmentStatus || 'Not specified',
-            previousAddress: app.previousAddress || 'Not specified',
-            applicationDate: app.submissionDate || app.createdAt || 'Unknown',
-            status: app.status || 'pending',
-            rating: 4,
-            verified: Math.random() > 0.5,
-            matchPercentage: Math.floor(Math.random() * 40) + 60
-          };
-        });
+        // Hardcoded rental applications based on provided data
+        const hardcodedApplications: TenantApplication[] = [
+          {
+            id: 'APP001',
+            applicantName: 'Raiyan Rahman',
+            unit: 'Available',
+            property: 'Pending Assignment',
+            monthlyIncome: 120000,
+            desiredMoveInDate: '2025-11-01',
+            employmentStatus: 'Software Engineer at Grameenphone IT Division (3 years)',
+            previousAddress: 'Previous rental history available',
+            applicationDate: '2025-09-15',
+            status: 'pending',
+            rating: 4.8,
+            verified: true,
+            matchPercentage: 95,
+            age: 29,
+            dateOfBirth: '1996-02-02',
+            employer: 'Grameenphone IT Division',
+            yearsAtEmployer: 3,
+            occupation: 'Software Engineer',
+            tenantRating: '4.8 (previous 2 leases)',
+            isIncomeConsistent: true
+          },
+          {
+            id: 'APP002',
+            applicantName: 'Niloy Hossain',
+            unit: 'Available',
+            property: 'Pending Assignment',
+            monthlyIncome: 45000,
+            desiredMoveInDate: '2025-10-15',
+            employmentStatus: 'Freelance Graphic Designer (2 years)',
+            previousAddress: 'No previous rental history',
+            applicationDate: '2025-09-20',
+            status: 'pending',
+            rating: undefined,
+            verified: false,
+            matchPercentage: 72,
+            age: 24,
+            dateOfBirth: '2001-07-17',
+            employer: 'Self-employed (Upwork/Fiverr)',
+            yearsAtEmployer: 2,
+            occupation: 'Freelance Graphic Designer',
+            tenantRating: 'None (first time renter)',
+            isIncomeConsistent: false
+          },
+          {
+            id: 'APP003',
+            applicantName: 'Arif Mahmud',
+            unit: 'Available',
+            property: 'Pending Assignment',
+            monthlyIncome: 95000,
+            desiredMoveInDate: '2025-12-01',
+            employmentStatus: 'Senior Accountant at BRAC Bank (5 years)',
+            previousAddress: 'Previous rental history available',
+            applicationDate: '2025-09-18',
+            status: 'pending',
+            rating: 4.5,
+            verified: true,
+            matchPercentage: 88,
+            age: 35,
+            dateOfBirth: '1989-11-11',
+            employer: 'BRAC Bank',
+            yearsAtEmployer: 5,
+            occupation: 'Senior Accountant',
+            tenantRating: '4.5',
+            isIncomeConsistent: true
+          },
+          {
+            id: 'APP004',
+            applicantName: 'Zarin Tasnim',
+            unit: 'Available',
+            property: 'Pending Assignment',
+            monthlyIncome: 70000,
+            desiredMoveInDate: '2025-11-15',
+            employmentStatus: 'Lecturer (Economics) at University of Dhaka (4 years)',
+            previousAddress: 'Previous rental history available',
+            applicationDate: '2025-09-22',
+            status: 'pending',
+            rating: 4.9,
+            verified: true,
+            matchPercentage: 92,
+            age: 32,
+            dateOfBirth: '1993-05-25',
+            employer: 'University of Dhaka',
+            yearsAtEmployer: 4,
+            occupation: 'Lecturer (Economics)',
+            tenantRating: '4.9',
+            isIncomeConsistent: true
+          },
+          {
+            id: 'APP005',
+            applicantName: 'Ayaan Chowdhury',
+            unit: 'Available',
+            property: 'Pending Assignment',
+            monthlyIncome: 65000,
+            desiredMoveInDate: '2025-10-30',
+            employmentStatus: 'Junior Doctor (Resident) at Square Hospital (1 year)',
+            previousAddress: 'No previous rental history',
+            applicationDate: '2025-09-25',
+            status: 'pending',
+            rating: undefined,
+            verified: true,
+            matchPercentage: 78,
+            age: 26,
+            dateOfBirth: '1998-12-04',
+            employer: 'Square Hospital',
+            yearsAtEmployer: 1,
+            occupation: 'Junior Doctor (Resident)',
+            tenantRating: 'None (new renter)',
+            isIncomeConsistent: true
+          },
+          {
+            id: 'APP006',
+            applicantName: 'Nusrat Jahan',
+            unit: 'Available',
+            property: 'Pending Assignment',
+            monthlyIncome: 150000,
+            desiredMoveInDate: '2025-11-30',
+            employmentStatus: 'Fashion Entrepreneur - Owns "Nusrat Styles" (6 years)',
+            previousAddress: 'Previous rental history available',
+            applicationDate: '2025-09-12',
+            status: 'pending',
+            rating: 4.7,
+            verified: true,
+            matchPercentage: 93,
+            age: 32,
+            dateOfBirth: '1993-06-15', // Estimated since not provided
+            employer: 'Owns boutique "Nusrat Styles"',
+            yearsAtEmployer: 6,
+            occupation: 'Fashion Entrepreneur',
+            tenantRating: '4.7',
+            isIncomeConsistent: false // Business income can vary
+          }
+        ];
 
-        setApplications(transformedApplications);
+        setApplications(hardcodedApplications);
         setError(null);
       } catch (err) {
-        console.error('Error fetching applications:', err);
+        console.error('Error loading hardcoded applications:', err);
         setError('Failed to load applications. Please try again.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchApplications();
+    // Simulate loading delay
+    setTimeout(() => {
+      loadHardcodedApplications();
+    }, 1000);
   }, []);
 
   if (loading) {
@@ -179,10 +299,10 @@ const TenantApplicationsPage: React.FC<TenantApplicationsPageProps> = ({
                   Unit & Property
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Income
+                  Monthly Income
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Employment
+                  Occupation & Employer
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Move-in Date
@@ -209,10 +329,26 @@ const TenantApplicationsPage: React.FC<TenantApplicationsPageProps> = ({
                           {application.verified && (
                             <CheckCircle className="w-4 h-4 text-green-500" />
                           )}
+                          {application.rating && (
+                            <div className="flex items-center gap-1">
+                              <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                              <span className="text-xs text-gray-600">{application.rating}</span>
+                            </div>
+                          )}
                         </div>
                         <div className="text-sm text-gray-500">
-                          Applied: {new Date(application.applicationDate).toLocaleDateString()}
+                          Age: {application.age} | Applied: {new Date(application.applicationDate).toLocaleDateString()}
                         </div>
+                        {application.tenantRating && application.tenantRating !== 'None (first time renter)' && application.tenantRating !== 'None (new renter)' && (
+                          <div className="text-xs text-green-600 font-medium">
+                            Rating: {application.tenantRating}
+                          </div>
+                        )}
+                        {(application.tenantRating === 'None (first time renter)' || application.tenantRating === 'None (new renter)') && (
+                          <div className="text-xs text-orange-600 font-medium">
+                            {application.tenantRating}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </td>
@@ -227,13 +363,27 @@ const TenantApplicationsPage: React.FC<TenantApplicationsPageProps> = ({
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center text-sm">
                       <DollarSign className="w-4 h-4 text-gray-400 mr-1" />
-                      <span className="font-medium text-gray-900">
-                        ${application.monthlyIncome.toLocaleString()}
-                      </span>
+                      <div>
+                        <span className="font-medium text-gray-900">
+                          ৳{application.monthlyIncome.toLocaleString()} BDT
+                        </span>
+                        {application.isIncomeConsistent === false && (
+                          <div className="text-xs text-orange-600">~inconsistent</div>
+                        )}
+                        {application.isIncomeConsistent === true && (
+                          <div className="text-xs text-green-600">stable</div>
+                        )}
+                      </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm text-gray-900">{application.employmentStatus}</span>
+                  <td className="px-6 py-4">
+                    <div className="text-sm">
+                      <div className="font-medium text-gray-900">{application.occupation}</div>
+                      <div className="text-gray-600 text-xs">{application.employer}</div>
+                      <div className="text-gray-500 text-xs">
+                        {application.yearsAtEmployer} year{application.yearsAtEmployer !== 1 ? 's' : ''} experience
+                      </div>
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center text-sm">

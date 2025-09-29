@@ -325,46 +325,152 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
             setLoading(true);
             setError(null);
             
-            // Get both service requests and dashboard stats for comprehensive data
-            const [serviceRequestsData, dashboardData] = await Promise.all([
-                serviceRequestsAPI.getAll(),
-                dashboardAPI.getStats()
-            ]);
-            
-            console.log('Service requests data:', serviceRequestsData);
-            console.log('Dashboard stats for service requests:', dashboardData);
-            
-            setDashboardStats(dashboardData);
-            
-            if (!Array.isArray(serviceRequestsData)) {
-                console.warn('Service requests data is not an array:', serviceRequestsData);
-                setRawServiceRequestsData([]);
-                return;
-            }
-            
-            // Handle empty array case - but check if dashboard has service request data
-            if (serviceRequestsData.length === 0) {
-                console.log('No service requests from API, checking dashboard stats');
-                
-                // If dashboard stats show service requests exist, use that RAW data
-                if (dashboardData?.serviceRequests?.recent && dashboardData.serviceRequests.recent.length > 0) {
-                    console.log('Using service requests from dashboard stats:', dashboardData.serviceRequests.recent);
-                    
-                    // Store RAW dashboard service request data - transformation happens in useMemo
-                    setRawServiceRequestsData(dashboardData.serviceRequests.recent);
-                } else {
-                    console.log('No service requests found anywhere, setting empty array');
-                    setRawServiceRequestsData([]);
+            // Hardcoded service requests data based on provided information
+            const hardcodedServiceRequests = [
+                {
+                    _id: 'SR-0001',
+                    building: 'Lalmatia Court',
+                    unit: '4A',
+                    tenant: 'Tania Akter',
+                    description: 'Leak under kitchen sink - Tenant reports water pooling under sink; cabinet getting damaged.',
+                    category: 'plumbing',
+                    priority: 'high',
+                    status: 'pending',
+                    requestDate: '2025-09-20',
+                    title: 'Leak under kitchen sink',
+                    urgencyScore: 85,
+                    dateCreated: '2025-09-20'
+                },
+                {
+                    _id: 'SR-0002',
+                    building: 'Lalmatia Court',
+                    unit: '2B',
+                    tenant: 'Sumi Akhter',
+                    description: 'Bathroom faucet dripping - Constant dripping, wasting water and raising bill.',
+                    category: 'plumbing',
+                    priority: 'medium',
+                    status: 'pending',
+                    requestDate: '2025-09-22',
+                    title: 'Bathroom faucet dripping',
+                    urgencyScore: 70,
+                    dateCreated: '2025-09-22'
+                },
+                {
+                    _id: 'SR-0003',
+                    building: 'Lalmatia Court',
+                    unit: '1C',
+                    tenant: 'Maruf Khan',
+                    description: 'AC not cooling properly - AC blows warm air even after filter cleaning.',
+                    category: 'hvac',
+                    priority: 'high',
+                    status: 'pending',
+                    requestDate: '2025-09-19',
+                    title: 'AC not cooling properly',
+                    urgencyScore: 90,
+                    dateCreated: '2025-09-19'
+                },
+                {
+                    _id: 'SR-0004',
+                    building: 'Banani Heights',
+                    unit: '2A',
+                    tenant: 'Kamal Uddin',
+                    description: 'Electrical outage in living room - Circuit breaker keeps tripping, no power in living room.',
+                    category: 'electrical',
+                    priority: 'high',
+                    status: 'in-progress',
+                    requestDate: '2025-09-18',
+                    title: 'Electrical outage in living room',
+                    urgencyScore: 95,
+                    dateCreated: '2025-09-18'
+                },
+                {
+                    _id: 'SR-0005',
+                    building: 'Banani Heights',
+                    unit: '4A',
+                    tenant: 'Tanvir Ahmed',
+                    description: 'Window glass cracked - Small crack in bedroom window, risk of shattering.',
+                    category: 'maintenance',
+                    priority: 'medium',
+                    status: 'pending',
+                    requestDate: '2025-09-23',
+                    title: 'Window glass cracked',
+                    urgencyScore: 60,
+                    dateCreated: '2025-09-23'
+                },
+                {
+                    _id: 'SR-0006',
+                    building: 'Banani Heights',
+                    unit: '3B',
+                    tenant: 'Zahid Hasan',
+                    description: 'Clogged kitchen drain - Water not draining; possible grease buildup.',
+                    category: 'plumbing',
+                    priority: 'medium',
+                    status: 'pending',
+                    requestDate: '2025-09-24',
+                    title: 'Clogged kitchen drain',
+                    urgencyScore: 65,
+                    dateCreated: '2025-09-24'
+                },
+                {
+                    _id: 'SR-0007',
+                    building: 'Dhanmondi Residency',
+                    unit: '2A',
+                    tenant: 'Shila Rahman',
+                    description: 'Bedroom light fixture sparking - Sparks seen when switching light on/off.',
+                    category: 'electrical',
+                    priority: 'high',
+                    status: 'pending',
+                    requestDate: '2025-09-21',
+                    title: 'Bedroom light fixture sparking',
+                    urgencyScore: 100,
+                    dateCreated: '2025-09-21'
+                },
+                {
+                    _id: 'SR-0008',
+                    building: 'Dhanmondi Residency',
+                    unit: '4A',
+                    tenant: 'Rezaul Karim',
+                    description: 'Pest infestation (cockroaches) - Cockroaches in kitchen; needs pest control service.',
+                    category: 'maintenance',
+                    priority: 'high',
+                    status: 'pending',
+                    requestDate: '2025-09-15',
+                    title: 'Pest infestation (cockroaches)',
+                    urgencyScore: 80,
+                    dateCreated: '2025-09-15'
+                },
+                {
+                    _id: 'SR-0009',
+                    building: 'Uttara Gardens',
+                    unit: '1',
+                    tenant: 'Selina Yasmin',
+                    description: 'Water heater not working - Tenant reports no hot water for past two days.',
+                    category: 'appliance',
+                    priority: 'high',
+                    status: 'pending',
+                    requestDate: '2025-09-25',
+                    title: 'Water heater not working',
+                    urgencyScore: 75,
+                    dateCreated: '2025-09-25'
                 }
-                setLastUpdated(new Date());
-                return;
-            }
+            ];
             
-            // Store raw data for memoized transformation
-            setRawServiceRequestsData(serviceRequestsData);
+            console.log('Hardcoded service requests loaded:', hardcodedServiceRequests);
+            
+            // Set minimal dashboard stats for service requests functionality
+            setDashboardStats({
+                serviceRequests: {
+                    total: hardcodedServiceRequests.length,
+                    pending: hardcodedServiceRequests.filter(sr => sr.status === 'pending').length,
+                    inProgress: hardcodedServiceRequests.filter(sr => sr.status === 'in-progress').length,
+                    completed: hardcodedServiceRequests.filter(sr => sr.status === 'completed').length,
+                    recent: hardcodedServiceRequests
+                }
+            } as any);
+            setRawServiceRequestsData(hardcodedServiceRequests);
             setLastUpdated(new Date());
         } catch (err) {
-            console.error('Error fetching service requests:', err);
+            console.error('Error loading hardcoded service requests:', err);
             const errorMessage = err instanceof Error ? err.message : 'Failed to load service requests data';
             setError(errorMessage);
         } finally {
@@ -391,25 +497,42 @@ export const ServiceRequestsPage: React.FC<ServiceRequestsPageProps> = ({
         }
 
         const transformedData = rawServiceRequestsData.map((sr: any, index: number) => {
-            // Simplified transformation without function calls that might cause instability
-            const building = sr.property?.split(',')[0] || 'Unknown Building';
+            // Use the hardcoded data structure directly
+            const building = sr.building || 'Unknown Building';
             const unit = sr.unit || 'Unknown Unit';
             const tenantName = sr.tenant || 'Unassigned';
+            
+            // Map the status to RequestStatus enum
+            const mapStatus = (status: string): RequestStatus => {
+                switch (status) {
+                    case 'completed':
+                    case 'complete':
+                        return RequestStatus.Complete;
+                    case 'in-progress':
+                    case 'assigned':
+                        return RequestStatus.InProgress;
+                    case 'pending':
+                    default:
+                        return RequestStatus.Pending;
+                }
+            };
             
             return {
                 id: sr._id || `sr-stable-${index}`,
                 building,
                 unit,
-                requestDate: new Date().toLocaleDateString(),
+                requestDate: sr.requestDate || new Date().toLocaleDateString(),
                 assignedContact: {
                     name: tenantName,
-                    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${index}`
+                    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${tenantName}`
                 },
-                status: RequestStatus.Pending,
+                status: mapStatus(sr.status),
                 description: sr.description || 'No description provided',
+                title: sr.title || 'Service Request',
                 category: sr.category || 'General',
                 priority: sr.priority || 'medium',
-                urgencyScore: 50,
+                urgencyScore: sr.urgencyScore || 50,
+                dateCreated: sr.dateCreated || sr.requestDate,
                 requests: 1
             };
         });
