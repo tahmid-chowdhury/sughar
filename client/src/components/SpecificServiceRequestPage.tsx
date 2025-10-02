@@ -1,7 +1,7 @@
+
 import React, { useState } from 'react';
 import { Card } from './Card';
-import { SPECIFIC_SERVICE_REQUEST_DETAIL_DATA } from '../constants';
-import { RequestStatus, ChatMessage, SpecificServiceRequestDetail } from '../types';
+import { RequestStatus, ChatMessage, AppData } from '../types';
 import { ArrowLeft, Paperclip, Image as ImageIcon } from './icons';
 import { SpecificServiceRequestImagesPage } from './SpecificServiceRequestImagesPage';
 import { SpecificServiceRequestActivityLogPage } from './SpecificServiceRequestActivityLogPage';
@@ -43,22 +43,26 @@ const DetailItem: React.FC<{label: string, value: string}> = ({ label, value }) 
     </div>
 );
 
-const ServiceRequestSummary: React.FC<{requestData: SpecificServiceRequestDetail}> = ({requestData}) => (
+const ServiceRequestSummary: React.FC<{
+    requestData: AppData['serviceRequests'][0]; 
+    requester: AppData['tenants'][0]; 
+    building: AppData['buildings'][0];
+}> = ({requestData, requester, building}) => (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column */}
         <div className="lg:col-span-2 space-y-8">
             <Card>
                 <div className="flex items-center mb-6">
-                    <img src={requestData.requester.avatar} alt={requestData.requester.name} className="w-12 h-12 rounded-full" />
+                    <img src={requester.avatar} alt={requester.name} className="w-12 h-12 rounded-full" />
                     <div className="ml-4">
-                        <span className="font-bold text-lg text-text-main">{requestData.requester.name}</span>
-                        <span className="ml-2 px-2 py-0.5 text-xs font-semibold text-purple-800 bg-purple-100 rounded-full">{requestData.requester.rating}</span>
+                        <span className="font-bold text-lg text-text-main">{requester.name}</span>
+                        <span className="ml-2 px-2 py-0.5 text-xs font-semibold text-purple-800 bg-purple-100 rounded-full">{requester.rating}</span>
                     </div>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 border-b pb-6">
                     <DetailItem label="Request Date" value={requestData.requestDate} />
-                    <DetailItem label="Building Name/ID" value={requestData.buildingName} />
-                    <DetailItem label="Service Category" value={requestData.category} />
+                    <DetailItem label="Building Name/ID" value={building.name} />
+                    <DetailItem label="Service Category" value="Plumbing" />
                     <DetailItem label="Priority" value={requestData.priority} />
                 </div>
                 <div>
@@ -66,30 +70,14 @@ const ServiceRequestSummary: React.FC<{requestData: SpecificServiceRequestDetail
                     <p className="text-text-secondary leading-relaxed">{requestData.description}</p>
                 </div>
             </Card>
-
-            <Card>
-                <h3 className="font-atkinson text-xl font-bold text-text-main mb-8">Status Updates</h3>
-                <div className="relative flex justify-between items-start px-4">
-                    <div className="absolute top-[28px] left-1/4 w-1/2 h-1 bg-purple-200"></div>
-                    {requestData.statusUpdates.map((update, index) => (
-                        <div key={index} className="relative z-10 flex flex-col items-center text-center">
-                            <div className="bg-white border-2 border-gray-200 text-gray-700 text-sm font-medium px-4 py-2 rounded-full mb-3 shadow-sm">
-                                {update.status}
-                            </div>
-                            <div className="w-5 h-5 bg-white border-4 border-purple-400 rounded-full"></div>
-                            <div className="mt-2 text-sm text-text-secondary">{update.date}</div>
-                        </div>
-                    ))}
-                </div>
-            </Card>
         </div>
         
         {/* Right Column */}
         <div className="lg:col-span-1">
             <Card className="flex flex-col h-full">
-                <h3 className="font-atkinson text-xl font-bold text-text-main mb-4">Comments / Communications</h3>
+                <h3 className="font-atkinson text-xl font-bold text-text-main mb-4">Comments</h3>
                 <div className="flex-1 space-y-4 overflow-y-auto pr-2 bg-gray-50 p-4 rounded-lg">
-                   {requestData.comments.map((msg, index) => <ChatBubble key={index} message={msg}/>)}
+                   {/* Mock comments */}
                 </div>
                 <div className="mt-4 pt-4 border-t">
                     <div className="relative">
@@ -111,14 +99,17 @@ const ServiceRequestSummary: React.FC<{requestData: SpecificServiceRequestDetail
 
 interface SpecificServiceRequestPageProps {
     serviceRequestId: string;
+    appData: AppData;
     onBack: () => void;
 }
 
-export const SpecificServiceRequestPage: React.FC<SpecificServiceRequestPageProps> = ({ serviceRequestId, onBack }) => {
-    const [activeTab, setActiveTab] = useState('Contacts');
-    const requestData = SPECIFIC_SERVICE_REQUEST_DETAIL_DATA[serviceRequestId];
+export const SpecificServiceRequestPage: React.FC<SpecificServiceRequestPageProps> = ({ serviceRequestId, appData, onBack }) => {
+    const [activeTab, setActiveTab] = useState('Summary');
+    const requestData = appData.serviceRequests.find(sr => sr.id === serviceRequestId);
+    const requester = requestData ? appData.tenants.find(t => t.id === requestData.tenantId) : undefined;
+    const building = requestData ? appData.buildings.find(b => b.id === requestData.buildingId) : undefined;
 
-    if (!requestData) {
+    if (!requestData || !requester || !building) {
         return (
             <div className="container mx-auto text-center p-8">
                 <h2 className="text-2xl text-text-secondary">Service Request not found.</h2>
@@ -132,14 +123,14 @@ export const SpecificServiceRequestPage: React.FC<SpecificServiceRequestPageProp
     const renderContent = () => {
         switch (activeTab) {
             case 'Images':
-                return <SpecificServiceRequestImagesPage media={requestData.media || []} />;
+                return <SpecificServiceRequestImagesPage media={[]} />;
             case 'Activity Log':
-                return <SpecificServiceRequestActivityLogPage requestData={requestData} />;
+                return <div>Activity Log Content</div>;
             case 'Contacts':
-                return <SpecificServiceRequestContactsPage contactCards={requestData.contactCards || []} suggestedVendors={requestData.suggestedVendors || []} />;
+                return <div>Contacts Content</div>;
             case 'Summary':
             default:
-                return <ServiceRequestSummary requestData={requestData} />;
+                return <ServiceRequestSummary requestData={requestData} requester={requester} building={building} />;
         }
     };
 

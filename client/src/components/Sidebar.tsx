@@ -1,10 +1,14 @@
+
 import React from 'react';
 import { HomeIcon, DollarSign, Building, Wrench, Users, FileText, Settings, LogOut } from './icons';
-import { useAuth } from '../contexts/AuthContext';
+// FIX: Changed import to relative path.
+import { User } from '../types';
 
 interface SidebarProps {
   currentPage: string;
   setCurrentPage: (page: string) => void;
+  currentUser: User | null;
+  onLogout: () => void;
 }
 
 const NavItem: React.FC<{
@@ -29,14 +33,33 @@ const NavItem: React.FC<{
     </button>
 );
 
-export const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage }) => {
-  const { logout, user } = useAuth();
+const UserProfile: React.FC<{ user: User, onAccountClick: () => void, isAccountPage: boolean }> = ({ user, onAccountClick, isAccountPage }) => {
+    const { name, email, avatarUrl } = user;
+    const avatarSrc = avatarUrl || `https://ui-avatars.com/api/?name=${name.replace(' ', '+')}&background=EBD4F8&color=8645B1`;
+    const buttonClass = `flex items-center w-full mt-4 p-2 rounded-lg text-left transition-colors ${
+        isAccountPage ? 'bg-gray-100' : 'hover:bg-gray-100'
+    }`;
 
-  const handleLogout = () => {
-    logout();
-    setCurrentPage('login');
-  };
+    return (
+        <button
+            onClick={onAccountClick}
+            className={buttonClass}
+        >
+            <img 
+                src={avatarSrc} 
+                alt="User Avatar"
+                className="w-10 h-10 rounded-full"
+            />
+            <div className="ml-3">
+                <p className="text-sm font-semibold text-text-main">{name}</p>
+                <p className="text-xs text-text-secondary">{email}</p>
+            </div>
+        </button>
+    );
+};
 
+
+export const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage, currentUser, onLogout }) => {
   const navItems = [
     { icon: HomeIcon, label: 'Home', page: 'home' },
     { icon: DollarSign, label: 'Financials', page: 'financials' },
@@ -75,33 +98,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage })
               <span>Settings</span>
             </button>
             <button
-              onClick={handleLogout}
+              onClick={onLogout}
               className="flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-900"
             >
               <LogOut className="w-5 h-5 mr-3" />
               <span>Log Out</span>
             </button>
         </div>
-        <button
-          onClick={() => setCurrentPage('account')}
-          className={`flex items-center w-full mt-4 p-2 rounded-lg text-left transition-colors ${
-            currentPage === 'account' ? 'bg-gray-100' : 'hover:bg-gray-100'
-          }`}
-        >
-            <img 
-                src="https://picsum.photos/id/237/40/40" 
-                alt="User Avatar"
-                className="w-10 h-10 rounded-full"
+        {currentUser && (
+            <UserProfile 
+                user={currentUser} 
+                onAccountClick={() => setCurrentPage('account')}
+                isAccountPage={currentPage === 'account'}
             />
-            <div className="ml-3 min-w-0 flex-1">
-                <p className="text-sm font-semibold text-text-main truncate">
-                  {user ? `${user.firstName} ${user.lastName}` : 'User'}
-                </p>
-                <p className="text-xs text-text-secondary truncate">
-                  {user ? user.email : 'user@example.com'}
-                </p>
-            </div>
-        </button>
+        )}
       </div>
     </aside>
   );

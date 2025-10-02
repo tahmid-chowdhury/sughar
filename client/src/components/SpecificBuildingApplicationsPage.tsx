@@ -1,6 +1,8 @@
+
 import React from 'react';
 import { Card } from './Card';
 import { APPLICATIONS_PAGE_DATA } from '../constants';
+// FIX: Import Application type to resolve error.
 import { Application } from '../types';
 import { User } from './icons';
 

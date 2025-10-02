@@ -1,6 +1,8 @@
 
+
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+// FIX: Changed import to relative path.
 import { RevenueData } from '../../types';
 
 interface MonthlyRevenueChartProps {

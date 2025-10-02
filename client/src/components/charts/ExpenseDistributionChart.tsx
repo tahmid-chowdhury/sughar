@@ -1,5 +1,7 @@
+
 import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+// FIX: Changed import to relative path.
 import { ExpenseData } from '../../types';
 
 interface ExpenseDistributionChartProps {
@@ -8,11 +10,11 @@ interface ExpenseDistributionChartProps {
 
 const COLORS = ['#A78BFA', '#F472B6', '#60A5FA', '#FBBF24'];
 
-const CustomLegend = (props) => {
+const CustomLegend = (props: any) => {
     const { payload } = props;
     return (
         <ul className="flex flex-wrap justify-center mt-4">
-            {payload.map((entry, index) => {
+            {payload.map((entry: any, index: number) => {
                  const percent = entry.payload?.percent || 0;
                  return (
                     <li key={`item-${index}`} className="flex items-center mr-4 mb-2 text-sm text-text-secondary">

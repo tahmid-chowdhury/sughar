@@ -1,182 +1,188 @@
+
+
 import React, { useState } from 'react';
 import { Card } from './Card';
-import { Header } from './Header';
-import { OccupancyChart } from './charts/OccupancyChart';
-import { RentCollectionChart } from './charts/RentCollectionChart';
-import { 
-    SPECIFIC_BUILDING_STATS, 
-    LEASES_ENDING_SOON_DATA, 
-    OVERDUE_RENT_DATA, 
-    OCCUPANCY_DATA, 
-    RENT_COLLECTION_DATA,
-    BUILDING_NAMES
-} from '../constants';
-import { LeaseEndingSoon, OverdueRent, SpecificBuildingStat } from '../types';
-import { ArrowLeft, MoreHorizontal } from './icons';
-import { SpecificBuildingUnitsPage } from './SpecificBuildingUnitsPage';
-import { SpecificBuildingDocumentsPage } from './SpecificBuildingDocumentsPage';
+import { AppData, UnitDetail, UnitStatus, RentStatus, Tenant, BuildingCategory } from '../types';
+import { ArrowLeft, SlidersHorizontal, Plus, Search } from './icons';
+import { BuildingDetailsTab } from './BuildingDetailsTab';
+import { useTable } from '../hooks/useTable';
+import { SortableHeader } from './SortableHeader';
 
 interface SpecificBuildingPageProps {
   buildingId: string;
+  appData: AppData;
   onBack: () => void;
+  onSelectUnit: (unitId: string) => void;
   setViewingTenantId: (tenantId: string) => void;
-  onUnitClick?: (unitId: string) => void;
 }
 
-// FIX: Changed component to use React.FC to properly type props and resolve key assignment error.
-const StatCard: React.FC<{ stat: SpecificBuildingStat }> = ({ stat }) => (
-  <Card className="flex items-center p-4">
-    <div className={`p-3 rounded-full ${stat.bgColor}`}>
-      <stat.icon className={`w-6 h-6 ${stat.color}`} />
-    </div>
-    <div className="ml-4">
-      <p className="text-2xl font-bold text-text-main">{stat.value}</p>
-      <p className="text-sm text-text-secondary">{stat.label}</p>
-    </div>
-  </Card>
-);
+const CategoryPill = ({ category }: { category: BuildingCategory }) => {
+    const styles = {
+        [BuildingCategory.Luxury]: 'bg-yellow-100 text-yellow-800',
+        [BuildingCategory.Standard]: 'bg-gray-200 text-gray-800',
+        [BuildingCategory.MidRange]: 'bg-purple-100 text-purple-800',
+    };
+    return <span className={`px-3 py-1 text-xs font-medium rounded-full ${styles[category]}`}>{category}</span>;
+};
 
-const TenantCell: React.FC<{ tenant: { id: string, name: string, avatar: string, rating: number }, setViewingTenantId: (id: string) => void }> = ({ tenant, setViewingTenantId }) => (
-    <button onClick={() => setViewingTenantId(tenant.id)} className="flex items-center text-left w-full p-1 rounded-md transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-accent-primary">
-        <img className="h-8 w-8 rounded-full object-cover" src={tenant.avatar} alt={tenant.name} />
-        <div className="ml-3">
-            <p className="font-medium text-gray-900 text-sm">{tenant.name}</p>
-        </div>
-        <span className="ml-2 px-2 py-0.5 text-xs font-semibold text-purple-800 bg-purple-100 rounded-full">{tenant.rating}</span>
-    </button>
-);
+const StatusPill = ({ status }: { status: UnitStatus | RentStatus | null }) => {
+    if (!status) return <span className="text-gray-400">---</span>;
+    
+    const styles = {
+        [UnitStatus.Rented]: 'bg-green-100 text-green-800',
+        [UnitStatus.Vacant]: 'bg-red-100 text-red-800',
+        [RentStatus.Paid]: 'bg-green-100 text-green-800',
+        [RentStatus.Overdue]: 'bg-red-100 text-red-800',
+        [RentStatus.Pending]: 'bg-yellow-100 text-yellow-800',
+    };
+    return <span className={`px-3 py-1 text-xs font-medium rounded-full ${styles[status]}`}>{status}</span>;
+};
 
-const LeasesEndingSoonTable: React.FC<{ data: LeaseEndingSoon[], setViewingTenantId: (id: string) => void }> = ({ data, setViewingTenantId }) => (
-    <Card>
-        <div className="flex justify-between items-center mb-4">
-            <h3 className="font-atkinson text-xl font-bold text-text-main">Leases Ending Soon</h3>
-            <button className="text-text-secondary hover:text-text-main">
-                <MoreHorizontal className="w-5 h-5" />
-            </button>
+const TenantCell: React.FC<{ tenant: Tenant | undefined, setViewingTenantId: (id: string) => void }> = ({ tenant, setViewingTenantId }) => {
+    if (!tenant) return <span className="text-gray-400">---</span>;
+    return (
+        <button onClick={() => setViewingTenantId(tenant.id)} className="flex items-center text-left w-full p-1 rounded-md transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-accent-primary">
+            <img className="h-8 w-8 rounded-full object-cover" src={tenant.avatar} alt={tenant.name} />
+            <span className="ml-3 font-medium text-gray-900">{tenant.name}</span>
+        </button>
+    );
+};
+
+const UnitsList: React.FC<{
+    buildingUnits: UnitDetail[];
+    appData: AppData;
+    onSelectUnit: (unitId: string) => void;
+    setViewingTenantId: (tenantId: string) => void;
+}> = ({ buildingUnits, appData, onSelectUnit, setViewingTenantId }) => {
+    const unitsWithTenant = React.useMemo(() => {
+        return buildingUnits.map(unit => ({
+            ...unit,
+            tenantName: appData.tenants.find(t => t.id === unit.currentTenantId)?.name || ''
+        }));
+    }, [buildingUnits, appData.tenants]);
+    
+    type UnitWithTenant = UnitDetail & { tenantName: string };
+    // FIX: Provide explicit generic type to useTable to fix type inference issues.
+    const { items, requestSort, sortConfig, searchQuery, setSearchQuery } = useTable<UnitWithTenant>(unitsWithTenant, ['unitNumber', 'category', 'tenantName']);
+
+    return (
+    <Card className="!p-0">
+        <div className="flex justify-between items-center p-4 gap-4">
+            <div className="relative w-full max-w-xs">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search units..."
+                    className="w-full pl-9 pr-4 py-2 border border-gray-200 bg-gray-50 rounded-lg text-sm focus:ring-2 focus:ring-accent-secondary focus:border-transparent"
+                />
+            </div>
+            <div className="flex gap-4">
+                <button className="flex items-center text-sm font-medium text-white bg-accent-secondary rounded-lg px-4 py-2 hover:bg-purple-600 transition-colors">
+                    <Plus className="w-4 h-4 mr-2" />
+                    New Unit
+                </button>
+                <button className="flex items-center text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg px-4 py-2 hover:bg-gray-50">
+                    <SlidersHorizontal className="w-4 h-4 mr-2" />
+                    Filters
+                </button>
+            </div>
         </div>
         <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-                <thead className="text-left text-gray-500">
+            <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
                     <tr>
-                        <th className="py-2 font-medium">Tenant</th>
-                        <th className="py-2 font-medium">Unit</th>
-                        <th className="py-2 font-medium">Lease Start Date</th>
-                        <th className="py-2 font-medium">Lease End Date</th>
+                        <SortableHeader<UnitWithTenant> columnKey="unitNumber" sortConfig={sortConfig} requestSort={requestSort}>Unit</SortableHeader>
+                        <SortableHeader<UnitWithTenant> columnKey="category" sortConfig={sortConfig} requestSort={requestSort}>Category</SortableHeader>
+                        <SortableHeader<UnitWithTenant> columnKey="monthlyRent" sortConfig={sortConfig} requestSort={requestSort}>Monthly Rent</SortableHeader>
+                        <SortableHeader<UnitWithTenant> columnKey="status" sortConfig={sortConfig} requestSort={requestSort}>Status</SortableHeader>
+                        <SortableHeader<UnitWithTenant> columnKey="tenantName" sortConfig={sortConfig} requestSort={requestSort}>Tenant</SortableHeader>
+                        <SortableHeader<UnitWithTenant> columnKey="leaseEndDate" sortConfig={sortConfig} requestSort={requestSort}>Lease End Date</SortableHeader>
                     </tr>
                 </thead>
-                <tbody>
-                    {data.map((lease) => (
-                        <tr key={lease.tenant.id} className="border-b border-gray-200 last:border-b-0">
-                            <td className="py-3"><TenantCell tenant={lease.tenant} setViewingTenantId={setViewingTenantId} /></td>
-                            <td className="py-3 text-gray-700">{lease.unit}</td>
-                            <td className="py-3 text-gray-700">{lease.leaseStartDate}</td>
-                            <td className="py-3 text-gray-700">{lease.leaseEndDate}</td>
+                <tbody className="bg-white divide-y divide-gray-200">
+                    {items.map((unit) => {
+                        const tenant = appData.tenants.find(t => t.id === unit.currentTenantId);
+                        return (
+                        <tr key={unit.id} className="hover:bg-gray-50">
+                            <td className="px-5 py-4 whitespace-nowrap text-sm font-bold">
+                                <button onClick={() => onSelectUnit(unit.id)} className="text-blue-600 hover:underline">
+                                   {unit.unitNumber}
+                                </button>
+                            </td>
+                            <td className="px-5 py-4 whitespace-nowrap"><CategoryPill category={unit.category} /></td>
+                            <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-500">{new Intl.NumberFormat().format(unit.monthlyRent)} BDT</td>
+                            <td className="px-5 py-4 whitespace-nowrap"><StatusPill status={unit.status} /></td>
+                            <td className="px-5 py-4 whitespace-nowrap"><TenantCell tenant={tenant} setViewingTenantId={setViewingTenantId} /></td>
+                            <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-500">{unit.leaseEndDate || '---'}</td>
                         </tr>
-                    ))}
+                        );
+                    })}
                 </tbody>
             </table>
         </div>
     </Card>
-);
+)};
 
-const OverdueRentTable: React.FC<{ data: OverdueRent[], setViewingTenantId: (id: string) => void }> = ({ data, setViewingTenantId }) => (
-    <Card>
-        <div className="flex justify-between items-center mb-4">
-            <h3 className="font-atkinson text-xl font-bold text-text-main">Overdue Rent</h3>
-            <button className="text-text-secondary hover:text-text-main">
-                <MoreHorizontal className="w-5 h-5" />
-            </button>
-        </div>
-         <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-                <thead className="text-left text-gray-500">
-                    <tr>
-                        <th className="py-2 font-medium">Tenant</th>
-                        <th className="py-2 font-medium">Unit</th>
-                        <th className="py-2 font-medium">Amount Due</th>
-                        <th className="py-2 font-medium">Days Overdue</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {data.map((rent) => (
-                        <tr key={rent.tenant.id} className="border-b border-gray-200 last:border-b-0">
-                            <td className="py-3"><TenantCell tenant={rent.tenant} setViewingTenantId={setViewingTenantId}/></td>
-                            <td className="py-3 text-gray-700">{rent.unit}</td>
-                            <td className="py-3 text-gray-700">{new Intl.NumberFormat('en-US').format(rent.amountDue)}</td>
-                            <td className="py-3 text-red-600 font-semibold">{rent.daysOverdue}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    </Card>
-);
 
-const BuildingOverview: React.FC<{setViewingTenantId: (id: string) => void}> = ({ setViewingTenantId }) => (
-    <>
-         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-8">
-            {SPECIFIC_BUILDING_STATS.map((stat) => (
-            <StatCard key={stat.label} stat={stat} />
-            ))}
-        </div>
+export const SpecificBuildingPage: React.FC<SpecificBuildingPageProps> = ({ buildingId, appData, onBack, onSelectUnit, setViewingTenantId }) => {
+    const [activeTab, setActiveTab] = useState('Units');
+    const building = appData.buildings.find(b => b.id === buildingId);
+    const buildingUnits = appData.units.filter(u => u.buildingId === buildingId);
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left column */}
-            <div className="lg:col-span-2 space-y-8 flex flex-col">
-                <LeasesEndingSoonTable data={LEASES_ENDING_SOON_DATA} setViewingTenantId={setViewingTenantId} />
-                <OverdueRentTable data={OVERDUE_RENT_DATA} setViewingTenantId={setViewingTenantId} />
+    if (!building) {
+        return (
+            <div>
+                <button onClick={onBack}>Back</button>
+                <p>Building not found.</p>
             </div>
-            
-            {/* Right Column */}
-            <div className="space-y-8 flex flex-col">
-            <Card className="flex flex-col h-[280px]">
-                <OccupancyChart data={OCCUPANCY_DATA} />
-            </Card>
-            <Card>
-                <h3 className="font-atkinson text-xl font-bold text-text-main mb-4">Rent Collection</h3>
-                <div className="h-64">
-                    <RentCollectionChart data={RENT_COLLECTION_DATA} />
-                </div>
-            </Card>
-            </div>
-        </div>
-    </>
-);
-
-export const SpecificBuildingPage: React.FC<SpecificBuildingPageProps> = ({ buildingId, onBack, setViewingTenantId, onUnitClick }) => {
-  const [activeTab, setActiveTab] = useState('Overview');
-  const buildingName = BUILDING_NAMES[buildingId] || "Building Details";
-
-  const renderContent = () => {
-    switch(activeTab) {
-        case 'Overview':
-            return <BuildingOverview setViewingTenantId={setViewingTenantId} />;
-        case 'Units':
-            return <SpecificBuildingUnitsPage buildingId={buildingId} setViewingTenantId={setViewingTenantId} onUnitClick={onUnitClick} />;
-        case 'Documents':
-            return <SpecificBuildingDocumentsPage buildingId={buildingId} />;
-        default:
-            return <BuildingOverview setViewingTenantId={setViewingTenantId} />;
+        );
     }
-  }
 
-  return (
-    <div className="container mx-auto">
-      <button onClick={onBack} className="flex items-center text-sm font-medium text-gray-600 hover:text-gray-900 mb-4">
-        <ArrowLeft className="w-4 h-4 mr-2" />
-        Back to Dashboard
-      </button>
-
-      <Header 
-        title={buildingName}
-        tabs={['Overview', 'Units', 'Documents']}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
-
-      {renderContent()}
-    </div>
-  );
+    const renderContent = () => {
+        switch (activeTab) {
+            case 'Building Details':
+                return <BuildingDetailsTab building={building} />;
+            case 'Units':
+            default:
+                return <UnitsList buildingUnits={buildingUnits} appData={appData} onSelectUnit={onSelectUnit} setViewingTenantId={setViewingTenantId} />;
+        }
+    };
+    
+    return (
+        <div className="container mx-auto">
+            <button onClick={onBack} className="flex items-center text-sm font-medium text-gray-600 hover:text-gray-900 mb-4">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Buildings Dashboard
+            </button>
+            <header className="mb-2">
+                <h1 className="text-4xl font-bold font-atkinson text-text-main">Building: {building.name}</h1>
+                <p className="text-text-secondary mt-1">ID: {building.id}</p>
+                 <div className="mt-4 border-b border-gray-200">
+                    <nav className="-mb-px flex space-x-6" aria-label="Tabs">
+                        {['Units', 'Building Details'].map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab)}
+                                className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors duration-200
+                                ${
+                                    activeTab === tab
+                                        ? 'border-brand-pink text-brand-pink'
+                                        : 'border-transparent text-inactive-tab hover:text-gray-700 hover:border-gray-300'
+                                }
+                            `}
+                            >
+                                {tab}
+                            </button>
+                        ))}
+                    </nav>
+                </div>
+            </header>
+            
+            <div className="mt-8">
+                {renderContent()}
+            </div>
+        </div>
+    );
 };

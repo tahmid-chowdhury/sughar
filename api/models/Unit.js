@@ -1,24 +1,45 @@
-import mongoose from 'mongoose';
-const { Schema } = mongoose;
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-const unitSchema = new Schema({
-  property: { type: Schema.Types.ObjectId, ref: 'Property', required: true },
-  unitNumber: { type: String, required: true },
-  bedrooms: { type: Number, required: true },
-  bathrooms: { type: Number, required: true },
-  squareFootage: { type: Number },
-  monthlyRent: { type: Number, required: true },
-  securityDeposit: { type: Number, required: true },
-  isOccupied: { type: Boolean, default: false },
-  currentTenant: { type: Schema.Types.ObjectId, ref: 'User' },
-  leaseStart: { type: Date },
-  leaseEnd: { type: Date },
-  amenities: [{ type: String }],
-  images: [{ type: String }],
-  description: { type: String },
-  isActive: { type: Boolean, default: true }
-}, {
-  timestamps: true
+const UnitSchema = new Schema({
+    property: {
+        type: Schema.Types.ObjectId,
+        ref: 'Property',
+        required: true
+    },
+    tenant: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: false
+    },
+    unitNumber: {
+        type: String,
+        required: true
+    },
+    squareFootage: {
+        type: Number
+    },
+    bedrooms: {
+        type: Number,
+        required: true
+    },
+    bathrooms: {
+        type: Number,
+        required: true
+    },
+    monthlyRent: {
+        type: Schema.Types.Decimal128,
+        required: true
+    },
+    status: {
+        type: String,
+        enum: ['Vacant', 'Occupied', 'Under Maintenance'],
+        default: 'Vacant'
+    },
+    leaseEndDate: {
+        type: Date,
+        required: false
+    }
 });
 
-export default mongoose.model('Unit', unitSchema);
+module.exports = mongoose.model('Unit', UnitSchema);

@@ -1,3 +1,5 @@
+
+
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
 import { Occupancy } from '../../types';
@@ -8,11 +10,11 @@ interface OccupancyChartProps {
 
 const COLORS = ['#86EFAC', '#BBF7D0'];
 
-const CustomLegend = (props) => {
+const CustomLegend = (props: any) => {
     const { payload } = props;
     return (
         <ul className="flex justify-center mt-4 space-x-4">
-            {payload.map((entry, index) => (
+            {payload.map((entry: any, index: number) => (
                 <li key={`item-${index}`} className="flex items-center text-sm text-text-secondary">
                     <span className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: entry.color }}></span>
                     <span>{entry.value}</span>

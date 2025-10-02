@@ -1,24 +1,25 @@
-import mongoose from 'mongoose';
-const { Schema } = mongoose;
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-const propertySchema = new Schema({
-  name: { type: String, required: true },
-  address: {
-    street: { type: String, required: true },
-    city: { type: String, required: true },
-    state: { type: String, required: true },
-    zipCode: { type: String, required: true },
-  },
-  landlord: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  propertyType: { type: String, enum: ['single-family', 'multi-family', 'apartment', 'condo', 'commercial'], required: true },
-  yearBuilt: { type: Number },
-  totalUnits: { type: Number, default: 1 },
-  description: { type: String },
-  amenities: [{ type: String }],
-  images: [{ type: String }],
-  isActive: { type: Boolean, default: true }
-}, {
-  timestamps: true
+const PropertySchema = new Schema({
+    owner: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    address: {
+        type: String,
+        required: true
+    },
+    propertyType: {
+        type: String,
+        enum: ['Residential', 'Commercial', 'Mixed-Use'],
+        required: true
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
 });
 
-export default mongoose.model('Property', propertySchema);
+module.exports = mongoose.model('Property', PropertySchema);

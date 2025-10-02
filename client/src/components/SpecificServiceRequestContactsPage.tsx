@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from './Card';
 import { ContactCardData, SuggestedVendor, ServiceContact } from '../types';
@@ -73,24 +74,31 @@ const DidYouKnowCard: React.FC = () => (
     </Card>
 );
 
-const SuggestedVendorCard: React.FC<{ vendor: SuggestedVendor }> = ({ vendor }) => (
-    <Card className="!p-3">
-        <div className="relative aspect-square rounded-lg overflow-hidden mb-3">
-            <img src={vendor.imageUrl} alt={vendor.name} className="w-full h-full object-cover" />
-        </div>
-        <div className="flex items-center mb-3">
-            {vendor.logo === 'star' ? <Star className="w-5 h-5 text-yellow-500 fill-current mr-2" /> :
-             <span className="w-5 h-5 flex items-center justify-center font-bold text-sm bg-gray-200 rounded-full mr-2">{vendor.logo}</span>}
-            <span className="text-sm font-bold text-text-main">{vendor.name}</span>
-            <span className="ml-auto px-1.5 py-0.5 text-[10px] font-semibold text-purple-800 bg-purple-100 rounded-full">
-                {vendor.rating}
-            </span>
-        </div>
-        <button className="w-full bg-accent-primary text-purple-800 font-bold py-2 rounded-lg text-sm hover:bg-purple-200 transition-colors">
-            Request a Quote
-        </button>
-    </Card>
-);
+// FIX: Correctly handle rendering of vendor.logo which can be a string or a React Component.
+const SuggestedVendorCard: React.FC<{ vendor: SuggestedVendor }> = ({ vendor }) => {
+    const LogoComponent = vendor.logo;
+    return (
+        <Card className="!p-3">
+            <div className="relative aspect-square rounded-lg overflow-hidden mb-3">
+                <img src={vendor.imageUrl} alt={vendor.name} className="w-full h-full object-cover" />
+            </div>
+            <div className="flex items-center mb-3">
+                {vendor.logo === 'star' ? <Star className="w-5 h-5 text-yellow-500 fill-current mr-2" /> :
+                 (typeof LogoComponent === 'string' ?
+                    <span className="w-5 h-5 flex items-center justify-center font-bold text-sm bg-gray-200 rounded-full mr-2">{LogoComponent}</span> :
+                    <LogoComponent className="w-5 h-5 mr-2" />
+                 )}
+                <span className="text-sm font-bold text-text-main">{vendor.name}</span>
+                <span className="ml-auto px-1.5 py-0.5 text-[10px] font-semibold text-purple-800 bg-purple-100 rounded-full">
+                    {vendor.rating}
+                </span>
+            </div>
+            <button className="w-full bg-accent-primary text-purple-800 font-bold py-2 rounded-lg text-sm hover:bg-purple-200 transition-colors">
+                Request a Quote
+            </button>
+        </Card>
+    );
+};
 
 
 export const SpecificServiceRequestContactsPage: React.FC<SpecificServiceRequestContactsPageProps> = ({ contactCards, suggestedVendors }) => {

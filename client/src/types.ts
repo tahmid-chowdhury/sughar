@@ -1,41 +1,24 @@
 import React from 'react';
 
-export interface FinancialStat {
-  label: string;
-  value: string;
-  icon: React.ElementType;
-  color: string;
-}
-
-export interface FinancialStatsResponse {
-  revenueThisMonth: number;
-  incomingRent: number;
-  overdueRent: number;
-  serviceCosts: number;
-  utilitiesCosts: number;
-}
-
-export enum DocumentType {
-  Lease = "Lease",
-  Utilities = "Utilities / Bills",
-  Income = "Income / Tax",
-  Insurance = "Insurance",
-  Service = "Service / Contract",
-  Certifications = "Certifications",
-}
-
-export interface Document {
+export interface User {
   id: string;
   name: string;
-  building: string;
-  unit: string;
-  type: DocumentType;
-  uploadDate: string;
+  email: string;
+  avatarUrl: string;
+  password?: string;
+}
+
+export interface FinancialStat {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  color: string;
 }
 
 export interface ExpenseData {
   name: string;
   value: number;
+  percent: number;
 }
 
 export interface RevenueData {
@@ -43,190 +26,30 @@ export interface RevenueData {
   revenue: number;
 }
 
-export interface BuildingStat {
-  label: string;
-  value: string;
-  icon: React.ElementType;
-  iconBgColor: string;
-  iconColor: string;
+export enum DocumentType {
+  Lease = 'Lease Agreement',
+  Utilities = 'Utility Bill',
+  Income = 'Income Proof',
+  Service = 'Service Record',
+  Insurance = 'Insurance Policy',
+  Certifications = 'Permits & Certs',
+  Other = 'Other',
+  ID = 'Identification',
 }
 
-export interface VacantUnit {
-  name: string;
-  vacant: number;
-}
 
-export interface Occupancy {
-  name: string;
-  value: number;
-}
-
-export interface BuildingInfo {
+export interface Document {
   id: string;
   name: string;
-  totalUnits: number;
-  vacantUnits: number;
-  activeRequests: number;
-}
-
-export interface RentCollection {
-    month: string;
-    rent: number;
-}
-
-// Dashboard Stats API Response Types
-export interface DashboardStats {
-  properties: {
-    total: number;
-    addresses: string[];
-  };
-  units: {
-    total: number;
-    occupied: number;
-    vacant: number;
-    occupancyRate: number;
-    totalRevenue: number;
-    details: {
-      _id: string;
-      unitNumber: string;
-      status: 'occupied' | 'vacant';
-      monthlyRent: number;
-      property: string;
-    }[];
-  };
-  serviceRequests: {
-    total: number;
-    active: number;
-    completed: number;
-    completedToday: number;
-    recent: {
-      _id: string;
-      description: string;
-      status: string;
-      tenant: string;
-      unit: string;
-      property: string;
-      requestDate: string;
-    }[];
-  };
-  applications: {
-    total: number;
-    pending: number;
-    approved: number;
-    rejected: number;
-  };
-  leases: {
-    total: number;
-    endingSoon: number;
-    endingToday: number;
-  };
-}
-
-// New Types for Buildings, Units, Applications
-
-export enum BuildingCategory {
-  Luxury = "Luxury",
-  Standard = "Standard",
-  MidRange = "Mid-range",
-}
-
-export interface BuildingDetail {
-  id: string;
-  name: string;
-  address: string;
-  category: BuildingCategory;
-  totalUnits: number;
-  vacantUnits: number;
-  requests: number;
-  occupationPercentage: number;
-  rentCollectionPercentage: number;
-  assignedContact: {
-    name: string;
-    avatar: string;
-  };
-}
-
-export enum UnitStatus {
-  Rented = "Rented",
-  Vacant = "Vacant",
-}
-
-export enum RentStatus {
-  Paid = "Paid",
-  Overdue = "Overdue",
-  Pending = "Pending",
-}
-
-export interface UnitDetail {
-    id: string;
-    buildingId: string;
-    unitNumber: string;
-    category: BuildingCategory;
-    bedrooms: number;
-    bathrooms: number;
-    sqft: number;
-    rent: number;
-    monthlyRent: number;
-    status: UnitStatus;
-    tenant: {
-        id: string;
-        name: string;
-        avatar: string;
-    } | null;
-    rentStatus: RentStatus | null;
-    leaseStartDate: string | null;
-    leaseEndDate: string | null;
-    requests: number;
-}
-
-export interface Application {
-    id: string;
-    tenant: {
-        id: string;
-        name: string;
-        avatar: string;
-        rating: number;
-    };
-    unit: string;
-    buildingId: string;
-    matchPercentage: number;
-    submissionDate: string;
-}
-
-// Types for Specific Building Page
-export interface SpecificBuildingStat {
-  label: string;
-  value: string;
-  icon: React.ElementType;
-  color: string;
-  bgColor: string;
-}
-
-export interface LeaseEndingSoon {
-  tenant: {
-    id: string;
-    name: string;
-    avatar: string;
-    rating: number;
-  };
+  type: DocumentType;
+  uploadDate: string;
+  building: string;
   unit: string;
-  leaseStartDate: string;
-  leaseEndDate: string;
+  amount?: number;
+  category?: 'Income' | 'Expense';
+  isStarred?: boolean;
 }
 
-export interface OverdueRent {
-  tenant: {
-    id: string;
-    name: string;
-    avatar: string;
-    rating: number;
-  };
-  unit: string;
-  amountDue: number;
-  daysOverdue: number;
-}
-
-// Types for Specific Building Documents Page
 export interface DocumentItem {
   name: string;
   date: string;
@@ -238,244 +61,270 @@ export interface CategorizedDocument {
   items: DocumentItem[];
 }
 
-// Types for Service Requests Page
-export enum RequestStatus {
-    Complete = "Complete",
-    Pending = "Pending",
-    InProgress = "In Progress",
-}
 
-export interface ServiceRequest {
-    id: string;
-    building: string;
-    unit: number;
-    assignedContact: {
-        name: string;
-        avatar: string;
-    };
-    requests: number;
-    requestDate: string;
-    status: RequestStatus;
-}
-
-// Types for Specific Service Request Page
-export interface MessageSender {
-    name: string;
-    avatar: string;
-}
-
-export interface ChatMessage {
-    sender: MessageSender;
-    message: string;
-    isSelf: boolean;
-}
-
-export interface ServiceRequestStatusUpdate {
-    status: string;
-    date: string;
-}
-
-export interface ServiceRequestMedia {
-    type: 'image' | 'video';
-    url: string;
-}
-
-export enum ActivityLogType {
-    Scheduled = 'Scheduled',
-    Arrived = 'Arrived',
-    Completed = 'Completed',
-}
-
-export interface ActivityLogItem {
-    type: ActivityLogType;
-    title: string;
-    timestamp: string;
-    description?: string;
-}
-
-export interface RequestInfoStats {
-    timeOpen: number; // in days
-    updates: number;
-    notes: number;
-}
-
-export interface ServiceRequestNote {
-    text: string;
-}
-
-export interface ServiceContact {
-    name: string;
-    avatar: string;
-    rating?: number;
-    phone: string;
-    email: string;
-    role?: string; 
-    id?: string; 
-}
-
-export interface ContactCardData {
-    title: string;
-    contacts: ServiceContact[];
-    workScope?: string;
-    projectEtc?: string;
-    date?: string;
-}
-
-export interface SuggestedVendor {
-    name:string;
-    logo: string;
-    imageUrl: string;
-    rating: number;
-}
-
-export interface SpecificServiceRequestDetail {
-    id: string;
-    title: string;
-    status: RequestStatus;
-    requester: {
-        name: string;
-        avatar: string;
-        rating: number;
-    };
-    requestDate: string;
-    buildingName: string;
-    category: string;
-    priority: string;
-    description: string;
-    statusUpdates: ServiceRequestStatusUpdate[];
-    comments: ChatMessage[];
-    media?: ServiceRequestMedia[];
-    activityLog?: ActivityLogItem[];
-    requestInfo?: RequestInfoStats;
-    notes?: ServiceRequestNote[];
-    contactCards?: ContactCardData[];
-    suggestedVendors?: SuggestedVendor[];
-}
-
-// Types for Tenants Dashboard
-export interface TenantDashboardStat {
-    label: string;
-    value: string;
+export interface DocumentDashboardStat {
     icon: React.ElementType;
-    iconColor: string;
+    label: string;
+    value: string;
     bgColor: string;
+    iconColor: string;
 }
 
-export interface Tenant {
+export interface DocumentDistribution {
+    name: string;
+    value: number;
+    percentage: string;
+}
+
+export interface UploadedDocumentData {
+    month: string;
+    count: number;
+}
+
+
+export interface ActionCenterItem {
+  icon: React.ElementType;
+  label: string;
+  isAlert: boolean;
+  targetPage?: string;
+  targetTab?: string;
+}
+
+export interface BuildingStat {
+    value: string;
+    label: string;
+    icon: React.ElementType;
+    iconBgColor: string;
+    iconColor: string;
+}
+
+export enum BuildingCategory {
+    Luxury = "Luxury",
+    MidRange = "Mid-Range",
+    Standard = "Standard",
+}
+
+export interface BuildingDetail {
     id: string;
     name: string;
-    avatar: string;
-    rating: number;
-    building: string;
-    leaseProgress: number; // percentage
-    rentStatus: RentStatus;
+    address: string;
+    category: BuildingCategory;
+    totalUnits: number;
+    vacantUnits: number;
     requests: number;
-}
-
-export interface CurrentTenant extends Omit<Tenant, 'leaseProgress'> {
-    unit: number;
-    leaseProgress: {
-        value: number;
-        variant: 'dark' | 'light';
+    occupation: number;
+    rentCollection: number;
+    contact: {
+        name: string;
+        avatar: string;
     };
 }
 
-export interface RentStatusData {
-    name: 'On Time' | 'Late';
-    value: number;
+
+export enum UnitStatus {
+    Rented = 'Rented',
+    Vacant = 'Vacant',
 }
 
-export interface QuickViewAction {
-    label: string;
-    value: string;
-    isFullText?: boolean;
+export enum RentStatus {
+    Paid = 'Paid',
+    Overdue = 'Overdue',
+    Pending = 'Pending',
 }
 
-export interface TenantApplication {
+export interface UnitDetail {
     id: string;
+    buildingId: string;
+    unitNumber: string;
+    category: BuildingCategory;
+    monthlyRent: number;
+    status: UnitStatus | null;
+    currentTenantId: string | null;
+    previousTenantId?: string | null;
+    rentStatus: RentStatus | null;
+    leaseStartDate: string | null;
+    leaseEndDate: string | null;
+    requests: number;
+    bedrooms: number;
+    bathrooms: number;
+    sqft: number;
+}
+
+export interface Occupancy {
+  name: string;
+  value: number;
+}
+
+export interface RentCollection {
+  month: string;
+  rent: number;
+}
+
+export interface VacantUnit {
+    name: string;
+    vacant: number;
+}
+
+export interface Application {
+    id: string;
+    buildingId: string;
     tenant: {
         id: string;
         name: string;
         avatar: string;
         rating: number;
     };
+    unit: string;
+    matchPercentage: number;
+    submissionDate: string;
+}
+
+export interface TenantReview {
+    date: string;
+    ratings: {
+        payment: number;
+        propertyCare: number;
+        communication: number;
+        cleanliness: number;
+        ruleAdherence: number;
+    };
+    comment: string;
+}
+
+export interface Tenant {
+    id: string;
+    name: string;
+    avatar: string;
     building: string;
     unit: string;
-    matchPercentage: number;
-    submissionDate: string;
+    leaseProgress: number;
+    rentStatus: RentStatus;
+    requests: number;
+    rating: number;
+    reviewHistory: TenantReview[];
+    joinDate: string;
 }
 
-export interface VerifiedTenantApplication {
-     id: string;
-     tenant: {
-        id: string;
+export enum RequestStatus {
+    Complete = 'Complete',
+    InProgress = 'In Progress',
+    Pending = 'Pending',
+}
+
+export interface ServiceRequest {
+    id: string;
+    title: string;
+    tenantId: string;
+    buildingId: string;
+    unitId: string;
+    assignedContact?: {
         name: string;
         avatar: string;
-        rating: number;
     };
-    unit: string;
-    matchPercentage: number;
-    submissionDate: string;
+    requestDate: string;
+    completionDate?: string;
+    status: RequestStatus;
+    priority: 'High' | 'Medium' | 'Low';
+    description: string;
 }
 
-// Types for Documents Dashboard
-export interface DocumentDashboardStat {
-    label: string;
-    value: string;
-    icon: React.ElementType;
-    iconColor: string;
-    bgColor: string;
+export enum ApplicationStatus {
+    Pending = 'Pending',
+    Approved = 'Approved',
+    Denied = 'Denied',
 }
 
-export interface DocumentDistribution {
-  name: string;
-  value: number;
-  percentage: string;
+export interface RentalApplication {
+    id: string;
+    userId: string;
+    status: ApplicationStatus;
+    statement: string;
+    occupation: string;
+    employer: string;
+    monthlyIncome: string;
+    yearsAtEmployer: number;
+    documents: { type: string; url: string }[];
+    references: { name: string; relation: string; phone: string }[];
 }
 
-export interface UploadedDocumentData {
-  month: string;
-  count: number;
+
+export interface AppData {
+  users: User[];
+  buildings: BuildingDetail[];
+  units: UnitDetail[];
+  tenants: Tenant[];
+  documents: Document[];
+  serviceRequests: ServiceRequest[];
+  rentalApplications: RentalApplication[];
 }
 
-// Types for Home Dashboard
+
 export interface HomeStat {
   label: string;
   value: string;
   icon: React.ElementType;
-  color: string;
-}
-
-export interface MonthlyProfitData {
-    month: string;
-    profit: number;
-}
-
-export interface ServiceRequestVolume {
-    month: string;
-    new: number;
-    completed: number;
-}
-
-export interface ActionCenterItem {
-    label: string;
-    icon: React.ElementType;
-    isAlert?: boolean;
+  color: 'orange' | 'red' | 'yellow' | 'green' | 'blue';
+  targetPage?: string;
+  targetTab?: string;
 }
 
 export interface HighPriorityTenant {
-    id: string;
-    name: string;
-    avatar: string;
-    unit: string;
-    daysOverdue: number;
+  id: string;
+  name: string;
+  avatar: string;
+  unit: string;
+  daysOverdue: number;
 }
 
-// Types for Account Overview Page
+export interface MonthlyProfitData {
+  month: string;
+  profit: number;
+}
+
+export interface ServiceRequestVolume {
+  month: string;
+  new: number;
+  completed: number;
+}
+
+export interface TenantDashboardStat {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  bgColor: string;
+  iconColor: string;
+}
+
+export interface RentStatusData {
+  name: "On Time" | "Late";
+  value: number;
+}
+
+export interface QuickViewAction {
+  value?: string;
+  label: string;
+  isFullText?: boolean;
+}
+
+export interface CurrentTenant extends Tenant {}
+
+export enum InvoiceStatus {
+    Paid = 'Paid',
+    Pending = 'Pending',
+    Failed = 'Failed',
+}
+
+export interface Invoice {
+    id: string;
+    date: string;
+    amount: number;
+    status: InvoiceStatus;
+}
+
 export interface AccountDetails {
     name: string;
-    email: string;
     role: string;
+    email: string;
     avatarUrl: string;
     memberSince: string;
 }
@@ -490,19 +339,6 @@ export interface BillingPlan {
 export interface PaymentMethod {
     cardType: string;
     lastFour: string;
-}
-
-export enum InvoiceStatus {
-    Paid = 'Paid',
-    Pending = 'Pending',
-    Failed = 'Failed',
-}
-
-export interface Invoice {
-    id: string;
-    date: string;
-    amount: number;
-    status: InvoiceStatus;
 }
 
 export interface TeamMember {
@@ -520,75 +356,79 @@ export interface NotificationSetting {
     push: boolean;
 }
 
-// Types for Settings Page
 export type Theme = 'Light' | 'Dark' | 'System';
 
 export interface SettingsData {
-    general: {
-        language: string;
-        currency: string;
-        timezone: string;
-    };
-    appearance: {
-        theme: Theme;
-    };
-    security: {
-        twoFactorEnabled: boolean;
-    };
+  general: {
+    language: string;
+    currency: string;
+    timezone: string;
+  };
+  appearance: {
+    theme: Theme;
+  };
+  security: {
+    twoFactorEnabled: boolean;
+  };
 }
 
-// Types for Tenant Detail Page
-export interface TenantReference {
-    id: string;
+
+export interface ServiceRequestMedia {
+  type: 'image' | 'video';
+  url: string;
+}
+
+export interface ChatMessage {
+    sender: { name: string; avatar: string };
+    message: string;
+    isSelf: boolean;
+}
+
+export enum ActivityLogType {
+  Scheduled = "Scheduled",
+  Arrived = "Arrived",
+  Completed = "Completed",
+}
+
+export interface ActivityLogItem {
+  type: ActivityLogType;
+  title: string;
+  timestamp: string;
+  description?: string;
+}
+
+export interface SpecificServiceRequestDetail {
+  activityLog: ActivityLogItem[];
+  requestInfo: {
+    timeOpen: number;
+    updates: number;
+    notes: number;
+  };
+  notes: { text: string }[];
+}
+
+
+export interface ServiceContact {
+    role?: string;
     name: string;
     avatar: string;
-    rating: number;
+    id?: string;
+    rating?: number;
+    phone: string;
+    email: string;
 }
 
-export interface TrustVerificationCheck {
-    item: string;
-    verified: boolean;
+export interface ContactCardData {
+    title: string;
+    contacts: ServiceContact[];
+    workScope?: string;
+    projectEtc?: string;
+    date?: string;
 }
 
-export interface TimelineEvent {
-    event: string;
-    date: string;
-    icon: React.ElementType;
-}
-
-export interface TenantDetailData {
-    id: string;
+export interface SuggestedVendor {
+    imageUrl: string;
+    logo: React.ElementType | string;
     name: string;
-    buildingName: string;
-    unitName: string;
-    avatarUrl: string;
-    education: {
-        degree: string;
-        university: string;
-        years: string;
-    };
-    employment: {
-        role: string;
-        company: string;
-        years: string;
-        income: number;
-    };
-    references: TenantReference[];
-    documents: {
-        name: string;
-    }[];
-    notes: {
-        text: string;
-        date: string;
-    }[];
-    trustAndVerification: {
-        score: number;
-        checks: TrustVerificationCheck[];
-    };
-    timeline: TimelineEvent[];
-    financialSummary: {
-        monthlyRent: number;
-        monthlyIncome: number;
-        deposit: number;
-    };
+    rating: number;
 }

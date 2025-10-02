@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card } from './Card';
 import {
@@ -176,14 +177,13 @@ export const AccountOverviewPage: React.FC = () => {
                 <h1 className="text-4xl font-bold font-atkinson text-text-main">Account Overview</h1>
                 <p className="text-text-secondary mt-1">Manage your profile, billing, and team settings.</p>
             </header>
-
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                <div className="lg:col-span-1">
+                <div className="lg:col-span-1 space-y-8">
                     <ProfileCard user={ACCOUNT_DETAILS_DATA} />
+                    <TeamMembersCard members={TEAM_MEMBERS_DATA} />
                 </div>
                 <div className="lg:col-span-2 space-y-8">
                     <PlanBillingCard plan={BILLING_PLAN_DATA} paymentMethod={PAYMENT_METHOD_DATA} invoices={INVOICE_HISTORY_DATA} />
-                    <TeamMembersCard members={TEAM_MEMBERS_DATA} />
                     <NotificationSettingsCard settings={NOTIFICATION_SETTINGS_DATA} />
                 </div>
             </div>

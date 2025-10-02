@@ -1,24 +1,35 @@
-import mongoose from 'mongoose';
-const { Schema } = mongoose;
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-const rentalApplicationSchema = new Schema({
-  applicant: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  property: { type: Schema.Types.ObjectId, ref: 'Property', required: true },
-  unit: { type: Schema.Types.ObjectId, ref: 'Unit', required: true },
-  desiredMoveInDate: { type: Date, required: true },
-  monthlyIncome: { type: Number, required: true },
-  employmentStatus: { type: String, required: true },
-  previousAddress: { type: String },
-  references: [{
-    name: { type: String },
-    relationship: { type: String },
-    phoneNumber: { type: String }
-  }],
-  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
-  applicationDate: { type: Date, default: Date.now },
-  documents: [{ type: String }]
-}, {
-  timestamps: true
+const RentalApplicationSchema = new Schema({
+    applicant: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    unit: {
+        type: Schema.Types.ObjectId,
+        ref: 'Unit'
+    },
+    property: {
+        type: Schema.Types.ObjectId,
+        ref: 'Property'
+    },
+    status: {
+        type: String,
+        enum: ['Pending', 'Approved', 'Rejected'],
+        default: 'Pending'
+    },
+    submissionDate: {
+        type: Date,
+        default: Date.now
+    },
+    occupation: String,
+    employer: String,
+    monthlyIncome: Number,
+    yearsAtEmployer: Number,
+    rating: Number,
+    dob: Date,
 });
 
-export default mongoose.model('RentalApplication', rentalApplicationSchema);
+module.exports = mongoose.model('RentalApplication', RentalApplicationSchema);

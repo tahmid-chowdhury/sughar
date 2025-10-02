@@ -1,62 +1,51 @@
 # Copilot Instructions for AI Agents
 
-## Project Architecture
+## Project Overview
+- This is a full-stack property management dashboard built with React (TypeScript) for the frontend and Node.js/Express with a simple file-based API for the backend (see `api/`).
+- The app is designed for local development and rapid prototyping, with a focus on dashboarding, document management, and service request workflows.
 
-- **Monorepo** with two main folders:
-  - `client/`: React + Vite frontend (TypeScript, Tailwind, MUI, Chart.js)
-  - `server/`: Node.js backend (Express, MongoDB, REST API)
+## Key Directories & Files
+- `components/`: All major UI components and pages. Each page is a self-contained React component (e.g., `BuildingsPage.tsx`, `ServiceRequestsPage.tsx`).
+- `api/`: Node.js backend with Express routes (`routes/`), data models (`models/`), and entrypoints (`server.js`, `db.js`).
+- `types.ts`: Central location for TypeScript types shared across the frontend.
+- `data.ts`: Contains mock/sample data for local development.
+- `constants.tsx`: App-wide constants and enums.
 
-### Client (Frontend)
-- **Entry point:** `src/App.tsx` (uses `Layout` and page components)
-- **Navigation:** Controlled by `currentPage` state (not React Router)
-- **UI Structure:**
-  - Use `Layout` and `Sidebar` for page structure
-  - Dashboard pages use `Card` and chart components from `src/components/charts/`
-  - Shared UI in `src/components/` (see `Header.tsx`, `Sidebar.tsx`, `Card.tsx`)
-  - Data and types centralized in `constants.tsx` and `types.ts`
-  - Icons in `components/icons.tsx`
-- **Styling:** Tailwind CSS, MUI, and custom classes
-- **State/data:** Fetches from backend REST endpoints (see `server/routes/`)
-- **TypeScript:** Used throughout client; types in `types.ts`
-
-#### Key Workflows
-- **Start dev server:** `npm run dev` (in `client/`)
-- **Build for production:** `npm run build`
-- **Lint:** `npm run lint`
-- **Preview build:** `npm run preview`
-
-#### Examples
-- To add a dashboard: create a component in `src/components/`, add to `App.tsx`, update navigation in `Sidebar.tsx`
-- To add a new page: follow the flat component structure, update `App.tsx` and `Sidebar.tsx`
-
-### Server (Backend)
-- **Entry point:** `server.js` (Express app)
-- **Environment:** Configured via `config.env` (MongoDB URI, etc.)
-- **Database:**
-  - Uses MongoDB (native driver in `db/connection.js`)
-  - Models in `models/` (some use Mongoose, some use native driver)
-  - REST routes in `routes/` (e.g., `/record`, `/auth`)
-
-#### Key Workflows
-- **Start dev server:** `npm run dev` (in `server/`, uses `nodemon`)
-- **Start prod server:** `npm start`
-
-#### Examples
-- To add an API route: create a file in `server/routes/`, register in `server.js`, (optionally) add a model in `models/`
+## Developer Workflows
+- **Start app locally:**
+  - `npm install` (install dependencies)
+  - `npm run dev` (start Vite dev server)
+  - Backend runs from `api/server.js` (may require manual start if not integrated with frontend dev server)
+- **Environment variables:**
+  - Set `GEMINI_API_KEY` in `.env.local` for AI features.
+- **No formal test suite** is present; manual testing via the UI is standard.
 
 ## Project Conventions & Patterns
-- **Frontend navigation** is state-driven, not URL-based
-- **Component structure:** Flat, logic in page components; shared UI in `components/`
-- **Data flow:** Frontend fetches from backend REST endpoints; backend exposes CRUD endpoints
-- **No formal test setup** (as of this writing)
-- **ESLint:** Configured in both client and server
+- **Component structure:**
+  - Pages and major UI elements are in `components/`, named by feature (e.g., `BuildingsPage.tsx`).
+  - Charts are in `components/charts/` and are used in dashboard pages.
+- **Data flow:**
+  - Most data is passed via props; some pages use mock data from `data.ts`.
+  - Backend API endpoints are defined in `api/routes/` and use models from `api/models/`.
+- **Styling:**
+  - No CSS framework detected; styling is likely inline or via simple CSS files (not shown in structure).
+- **TypeScript:**
+  - Use types from `types.ts` for props and API responses.
+- **No Redux or global state management**; state is local to components or passed via props.
 
 ## Integration Points
-- **API:** Frontend expects backend at `/record` and similar endpoints
-- **MongoDB:** Connection string in `config.env` (`ATLAS_URI`)
-- **MUI, Tailwind, Chart.js:** Used for UI and charts
+- **AI/LLM features:**
+  - Requires `GEMINI_API_KEY` for Gemini API integration (details not in repo, but referenced in README).
+- **Backend:**
+  - Express server in `api/server.js` exposes REST endpoints for property, unit, service request, and user data.
+  - Models in `api/models/` define data shape for backend.
 
-## References
-- See `client/README.md` for Vite/React basics
-- See `server/package.json` and `client/package.json` for scripts and dependencies
-- For project-specific patterns, check `src/constants.tsx`, `src/types.ts`, and main dashboard components
+## Examples
+- To add a new dashboard, create a new component in `components/`, import it in `App.tsx`, and add a route if using a router.
+- To add a new API endpoint, define a route in `api/routes/` and a model in `api/models/` if needed.
+
+## Tips for AI Agents
+- Prefer using existing types and mock data for new features.
+- Follow the file naming and placement conventions for new pages/components.
+- Reference `README.md` for setup and environment details.
+- If unsure about data shape, check `types.ts` and `api/models/`.

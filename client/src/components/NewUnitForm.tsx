@@ -1,12 +1,16 @@
+
 import React, { useState } from 'react';
 import { Card } from './Card';
 import { ArrowLeft } from './icons';
+import { UnitDetail, BuildingDetail, BuildingCategory } from '../types';
 
 interface NewUnitFormProps {
   onBack: () => void;
+  onAddUnit: (unitData: Omit<UnitDetail, 'id' | 'status' | 'currentTenantId' | 'previousTenantId' | 'rentStatus' | 'leaseStartDate' | 'leaseEndDate' | 'requests'>) => void;
+  buildings: BuildingDetail[];
 }
 
-const FormInput: React.FC<{ label: string, name: string, value: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, placeholder?: string, type?: string, className?: string }> = 
+const FormInput: React.FC<{ label: string, name: string, value: string | number, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, placeholder?: string, type?: string, className?: string }> = 
 ({ label, name, value, onChange, placeholder, type = 'text', className = '' }) => (
     <div className={className}>
         <label htmlFor={name} className="block text-sm font-medium text-text-main mb-1">
@@ -20,30 +24,53 @@ const FormInput: React.FC<{ label: string, name: string, value: string, onChange
             onChange={onChange}
             placeholder={placeholder}
             className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-secondary"
+            required
         />
     </div>
 );
 
-export const NewUnitForm: React.FC<NewUnitFormProps> = ({ onBack }) => {
+const FormSelect: React.FC<{ label: string, name: string, value: string, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void, children: React.ReactNode }> =
+({ label, name, value, onChange, children }) => (
+     <div>
+        <label htmlFor={name} className="block text-sm font-medium text-text-main mb-1">{label}</label>
+        <select
+            id={name}
+            name={name}
+            value={value}
+            onChange={onChange}
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-secondary"
+            required
+        >
+            {children}
+        </select>
+    </div>
+);
+
+export const NewUnitForm: React.FC<NewUnitFormProps> = ({ onBack, onAddUnit, buildings }) => {
     const [activeTab, setActiveTab] = useState('Buildings');
     const [formData, setFormData] = useState({
-        building: '',
-        unitName: '',
-        bedrooms: '',
-        bathrooms: '',
-        sqft: '',
-        rent: '',
-        status: '',
+        buildingId: buildings[0]?.id || '',
+        unitNumber: '',
+        bedrooms: 1,
+        bathrooms: 1,
+        sqft: 0,
+        monthlyRent: 0,
+        category: BuildingCategory.Standard,
     });
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        const isNumeric = ['bedrooms', 'bathrooms', 'sqft', 'monthlyRent'].includes(name);
+        setFormData(prev => ({ ...prev, [name]: isNumeric ? parseInt(value, 10) : value }));
     };
 
     const handleSave = (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Creating unit:', formData);
+        if(!formData.buildingId) {
+            alert("Please select a building.");
+            return;
+        }
+        onAddUnit(formData);
         onBack();
     };
 
@@ -76,15 +103,22 @@ export const NewUnitForm: React.FC<NewUnitFormProps> = ({ onBack }) => {
                 <div className="lg:col-span-1">
                     <Card>
                         <form onSubmit={handleSave} className="space-y-5">
-                            <FormInput label="Select Building" name="building" value={formData.building} onChange={handleChange} />
-                            <FormInput label="Unit Number/Name" name="unitName" value={formData.unitName} onChange={handleChange} />
+                            <FormSelect label="Select Building" name="buildingId" value={formData.buildingId} onChange={handleChange}>
+                                <option value="" disabled>Select a building</option>
+                                {buildings.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+                            </FormSelect>
+                            <FormInput label="Unit Number/Name" name="unitNumber" value={formData.unitNumber} onChange={handleChange} />
+                             <FormSelect label="Category" name="category" value={formData.category} onChange={handleChange}>
+                                {/* FIX: Correctly type `cat` to resolve `key` prop error. */}
+                                {Object.values(BuildingCategory).map((cat: BuildingCategory) => <option key={cat} value={cat}>{cat}</option>)}
+                            </FormSelect>
                             <div className="grid grid-cols-2 gap-4">
                                 <FormInput label="Bedrooms" name="bedrooms" value={formData.bedrooms} onChange={handleChange} type="number" />
                                 <FormInput label="Bathrooms" name="bathrooms" value={formData.bathrooms} onChange={handleChange} type="number" />
                             </div>
                             <FormInput label="Square Footage (sq ft)" name="sqft" value={formData.sqft} onChange={handleChange} type="number" />
-                            <FormInput label="Monthly Rent" name="rent" value={formData.rent} onChange={handleChange} type="number" />
-                            <FormInput label="Occupancy Status" name="status" value={formData.status} onChange={handleChange} />
+                            <FormInput label="Monthly Rent (BDT)" name="monthlyRent" value={formData.monthlyRent} onChange={handleChange} type="number" />
+                            
                             <div className="flex items-center justify-end space-x-4 pt-4">
                                 <button type="button" onClick={onBack} className="px-6 py-2 text-sm font-bold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                                     Cancel

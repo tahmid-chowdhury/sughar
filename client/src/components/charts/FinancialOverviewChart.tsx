@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { MonthlyProfitData } from '../../types';
@@ -27,7 +28,7 @@ export const FinancialOverviewChart: React.FC<FinancialOverviewChartProps> = ({ 
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
                 <XAxis dataKey="month" tick={{fill: '#6B7280', fontSize: 12}} axisLine={false} tickLine={false} />
                 <YAxis tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`} tick={{fill: '#6B7280', fontSize: 12}} axisLine={false} tickLine={false} />
-                <Tooltip 
+                 <Tooltip 
                     contentStyle={{
                         background: 'white',
                         border: '1px solid #ddd',
@@ -35,7 +36,7 @@ export const FinancialOverviewChart: React.FC<FinancialOverviewChartProps> = ({ 
                     }}
                     formatter={(value: number) => [`$${value.toLocaleString()}`, 'Profit']}
                 />
-                <Area type="monotone" dataKey="profit" stroke="#A855F7" fillOpacity={1} fill="url(#colorProfit)" strokeWidth={2.5} />
+                <Area type="monotone" dataKey="profit" stroke="#C084FC" fillOpacity={1} fill="url(#colorProfit)" strokeWidth={2.5} />
             </AreaChart>
         </ResponsiveContainer>
     );

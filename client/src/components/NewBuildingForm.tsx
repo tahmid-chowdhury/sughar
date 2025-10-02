@@ -1,12 +1,15 @@
+
 import React, { useState } from 'react';
 import { Card } from './Card';
 import { ArrowLeft } from './icons';
+import { BuildingDetail, BuildingCategory } from '../types';
 
 interface NewBuildingFormProps {
   onBack: () => void;
+  onAddBuilding: (buildingData: Omit<BuildingDetail, 'id' | 'vacantUnits' | 'requests' | 'occupation' | 'rentCollection' | 'contact'> & { totalUnits: number }) => void;
 }
 
-const FormInput: React.FC<{ label: string, name: string, value: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, placeholder?: string, type?: string }> = 
+const FormInput: React.FC<{ label: string, name: string, value: string | number, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, placeholder?: string, type?: string }> = 
 ({ label, name, value, onChange, placeholder, type = 'text' }) => (
     <div>
         <label htmlFor={name} className="block text-sm font-medium text-text-main mb-1">
@@ -20,31 +23,49 @@ const FormInput: React.FC<{ label: string, name: string, value: string, onChange
             onChange={onChange}
             placeholder={placeholder}
             className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-secondary"
+            required
         />
     </div>
 );
 
-export const NewBuildingForm: React.FC<NewBuildingFormProps> = ({ onBack }) => {
+const FormSelect: React.FC<{ label: string, name: string, value: string, onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void }> =
+({ label, name, value, onChange }) => (
+    <div>
+        <label htmlFor={name} className="block text-sm font-medium text-text-main mb-1">{label}</label>
+        <select
+            id={name}
+            name={name}
+            value={value}
+            onChange={onChange}
+            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-secondary"
+            required
+        >
+            <option value="" disabled>Select a category</option>
+            {/* FIX: Correctly type `cat` to resolve `key` prop error. */}
+            {Object.values(BuildingCategory).map((cat: BuildingCategory) => <option key={cat} value={cat}>{cat}</option>)}
+        </select>
+    </div>
+);
+
+
+export const NewBuildingForm: React.FC<NewBuildingFormProps> = ({ onBack, onAddBuilding }) => {
     const [activeTab, setActiveTab] = useState('Buildings');
     const [formData, setFormData] = useState({
-        buildingName: '',
+        name: '',
         address: '',
-        cityArea: '',
-        numUnits: '',
-        buildingType: '',
-        amenities: '',
+        category: BuildingCategory.Standard,
+        totalUnits: 0,
     });
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData(prev => ({ ...prev, [name]: name === 'totalUnits' ? parseInt(value, 10) : value }));
     };
 
     const handleSave = (e: React.FormEvent) => {
         e.preventDefault();
-        // In a real app, you would handle the form submission here
-        console.log('Saving building:', formData);
-        onBack(); // Go back after saving for now
+        onAddBuilding(formData);
+        onBack();
     };
 
     return (
@@ -76,12 +97,11 @@ export const NewBuildingForm: React.FC<NewBuildingFormProps> = ({ onBack }) => {
                 <div className="lg:col-span-1">
                     <Card>
                         <form onSubmit={handleSave} className="space-y-5">
-                            <FormInput label="Building Name" name="buildingName" value={formData.buildingName} onChange={handleChange} />
+                            <FormInput label="Building Name" name="name" value={formData.name} onChange={handleChange} />
                             <FormInput label="Address" name="address" value={formData.address} onChange={handleChange} />
-                            <FormInput label="City/Area" name="cityArea" value={formData.cityArea} onChange={handleChange} />
-                            <FormInput label="Number of Units" name="numUnits" value={formData.numUnits} onChange={handleChange} type="number" />
-                            <FormInput label="Building Type" name="buildingType" value={formData.buildingType} onChange={handleChange} />
-                            <FormInput label="Amenities" name="amenities" value={formData.amenities} onChange={handleChange} />
+                            <FormSelect label="Category" name="category" value={formData.category} onChange={handleChange} />
+                            <FormInput label="Number of Units" name="totalUnits" value={formData.totalUnits} onChange={handleChange} type="number" />
+                            
                             <div className="flex items-center justify-end space-x-4 pt-4">
                                 <button type="button" onClick={onBack} className="px-6 py-2 text-sm font-bold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                                     Cancel
