@@ -1,0 +1,20 @@
+{
+  "name": "sughar",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "client",
+    "api"
+  ],
+  "scripts": {
+    "install:client": "cd client && npm install",
+    "install:api": "cd api && npm install",
+    "build:client": "cd client && npm run build",
+    "build:api": "cd api && npm install",
+    "build": "npm run install:client && npm run install:api && npm run build:client",
+    "start": "cd api && npm start"
+  },
+  "engines": {
+    "node": ">=18.x"
+  }
+}
