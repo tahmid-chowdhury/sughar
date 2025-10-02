@@ -8,6 +8,46 @@ export interface User {
   password?: string;
 }
 
+export interface RentStatusData {
+  name: 'On Time' | 'Late';
+  value: number;
+}
+
+export interface AppData {
+  applications: any[];  // TODO: Define proper type
+  // Add other app data properties
+}
+
+export interface ApplicationsPageProps {
+  setViewingTenantId: (id: string) => void;
+  onSelectBuilding: (buildingId: string) => void;
+  onSelectUnit: (unitId: string) => void;
+  appData: AppData;
+}
+
+export interface TenantApplicationsPageProps extends ApplicationsPageProps {}
+
+export interface HeaderProps {
+  title: string;
+  tabs: string[];
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+}
+
+export interface DocumentType {
+  id: string;
+  name: string;
+  type: string;
+}
+
+export interface ActionCenterItem {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
+  priority: 'high' | 'medium' | 'low';
+}
+
 export interface FinancialStat {
   icon: React.ElementType;
   label: string;

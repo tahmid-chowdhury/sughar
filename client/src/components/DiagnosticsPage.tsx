@@ -79,7 +79,7 @@ export const DiagnosticsPage = () => {
 
   return (
     <div className="container mx-auto">
-      <Header title="System Diagnostics" />
+      <Header title="System Diagnostics" tabs={[]} activeTab="" onTabChange={() => {}} />
 
       <div className="space-y-6">
         <Card className="p-6">
