@@ -286,3 +286,30 @@ export const Trash: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
         <line x1="14" y1="11" x2="14" y2="17"></line>
     </Icon>
 );
+
+export const Bank: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <Icon {...props}>
+        <line x1="3" y1="22" x2="21" y2="22"></line>
+        <line x1="6" y1="18" x2="6" y2="11"></line>
+        <line x1="10" y1="18" x2="10" y2="11"></line>
+        <line x1="14" y1="18" x2="14" y2="11"></line>
+        <line x1="18" y1="18" x2="18" y2="11"></line>
+        <polygon points="12 2 20 7 4 7"></polygon>
+    </Icon>
+);
+
+export const BkashLogo: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <Icon {...props}>
+        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+        <line x1="1" y1="10" x2="23" y2="10"></line>
+        <circle cx="12" cy="15" r="2"></circle>
+    </Icon>
+);
+
+export const PlusCircle: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <Icon {...props}>
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="16"></line>
+        <line x1="8" y1="12" x2="16" y2="12"></line>
+    </Icon>
+);

@@ -1,1 +1,4 @@
-full contents of components/SpecificApplicantPage.tsx
+// Placeholder component - to be implemented
+export const SpecificApplicantPage = () => {
+  return <div>Specific Applicant Page - Coming Soon</div>;
+};
