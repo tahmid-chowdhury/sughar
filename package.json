@@ -1,20 +1,25 @@
 {
-  "name": "sughar",
+  "name": "sughar-v2",
   "version": "1.0.0",
-  "private": true,
-  "workspaces": [
-    "client",
-    "api"
-  ],
+  "description": "A modern, intuitive SaaS platform for landlords and tenants in the real estate sector.",
+  "type": "module",
   "scripts": {
-    "install:client": "cd client && npm install",
-    "install:api": "cd api && npm install",
-    "build:client": "cd client && npm run build",
-    "build:api": "cd api && npm install",
-    "build": "npm run install:client && npm run install:api && npm run build:client",
-    "start": "cd api && npm start"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
   },
-  "engines": {
-    "node": ">=18.x"
+  "dependencies": {
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "recharts": "^2.9.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vitejs/plugin-react": "^4.0.3",
+    "typescript": "^5.0.2",
+    "vite": "^4.4.5"
   }
 }

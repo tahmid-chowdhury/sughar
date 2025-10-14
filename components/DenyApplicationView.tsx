@@ -1,0 +1,1 @@
+full contents of components/DenyApplicationView.tsx
