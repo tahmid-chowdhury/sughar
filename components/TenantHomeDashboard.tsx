@@ -70,19 +70,34 @@ export const TenantHomeDashboard: React.FC<TenantHomeDashboardProps> = ({ curren
 
   // Rent payment history data (mock - would come from payment records in real app)
   const rentPaymentData = [
-    { name: 'On Time', value: 85, color: '#10B981' },
-    { name: 'Late', value: 15, color: '#EF4444' },
+    { name: 'On Time', value: 85, color: '#F472B6' },
+    { name: 'Late', value: 15, color: '#EBD4F8' },
   ];
 
   // Service request breakdown data
   const serviceRequestData = [
-    { name: 'Completed', value: completedRequests, color: '#10B981' },
-    { name: 'In Progress', value: inProgressRequests, color: '#F59E0B' },
-    { name: 'Pending', value: pendingRequests, color: '#EF4444' },
+    { name: 'Completed', value: completedRequests, color: '#F472B6' },
+    { name: 'In Progress', value: inProgressRequests, color: '#D8B4FE' },
+    { name: 'Pending', value: pendingRequests, color: '#EBD4F8' },
   ].filter(item => item.value > 0);
 
   // Building manager info
   const buildingManager = tenantBuilding?.contact;
+
+  // Important notices data
+  const importantNotices = [
+    { type: 'info', title: 'Monthly Building Meeting - Oct 20', description: 'All residents are invited to the monthly meeting in the lobby at 6:00 PM.', color: 'blue' },
+    { type: 'warning', title: 'Water Maintenance - Oct 25', description: 'Water will be shut off from 9:00 AM to 3:00 PM for routine maintenance work.', color: 'yellow' },
+    { type: 'success', title: 'New Recycling Program Launched', description: 'Separate bins for plastic and paper are now available on each floor.', color: 'green' },
+    { type: 'alert', title: 'Package Delivery Hours Updated', description: 'Packages will now be accepted at the front desk from 8:00 AM to 8:00 PM daily.', color: 'purple' },
+  ];
+
+  const noticeColors = {
+    blue: { bg: 'bg-blue-50', border: 'border-blue-400', text: 'text-blue-800' },
+    yellow: { bg: 'bg-yellow-50', border: 'border-yellow-400', text: 'text-yellow-800' },
+    green: { bg: 'bg-green-50', border: 'border-green-400', text: 'text-green-800' },
+    purple: { bg: 'bg-purple-50', border: 'border-purple-400', text: 'text-purple-800' },
+  };
 
   return (
     <div className="container mx-auto">
@@ -136,6 +151,22 @@ export const TenantHomeDashboard: React.FC<TenantHomeDashboardProps> = ({ curren
         />
       </div>
 
+      {/* Important Notices */}
+      <Card className="mb-8">
+        <h3 className="font-atkinson text-lg font-bold text-text-main mb-4">Important Notices</h3>
+        <div className="space-y-3">
+          {importantNotices.map((notice, i) => {
+            const colors = noticeColors[notice.color as keyof typeof noticeColors];
+            return (
+              <div key={i} className={`p-3 ${colors.bg} border-l-4 ${colors.border} rounded`}>
+                <p className={`text-sm font-medium ${colors.text}`}>{notice.title}</p>
+                <p className="text-xs text-text-secondary mt-1">{notice.description}</p>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
         {/* Rent Payment Record */}
@@ -145,16 +176,16 @@ export const TenantHomeDashboard: React.FC<TenantHomeDashboardProps> = ({ curren
             <h3 className="font-atkinson text-lg font-bold text-text-main">Rent Payment Record</h3>
             <button className="text-xs text-brand-pink hover:underline">view all</button>
           </div>
-          <div className="h-48 flex items-center justify-center">
+          <div className="h-64 flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={rentPaymentData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={50}
-                  outerRadius={70}
-                  paddingAngle={2}
+                  innerRadius={60}
+                  outerRadius={85}
+                  paddingAngle={3}
                   dataKey="value"
                 >
                   {rentPaymentData.map((entry, index) => (
@@ -185,7 +216,7 @@ export const TenantHomeDashboard: React.FC<TenantHomeDashboardProps> = ({ curren
             <h3 className="font-atkinson text-lg font-bold text-text-main">My Service Requests</h3>
             <button onClick={() => onNavigate('service-requests')} className="text-xs text-brand-pink hover:underline">view all</button>
           </div>
-          <div className="h-48 flex items-center justify-center">
+          <div className="h-64 flex items-center justify-center">
             {serviceRequestData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -193,9 +224,9 @@ export const TenantHomeDashboard: React.FC<TenantHomeDashboardProps> = ({ curren
                     data={serviceRequestData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={50}
-                    outerRadius={70}
-                    paddingAngle={2}
+                    innerRadius={60}
+                    outerRadius={85}
+                    paddingAngle={3}
                     dataKey="value"
                   >
                     {serviceRequestData.map((entry, index) => (
@@ -294,19 +325,6 @@ export const TenantHomeDashboard: React.FC<TenantHomeDashboardProps> = ({ curren
           </Card>
         </div>
       </div>
-
-      {/* Important Notices */}
-      <Card>
-        <h3 className="font-atkinson text-lg font-bold text-text-main mb-4">Important Notices</h3>
-        <div className="space-y-3">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="p-3 bg-blue-50 border-l-4 border-blue-400 rounded">
-              <p className="text-sm font-medium text-text-main">Water maintenance scheduled for Sept 30</p>
-              <p className="text-xs text-text-secondary mt-1">Water maintenance scheduled for Sept 30</p>
-            </div>
-          ))}
-        </div>
-      </Card>
     </div>
   );
 };
