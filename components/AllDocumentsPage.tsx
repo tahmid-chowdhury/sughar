@@ -1,16 +1,18 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from './Card';
 import { Document, DocumentType, AppData } from '../types';
-import { SlidersHorizontal, Plus, Search } from './icons';
+import { SlidersHorizontal, Plus, Search, Users } from './icons';
 import { useTable } from '../hooks/useTable';
 import { SortableHeader } from './SortableHeader';
+import { DocumentSharingModal } from './DocumentSharingModal';
 
 interface AllDocumentsPageProps {
   onAddNewDocument: () => void;
   onSelectBuilding: (id: string) => void;
   onSelectUnit: (id: string) => void;
   appData: AppData;
+  onUpdateDocumentSharing?: (documentId: string, sharedWith: string[]) => void;
 }
 
 const getDocumentTypeStyles = (type: DocumentType) => {
@@ -25,7 +27,8 @@ const getDocumentTypeStyles = (type: DocumentType) => {
     }
 };
 
-export const AllDocumentsPage: React.FC<AllDocumentsPageProps> = ({ onAddNewDocument, onSelectBuilding, onSelectUnit, appData }) => {
+export const AllDocumentsPage: React.FC<AllDocumentsPageProps> = ({ onAddNewDocument, onSelectBuilding, onSelectUnit, appData, onUpdateDocumentSharing }) => {
+    const [sharingDocument, setSharingDocument] = useState<Document | null>(null);
     const documentsWithBuildingName = React.useMemo(() => {
         return appData.documents.map(doc => ({
             ...doc,
@@ -93,6 +96,8 @@ export const AllDocumentsPage: React.FC<AllDocumentsPageProps> = ({ onAddNewDocu
                             <SortableHeader<DocumentWithBuildingName> columnKey="unit" sortConfig={sortConfig} requestSort={requestSort}>Unit</SortableHeader>
                             <SortableHeader<DocumentWithBuildingName> columnKey="type" sortConfig={sortConfig} requestSort={requestSort}>Doc Type</SortableHeader>
                             <SortableHeader<DocumentWithBuildingName> columnKey="uploadDate" sortConfig={sortConfig} requestSort={requestSort}>Date Uploaded</SortableHeader>
+                            <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shared With</th>
+                            <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -123,11 +128,39 @@ export const AllDocumentsPage: React.FC<AllDocumentsPageProps> = ({ onAddNewDocu
                                     </span>
                                 </td>
                                 <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-500">{doc.uploadDate}</td>
+                                <td className="px-5 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {doc.sharedWith && doc.sharedWith.length > 0 ? (
+                                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                                            {doc.sharedWith.length} tenant{doc.sharedWith.length !== 1 ? 's' : ''}
+                                        </span>
+                                    ) : (
+                                        <span className="text-xs text-gray-400">Not shared</span>
+                                    )}
+                                </td>
+                                <td className="px-5 py-4 whitespace-nowrap text-sm">
+                                    <button
+                                        onClick={() => setSharingDocument(doc)}
+                                        className="flex items-center gap-1 text-brand-pink hover:text-pink-700 font-medium"
+                                    >
+                                        <Users className="w-4 h-4" />
+                                        Share
+                                    </button>
+                                </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
+            
+            {/* Document Sharing Modal */}
+            {sharingDocument && onUpdateDocumentSharing && (
+                <DocumentSharingModal
+                    document={sharingDocument}
+                    appData={appData}
+                    onClose={() => setSharingDocument(null)}
+                    onUpdateSharing={onUpdateDocumentSharing}
+                />
+            )}
         </Card>
     );
 };

@@ -13,7 +13,7 @@
  */
 
 import React from 'react';
-import { HomeIcon, DollarSign, Building, Wrench, Users, FileText, Settings, LogOut } from './icons';
+import { HomeIcon, DollarSign, Building, Wrench, Users, FileText, Settings, LogOut, List } from './icons';
 // FIX: Changed import to relative path.
 import { User, UserRole } from '../types';
 
@@ -104,6 +104,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage, c
     { icon: Wrench, label: 'Service Requests', page: 'service-requests' },
     { icon: Users, label: 'Tenants', page: 'tenants' },
     { icon: FileText, label: 'Documents', page: 'documents' },
+    { icon: List, label: 'Listings', page: 'listings' },
   ];
   
   // Tenant-only navigation items (simplified)

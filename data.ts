@@ -30,6 +30,11 @@ import {
   RequestStatus,
   DocumentType,
   ApplicationStatus,
+  PropertyGroup,
+  Contractor,
+  ActivityLogItem,
+  ActivityLogType,
+  PropertyListing,
 } from './types';
 
 /**
@@ -49,6 +54,10 @@ const generateInitialData = (): AppData => {
             avatarUrl: 'https://i.pravatar.cc/150?u=monir',
             password: 'password123',
             role: UserRole.Landlord,
+            phone: '+880-1711-123456',
+            propertyGroupRoles: [
+                { groupId: 'PG-1', role: UserRole.Landlord },
+            ],
         },
         {
             id: 'U-DEMO',
@@ -57,7 +66,98 @@ const generateInitialData = (): AppData => {
             avatarUrl: 'https://i.pravatar.cc/150?u=demo',
             password: 'demo',
             role: UserRole.Landlord,
+            phone: '+880-1711-999999',
+            propertyGroupRoles: [
+                { groupId: 'PG-1', role: UserRole.Landlord },
+            ],
+        },
+        {
+            id: 'U-BILAL',
+            name: 'Bilal Ahmed',
+            email: 'bilal@email.com',
+            avatarUrl: 'https://i.pravatar.cc/150?u=bilal',
+            password: 'bilal123',
+            role: UserRole.BuildingManager,
+            phone: '+880-1711-555555',
+            propertyGroupRoles: [
+                { groupId: 'PG-1', role: UserRole.BuildingManager },
+                { groupId: 'PG-2', role: UserRole.Tenant },
+            ],
         }
+    ];
+
+    // ============ Property Groups ============
+    const propertyGroups: PropertyGroup[] = [
+        {
+            id: 'PG-1',
+            name: 'Asha Properties Group A',
+            description: 'Primary property group in Dhaka metropolitan area',
+            ownerId: 'U-1',
+            buildingIds: ['B-LC', 'B-BH', 'B-DR'],
+            createdAt: '2024-01-01',
+        },
+        {
+            id: 'PG-2',
+            name: 'Uttara Residences',
+            description: 'Residential properties in Uttara sector',
+            ownerId: 'U-1',
+            buildingIds: ['B-UG'],
+            createdAt: '2024-03-15',
+        },
+    ];
+
+    // ============ Contractors ============
+    const contractors: Contractor[] = [
+        {
+            id: 'C-1',
+            name: 'Karim Plumbing Services',
+            avatar: 'https://i.pravatar.cc/150?u=contractor1',
+            phone: '+880-1711-234567',
+            email: 'karim@plumbing.com',
+            rating: 4.8,
+            specialties: ['Plumbing', 'Water Systems', 'Drainage'],
+            isActive: true,
+        },
+        {
+            id: 'C-2',
+            name: 'Rahman Electric Co.',
+            avatar: 'https://i.pravatar.cc/150?u=contractor2',
+            phone: '+880-1711-345678',
+            email: 'info@rahmanelectric.com',
+            rating: 4.6,
+            specialties: ['Electrical', 'Wiring', 'AC Installation'],
+            isActive: true,
+        },
+        {
+            id: 'C-3',
+            name: 'Dhaka Pest Control',
+            avatar: 'https://i.pravatar.cc/150?u=contractor3',
+            phone: '+880-1711-456789',
+            email: 'contact@dhakapest.com',
+            rating: 4.7,
+            specialties: ['Pest Control', 'Fumigation', 'Prevention'],
+            isActive: true,
+        },
+        {
+            id: 'C-4',
+            name: 'Modern HVAC Solutions',
+            avatar: 'https://i.pravatar.cc/150?u=contractor4',
+            phone: '+880-1711-567890',
+            email: 'service@modernhvac.com',
+            rating: 4.9,
+            specialties: ['HVAC', 'AC Repair', 'Heating Systems'],
+            isActive: true,
+        },
+        {
+            id: 'C-5',
+            name: 'BuildRight Construction',
+            avatar: 'https://i.pravatar.cc/150?u=contractor5',
+            phone: '+880-1711-678901',
+            email: 'info@buildright.com',
+            rating: 4.5,
+            specialties: ['General Repairs', 'Carpentry', 'Painting'],
+            isActive: true,
+        },
     ];
 
     // ============ Buildings ============
@@ -336,8 +436,114 @@ const generateInitialData = (): AppData => {
     });
 
 
+    // ============ Activity Logs ============
+    // Generate initial activity logs for service requests
+    const activityLogs: ActivityLogItem[] = [];
+    
+    serviceRequests.forEach((req, idx) => {
+        // Created event
+        activityLogs.push({
+            id: `AL-${req.id}-1`,
+            type: ActivityLogType.Created,
+            title: 'Service Request Created',
+            timestamp: req.requestDate,
+            description: `Request submitted by tenant`,
+            userId: req.tenantId,
+            userName: tenants.find(t => t.id === req.tenantId)?.name || 'Tenant',
+            relatedEntityId: req.id,
+            relatedEntityType: 'ServiceRequest',
+        });
+        
+        // Add viewed event for older requests
+        if (idx < 15) {
+            const viewDate = new Date(req.requestDate);
+            viewDate.setHours(viewDate.getHours() + 2);
+            activityLogs.push({
+                id: `AL-${req.id}-2`,
+                type: ActivityLogType.Viewed,
+                title: 'Viewed by Landlord',
+                timestamp: viewDate.toISOString().split('T')[0],
+                description: 'Landlord reviewed the request',
+                userId: 'U-1',
+                userName: 'Monir Rahman',
+                relatedEntityId: req.id,
+                relatedEntityType: 'ServiceRequest',
+            });
+        }
+        
+        // Add contractor assigned for in-progress requests
+        if (req.status === RequestStatus.InProgress && req.assignedContact) {
+            const assignDate = new Date(req.requestDate);
+            assignDate.setDate(assignDate.getDate() + 1);
+            activityLogs.push({
+                id: `AL-${req.id}-3`,
+                type: ActivityLogType.ContractorAssigned,
+                title: 'Contractor Assigned',
+                timestamp: assignDate.toISOString().split('T')[0],
+                description: `${req.assignedContact.name} assigned to handle this request`,
+                userId: 'U-1',
+                userName: 'Monir Rahman',
+                relatedEntityId: req.id,
+                relatedEntityType: 'ServiceRequest',
+            });
+        }
+        
+        // Add completed event for completed requests
+        if (req.status === RequestStatus.Complete && req.completionDate) {
+            activityLogs.push({
+                id: `AL-${req.id}-4`,
+                type: ActivityLogType.Completed,
+                title: 'Service Request Completed',
+                timestamp: req.completionDate,
+                description: 'Work completed and verified',
+                userId: req.assignedContact?.name || 'Contractor',
+                userName: req.assignedContact?.name || 'Contractor',
+                relatedEntityId: req.id,
+                relatedEntityType: 'ServiceRequest',
+            });
+        }
+    });
+
+    // ============ Property Listings ============
+    const propertyListings: PropertyListing[] = [
+        {
+            id: 'PL-1',
+            unitId: 'U-B-LC-2A',
+            buildingId: 'B-LC',
+            title: 'Spacious 2BR Apartment in Lalmatia',
+            description: 'Beautiful apartment with modern amenities, great location, close to schools and markets.',
+            rent: 28000,
+            listingType: 'rent',
+            photos: [
+                'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
+                'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800',
+            ],
+            amenities: ['Parking', 'Security', 'Elevator', 'Backup Generator'],
+            contactInfo: {
+                name: 'Monir Rahman',
+                phone: '+880-1711-123456',
+                email: 'monir@ashaproperties.com',
+            },
+            status: 'active',
+            createdAt: '2025-10-15',
+            publishedAt: '2025-10-16',
+        },
+    ];
+
     // Return the complete interconnected dataset
-    return { users, buildings, units, tenants, documents, serviceRequests, rentalApplications };
+    return { 
+        users, 
+        propertyGroups,
+        buildings, 
+        units, 
+        tenants, 
+        documents, 
+        serviceRequests, 
+        rentalApplications,
+        contractors,
+        activityLogs,
+        propertyListings,
+    };
 };
 
 /**

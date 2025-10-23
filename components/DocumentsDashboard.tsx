@@ -15,6 +15,7 @@ interface DocumentsDashboardProps {
   onSelectUnit: (unitId: string) => void;
   appData: AppData;
   onAddDocument: (docData: Omit<Document, 'id' | 'uploadDate'>) => void;
+  onUpdateDocumentSharing: (documentId: string, sharedWith: string[]) => void;
 }
 
 const StatCard: React.FC<{ stat: DocumentDashboardStat }> = ({ stat }) => (
@@ -59,7 +60,7 @@ const OverviewContent: React.FC<{ onSelectBuilding: (id: string) => void; onSele
     </>
 );
 
-export const DocumentsDashboard: React.FC<DocumentsDashboardProps> = ({ onSelectBuilding, onSelectUnit, appData, onAddDocument }) => {
+export const DocumentsDashboard: React.FC<DocumentsDashboardProps> = ({ onSelectBuilding, onSelectUnit, appData, onAddDocument, onUpdateDocumentSharing }) => {
     const [activeTab, setActiveTab] = useState('Overview');
     const [isCreatingDocument, setIsCreatingDocument] = useState(false);
 
@@ -70,7 +71,7 @@ export const DocumentsDashboard: React.FC<DocumentsDashboardProps> = ({ onSelect
     const renderContent = () => {
         switch (activeTab) {
             case 'All Documents':
-                return <AllDocumentsPage onAddNewDocument={() => setIsCreatingDocument(true)} onSelectBuilding={onSelectBuilding} onSelectUnit={onSelectUnit} appData={appData} />;
+                return <AllDocumentsPage onAddNewDocument={() => setIsCreatingDocument(true)} onSelectBuilding={onSelectBuilding} onSelectUnit={onSelectUnit} appData={appData} onUpdateDocumentSharing={onUpdateDocumentSharing} />;
             case 'Overview':
             default:
                 return <OverviewContent onSelectBuilding={onSelectBuilding} onSelectUnit={onSelectUnit} appData={appData} />;

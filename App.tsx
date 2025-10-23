@@ -38,12 +38,15 @@ import { SpecificBuildingPage } from './components/SpecificBuildingPage';
 import { SpecificUnitPage } from './components/SpecificUnitPage';
 import { TenantDetailPage } from './components/TenantDetailPage';
 import { SpecificServiceRequestPage } from './components/SpecificServiceRequestPage';
+import { EnhancedServiceRequestPage } from './components/EnhancedServiceRequestPage';
 import { LeasesEndingSoonPage } from './components/LeasesEndingSoonPage';
 import { LeasesExpiredPage } from './components/LeasesExpiredPage';
 // import { SpecificApplicantPage } from './components/SpecificApplicantPage';
 import { SignUpPage } from './components/SignUpPage';
 import { LoginPage } from './components/LoginPage';
-import { AppData, BuildingDetail, Document, UnitDetail, User, UserRole, UnitStatus, RentalApplication, ApplicationStatus, ServiceRequest, RequestStatus } from './types';
+import { PropertyGroupSelectionPage } from './components/PropertyGroupSelectionPage';
+import { ListingsPlatform } from './components/ListingsPlatform';
+import { AppData, BuildingDetail, Document, UnitDetail, User, UserRole, UnitStatus, RentalApplication, ApplicationStatus, ServiceRequest, RequestStatus, ActivityLogItem, ActivityLogType, ServiceRequestComment, ServiceRequestMedia, Contractor, PropertyListing } from './types';
 import { INITIAL_APP_DATA } from './data';
 
 /**
@@ -63,6 +66,12 @@ const App: React.FC = () => {
   
   /** Currently logged-in user (null if not authenticated) */
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  
+  /** Selected property group ID */
+  const [selectedPropertyGroupId, setSelectedPropertyGroupId] = useState<string | null>(null);
+  
+  /** User's active role in the selected property group */
+  const [activeRole, setActiveRole] = useState<UserRole | null>(null);
 
   // ============ Detail View State ============
   // These track which specific item is being viewed on detail pages
@@ -99,10 +108,33 @@ const App: React.FC = () => {
     const user = appData.users.find(u => u.email === email && u.password === password);
     if (user) {
         setCurrentUser(user);
-        setCurrentPage('home');
+        // Check if user has multiple property groups
+        const hasMultipleGroups = user.propertyGroupRoles && user.propertyGroupRoles.length > 1;
+        if (hasMultipleGroups) {
+            setCurrentPage('property-group-selection');
+        } else if (user.propertyGroupRoles && user.propertyGroupRoles.length === 1) {
+            // Auto-select the only group
+            const singleGroup = user.propertyGroupRoles[0];
+            setSelectedPropertyGroupId(singleGroup.groupId);
+            setActiveRole(singleGroup.role);
+            setCurrentPage('home');
+        } else {
+            // No property groups, use default role
+            setActiveRole(user.role);
+            setCurrentPage('home');
+        }
         return true;
     }
     return false;
+  };
+  
+  /**
+   * Handles property group selection
+   */
+  const handleSelectPropertyGroup = (groupId: string, role: UserRole) => {
+    setSelectedPropertyGroupId(groupId);
+    setActiveRole(role);
+    setCurrentPage('home');
   };
   
   /**
@@ -110,6 +142,8 @@ const App: React.FC = () => {
    */
   const handleLogout = () => {
       setCurrentUser(null);
+      setSelectedPropertyGroupId(null);
+      setActiveRole(null);
       setCurrentPage('login');
   };
 
@@ -254,14 +288,37 @@ const App: React.FC = () => {
    */
   const handleAddServiceRequest = (requestData: Omit<ServiceRequest, 'id' | 'requestDate' | 'status' | 'assignedContact'>) => {
       setAppData(prevData => {
+          const newRequestId = `SR-${String(prevData.serviceRequests.length + 1).padStart(4, '0')}`;
+          const requestDate = new Date().toISOString();
+          
           const newRequest: ServiceRequest = {
               ...requestData,
-              id: `SR-${String(prevData.serviceRequests.length + 1).padStart(3, '0')}`,
-              requestDate: new Date().toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' }),
+              id: newRequestId,
+              requestDate: requestDate,
               status: RequestStatus.Pending,
               assignedContact: undefined, // No contact assigned initially
+              viewedByLandlord: false,
+              comments: [],
           };
-          return { ...prevData, serviceRequests: [...prevData.serviceRequests, newRequest] };
+          
+          // Create activity log for new request
+          const activityLog: ActivityLogItem = {
+              id: `AL-${newRequestId}-1`,
+              type: ActivityLogType.Created,
+              title: 'Service Request Created',
+              timestamp: requestDate,
+              description: 'New service request submitted by tenant',
+              userId: requestData.tenantId,
+              userName: appData.tenants.find(t => t.id === requestData.tenantId)?.name || 'Tenant',
+              relatedEntityId: newRequestId,
+              relatedEntityType: 'ServiceRequest',
+          };
+          
+          return { 
+              ...prevData, 
+              serviceRequests: [...prevData.serviceRequests, newRequest],
+              activityLogs: [...prevData.activityLogs, activityLog],
+          };
       });
   };
 
@@ -276,6 +333,202 @@ const App: React.FC = () => {
         app.userId === applicantUserId ? { ...app, status } : app
       );
       return { ...prevData, rentalApplications: updatedApplications };
+    });
+  };
+
+  /**
+   * Adds a comment to a service request
+   */
+  const handleAddComment = (serviceRequestId: string, comment: ServiceRequestComment) => {
+    setAppData(prevData => {
+      const updatedRequests = prevData.serviceRequests.map(req => {
+        if (req.id === serviceRequestId) {
+          return {
+            ...req,
+            comments: [...(req.comments || []), comment],
+          };
+        }
+        return req;
+      });
+      
+      // Add activity log
+      const activityLog: ActivityLogItem = {
+        id: `AL-${serviceRequestId}-${Date.now()}`,
+        type: ActivityLogType.CommentAdded,
+        title: 'Comment Added',
+        timestamp: comment.timestamp,
+        description: `${comment.userName} added a comment`,
+        userId: comment.userId,
+        userName: comment.userName,
+        relatedEntityId: serviceRequestId,
+        relatedEntityType: 'ServiceRequest',
+      };
+      
+      return {
+        ...prevData,
+        serviceRequests: updatedRequests,
+        activityLogs: [...prevData.activityLogs, activityLog],
+      };
+    });
+  };
+
+  /**
+   * Adds media to a service request
+   */
+  const handleAddMedia = (serviceRequestId: string, media: ServiceRequestMedia[]) => {
+    setAppData(prevData => {
+      const updatedRequests = prevData.serviceRequests.map(req => {
+        if (req.id === serviceRequestId) {
+          return {
+            ...req,
+            media: [...(req.media || []), ...media],
+          };
+        }
+        return req;
+      });
+      
+      // Add activity log
+      const activityLog: ActivityLogItem = {
+        id: `AL-${serviceRequestId}-media-${Date.now()}`,
+        type: ActivityLogType.MediaUploaded,
+        title: 'Media Uploaded',
+        timestamp: new Date().toISOString(),
+        description: `${media.length} file(s) uploaded`,
+        relatedEntityId: serviceRequestId,
+        relatedEntityType: 'ServiceRequest',
+      };
+      
+      return {
+        ...prevData,
+        serviceRequests: updatedRequests,
+        activityLogs: [...prevData.activityLogs, activityLog],
+      };
+    });
+  };
+
+  /**
+   * Assigns a contractor to a service request (by contractor ID)
+   */
+  const handleAssignContractorById = (serviceRequestId: string, contractorId: string) => {
+    const contractor = appData.contractors.find(c => c.id === contractorId);
+    if (!contractor) return;
+    handleAssignContractor(serviceRequestId, contractor);
+  };
+
+  /**
+   * Assigns a contractor to a service request
+   */
+  const handleAssignContractor = (serviceRequestId: string, contractor: Contractor) => {
+    setAppData(prevData => {
+      const updatedRequests = prevData.serviceRequests.map(req => {
+        if (req.id === serviceRequestId) {
+          return {
+            ...req,
+            assignedContractor: {
+              id: contractor.id,
+              name: contractor.name,
+              avatar: contractor.avatar,
+              rating: contractor.rating,
+            },
+            status: RequestStatus.InProgress, // Auto-update status
+          };
+        }
+        return req;
+      });
+      
+      // Add activity log for contractor assignment
+      const activityLog: ActivityLogItem = {
+        id: `AL-${serviceRequestId}-contractor-${Date.now()}`,
+        type: ActivityLogType.ContractorAssigned,
+        title: 'Contractor Assigned',
+        timestamp: new Date().toISOString(),
+        description: `${contractor.name} assigned to this request`,
+        userId: currentUser?.id,
+        userName: currentUser?.name || 'Landlord',
+        relatedEntityId: serviceRequestId,
+        relatedEntityType: 'ServiceRequest',
+      };
+      
+      // Add status change activity log
+      const statusLog: ActivityLogItem = {
+        id: `AL-${serviceRequestId}-status-${Date.now()}`,
+        type: ActivityLogType.StatusChanged,
+        title: 'Status Changed to In Progress',
+        timestamp: new Date().toISOString(),
+        description: 'Status automatically updated when contractor was assigned',
+        userId: currentUser?.id,
+        userName: currentUser?.name || 'System',
+        relatedEntityId: serviceRequestId,
+        relatedEntityType: 'ServiceRequest',
+      };
+      
+      return {
+        ...prevData,
+        serviceRequests: updatedRequests,
+        activityLogs: [...prevData.activityLogs, activityLog, statusLog],
+      };
+    });
+  };
+
+  /**
+   * Marks a service request as viewed by landlord
+   */
+  const handleMarkAsViewed = (serviceRequestId: string) => {
+    setAppData(prevData => {
+      const request = prevData.serviceRequests.find(req => req.id === serviceRequestId);
+      if (!request || request.viewedByLandlord) return prevData; // Already viewed
+      
+      const updatedRequests = prevData.serviceRequests.map(req => {
+        if (req.id === serviceRequestId) {
+          return {
+            ...req,
+            viewedByLandlord: true,
+            viewedAt: new Date().toISOString(),
+          };
+        }
+        return req;
+      });
+      
+      // Add activity log
+      const activityLog: ActivityLogItem = {
+        id: `AL-${serviceRequestId}-viewed-${Date.now()}`,
+        type: ActivityLogType.Viewed,
+        title: 'Viewed by Landlord',
+        timestamp: new Date().toISOString(),
+        description: `${currentUser?.name || 'Landlord'} viewed this request`,
+        userId: currentUser?.id,
+        userName: currentUser?.name || 'Landlord',
+        relatedEntityId: serviceRequestId,
+        relatedEntityType: 'ServiceRequest',
+      };
+      
+      return {
+        ...prevData,
+        serviceRequests: updatedRequests,
+        activityLogs: [...prevData.activityLogs, activityLog],
+      };
+    });
+  };
+
+  /**
+   * Creates a property listing from a unit
+   */
+  const handleCreateListing = (listing: PropertyListing) => {
+    setAppData(prevData => ({
+      ...prevData,
+      propertyListings: [...prevData.propertyListings, listing],
+    }));
+  };
+
+  /**
+   * Updates document sharing
+   */
+  const handleUpdateDocumentSharing = (documentId: string, sharedWith: string[]) => {
+    setAppData(prevData => {
+      const updatedDocuments = prevData.documents.map(doc => 
+        doc.id === documentId ? { ...doc, sharedWith } : doc
+      );
+      return { ...prevData, documents: updatedDocuments };
     });
   };
 
@@ -352,7 +605,7 @@ const App: React.FC = () => {
           return <TenantDocumentsPage currentUser={currentUser} appData={appData} />;
         }
         // Landlords see full documents dashboard
-        return <DocumentsDashboard onSelectBuilding={handleSelectBuilding} onSelectUnit={handleSelectUnit} appData={appData} onAddDocument={handleAddDocument} />;
+        return <DocumentsDashboard onSelectBuilding={handleSelectBuilding} onSelectUnit={handleSelectUnit} appData={appData} onAddDocument={handleAddDocument} onUpdateDocumentSharing={handleUpdateDocumentSharing} />;
       case 'settings':
         return <SettingsPage />;
       case 'account':
@@ -374,7 +627,16 @@ const App: React.FC = () => {
         return viewingApplicantId && <SpecificApplicantPage applicantUserId={viewingApplicantId} appData={appData} onBack={() => handleBackTo('tenants')} onUpdateStatus={handleUpdateApplicationStatus} />;
       */
       case 'specific-service-request':
-        return viewingServiceRequestId && <SpecificServiceRequestPage serviceRequestId={viewingServiceRequestId} appData={appData} onBack={() => handleBackTo('service-requests')} currentUser={currentUser || undefined} />;
+        return viewingServiceRequestId && <EnhancedServiceRequestPage 
+          serviceRequestId={viewingServiceRequestId} 
+          appData={appData} 
+          onBack={() => handleBackTo('service-requests')} 
+          currentUser={currentUser || undefined}
+          onAddComment={handleAddComment}
+          onAddMedia={handleAddMedia}
+          onAssignContractor={handleAssignContractorById}
+          onMarkAsViewed={handleMarkAsViewed}
+        />;
       case 'leases-ending-soon':
         // Landlord-only page
         if (isTenant) return <div className="container mx-auto text-center p-8"><h2 className="text-2xl text-text-secondary">Access Denied</h2></div>;
@@ -383,6 +645,12 @@ const App: React.FC = () => {
         // Landlord-only page
         if (isTenant) return <div className="container mx-auto text-center p-8"><h2 className="text-2xl text-text-secondary">Access Denied</h2></div>;
         return <LeasesExpiredPage appData={appData} setViewingTenantId={handleSetViewingTenantId} onSelectBuilding={handleSelectBuilding} onSelectUnit={handleSelectUnit} />;
+      case 'listings':
+        // Landlord-only page for property listings
+        if (isTenant) return <div className="container mx-auto text-center p-8"><h2 className="text-2xl text-text-secondary">Access Denied</h2></div>;
+        return <ListingsPlatform appData={appData} onCreateListing={handleCreateListing} onSelectUnit={handleSelectUnit} />;
+      case 'property-group-selection':
+        return currentUser && <PropertyGroupSelectionPage currentUser={currentUser} appData={appData} onSelectGroup={handleSelectPropertyGroup} />;
       case 'login':
         return <LoginPage onLogin={handleLogin} setCurrentPage={setCurrentPage} />;
       case 'signup':
@@ -397,8 +665,8 @@ const App: React.FC = () => {
 
   // ============ Root Render ============
   
-  // If user is not authenticated, show login/signup pages without Layout
-  if (currentPage === 'login' || currentPage === 'signup') {
+  // If user is not authenticated or selecting property group, show pages without Layout
+  if (currentPage === 'login' || currentPage === 'signup' || currentPage === 'property-group-selection') {
       return renderPage();
   }
 

@@ -21,6 +21,8 @@ export enum UserRole {
   Landlord = 'Landlord',
   Tenant = 'Tenant',
   Applicant = 'Applicant',
+  Contractor = 'Contractor',
+  BuildingManager = 'BuildingManager',
 }
 
 /**
@@ -39,6 +41,10 @@ export interface User {
   password?: string;
   /** User role (landlord, tenant, applicant) */
   role: UserRole;
+  /** Phone number for contact */
+  phone?: string;
+  /** Property groups and their associated roles for this user */
+  propertyGroupRoles?: { groupId: string; role: UserRole }[];
 }
 
 /** 
@@ -113,6 +119,12 @@ export interface Document {
   category?: 'Income' | 'Expense';
   /** Whether the document is starred/favorited */
   isStarred?: boolean;
+  /** User ID who uploaded the document */
+  uploadedBy?: string;
+  /** Array of tenant IDs who can access this document */
+  sharedWith?: string[];
+  /** File URL or base64 data */
+  fileUrl?: string;
 }
 
 export interface DocumentItem {
@@ -356,6 +368,17 @@ export interface ServiceRequest {
         /** URL to assigned person's avatar */
         avatar: string;
     };
+    /** Contractor assigned to this request */
+    assignedContractor?: {
+        /** Contractor ID */
+        id: string;
+        /** Contractor's name */
+        name: string;
+        /** URL to contractor's avatar */
+        avatar: string;
+        /** Contractor's rating */
+        rating?: number;
+    };
     /** Date the request was submitted (YYYY-MM-DD format) */
     requestDate: string;
     /** Date the request was completed (if applicable) */
@@ -366,6 +389,14 @@ export interface ServiceRequest {
     priority: 'High' | 'Medium' | 'Low';
     /** Detailed description of the issue */
     description: string;
+    /** Media attachments (photos/videos) */
+    media?: ServiceRequestMedia[];
+    /** Comments/messages on this request */
+    comments?: ServiceRequestComment[];
+    /** Whether landlord has viewed this request */
+    viewedByLandlord?: boolean;
+    /** Timestamp when landlord first viewed */
+    viewedAt?: string;
 }
 
 /**
@@ -405,6 +436,82 @@ export interface RentalApplication {
 
 
 /**
+ * Property Group containing multiple buildings
+ */
+export interface PropertyGroup {
+  /** Unique identifier */
+  id: string;
+  /** Group name */
+  name: string;
+  /** Description */
+  description?: string;
+  /** Owner/manager user ID */
+  ownerId: string;
+  /** Building IDs in this group */
+  buildingIds: string[];
+  /** Creation date */
+  createdAt: string;
+}
+
+/**
+ * Contractor profile
+ */
+export interface Contractor {
+  /** Unique identifier */
+  id: string;
+  /** Contractor name or company name */
+  name: string;
+  /** Avatar/logo URL */
+  avatar: string;
+  /** Contact phone */
+  phone: string;
+  /** Contact email */
+  email: string;
+  /** Average rating */
+  rating: number;
+  /** Specialties */
+  specialties: string[];
+  /** Active status */
+  isActive: boolean;
+}
+
+/**
+ * Internal listing for units
+ */
+export interface PropertyListing {
+  /** Unique identifier */
+  id: string;
+  /** Associated unit ID */
+  unitId: string;
+  /** Associated building ID */
+  buildingId: string;
+  /** Listing title */
+  title: string;
+  /** Description */
+  description: string;
+  /** Monthly rent */
+  rent: number;
+  /** Listing type */
+  listingType: 'rent' | 'sale';
+  /** Photos */
+  photos: string[];
+  /** Amenities */
+  amenities: string[];
+  /** Contact info */
+  contactInfo: {
+    name: string;
+    phone: string;
+    email: string;
+  };
+  /** Listing status */
+  status: 'active' | 'pending' | 'rented' | 'sold';
+  /** Created date */
+  createdAt: string;
+  /** Published date */
+  publishedAt?: string;
+}
+
+/**
  * Root data structure containing all application state.
  * This is the main data model used throughout the application.
  * In a production app, this would be managed by a backend database.
@@ -412,6 +519,8 @@ export interface RentalApplication {
 export interface AppData {
   /** All user accounts in the system */
   users: User[];
+  /** All property groups */
+  propertyGroups: PropertyGroup[];
   /** All buildings in the property portfolio */
   buildings: BuildingDetail[];
   /** All rental units across all buildings */
@@ -424,6 +533,12 @@ export interface AppData {
   serviceRequests: ServiceRequest[];
   /** All rental applications from prospective tenants */
   rentalApplications: RentalApplication[];
+  /** All contractors */
+  contractors: Contractor[];
+  /** All activity logs */
+  activityLogs: ActivityLogItem[];
+  /** All property listings */
+  propertyListings: PropertyListing[];
 }
 
 
@@ -527,16 +642,70 @@ export interface NotificationSetting {
 export type Theme = 'Light' | 'Dark' | 'System';
 
 export interface SettingsData {
-  general: {
+  // Existing settings (kept for backward compatibility)
+  general?: {
     language: string;
     currency: string;
     timezone: string;
   };
-  appearance: {
+  appearance?: {
     theme: Theme;
   };
-  security: {
+  security?: {
     twoFactorEnabled: boolean;
+  };
+
+  // New settings structure
+  profile: {
+    fullName: string;
+    email: string;
+    phone?: string;
+    profilePictureUrl?: string;
+    language?: string;
+    timezone?: string;
+  };
+  notifications: {
+    emailNotifications: boolean;
+    smsNotifications?: boolean;
+    inAppNotifications: boolean;
+    serviceRequestUpdates: boolean;
+    paymentReminders: boolean;
+  };
+  apiKeys?: {
+    keys: Array<{
+      id: string;
+      label: string;
+      createdAt: string;
+      lastUsed?: string;
+    }>;
+  };
+  billing?: {
+    plan: 'free' | 'pro' | 'enterprise';
+    renewalDate?: string;
+    paymentMethod?: {
+      brand: string;
+      last4: string;
+      expiry: string;
+    };
+    invoices?: Array<{
+      id: string;
+      amount: number;
+      date: string;
+      status: 'paid' | 'pending';
+    }>;
+  };
+  team?: {
+    members: Array<{
+      id: string;
+      name: string;
+      email: string;
+      role: 'owner' | 'admin' | 'member';
+    }>;
+    invitations?: Array<{
+      email: string;
+      role: string;
+      status: 'pending' | 'accepted';
+    }>;
   };
 }
 
@@ -544,6 +713,8 @@ export interface SettingsData {
 export interface ServiceRequestMedia {
   type: 'image' | 'video';
   url: string;
+  filename?: string;
+  uploadedAt?: string;
 }
 
 export interface ChatMessage {
@@ -552,17 +723,51 @@ export interface ChatMessage {
     isSelf: boolean;
 }
 
+/**
+ * Comment/message on a service request
+ */
+export interface ServiceRequestComment {
+    id: string;
+    /** User ID of commenter */
+    userId: string;
+    /** User name */
+    userName: string;
+    /** User avatar URL */
+    userAvatar: string;
+    /** User role */
+    userRole: UserRole;
+    /** Comment text */
+    message: string;
+    /** Timestamp */
+    timestamp: string;
+    /** Attached files */
+    attachments?: { type: 'image' | 'file'; url: string; filename: string }[];
+}
+
 export enum ActivityLogType {
   Scheduled = "Scheduled",
   Arrived = "Arrived",
   Completed = "Completed",
+  Created = "Created",
+  Viewed = "Viewed",
+  ContractorAssigned = "ContractorAssigned",
+  StatusChanged = "StatusChanged",
+  CommentAdded = "CommentAdded",
+  MediaUploaded = "MediaUploaded",
 }
 
 export interface ActivityLogItem {
+  id: string;
   type: ActivityLogType;
   title: string;
   timestamp: string;
   description?: string;
+  /** User who performed the action */
+  userId?: string;
+  userName?: string;
+  /** Related entity ID (service request, property, etc.) */
+  relatedEntityId: string;
+  relatedEntityType: 'ServiceRequest' | 'Property' | 'Unit' | 'Document';
 }
 
 export interface SpecificServiceRequestDetail {
