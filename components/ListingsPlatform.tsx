@@ -34,35 +34,55 @@ interface Listing {
   lastUpdated: string;
 }
 
+interface AppData {
+  // Add the actual properties of appData here
+  // For now, using any to make it work, but you should replace with proper types
+  [key: string]: any;
+}
+
 interface ListingsPlatformProps {
-  isInternal: boolean;
-  listings: Listing[];
-  onAddListing: () => void;
-  onEditListing: (id: string) => void;
-  onToggleVisibility: (id: string) => void;
+  appData: AppData;
+  onCreateListing: (listing: any) => void;
+  onSelectUnit: (unitId: string) => void;
 }
 
 export const ListingsPlatform: React.FC<ListingsPlatformProps> = ({
-  isInternal,
-  listings,
-  onAddListing,
-  onEditListing,
-  onToggleVisibility,
+  appData,
+  onCreateListing,
+  onSelectUnit,
 }) => {
+  // Extract listings from appData or use empty array if not available
+  const listings: Listing[] = appData.listings || [];
+  
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filters, setFilters] = React.useState({
-    status: 'all',
+    status: '',
     minPrice: '',
     maxPrice: '',
     beds: '',
+    baths: '',
   });
+  const [showFilters, setShowFilters] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [selectedListing, setSelectedListing] = React.useState<Listing | null>(null);
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  
+  // Handle the create listing action
+  const handleCreateListing = (listingData: any) => {
+    onCreateListing(listingData);
+  };
+  
+  // Handle unit selection
+  const handleSelectUnit = (unitId: string) => {
+    onSelectUnit(unitId);
+  };
 
   const filteredListings = listings.filter((listing) => {
     const matchesSearch = listing.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       listing.address.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesFilters = 
-      (filters.status === 'all' || listing.status === filters.status) &&
+      (filters.status === '' || listing.status === filters.status) &&
       (!filters.minPrice || listing.price >= Number(filters.minPrice)) &&
       (!filters.maxPrice || listing.price <= Number(filters.maxPrice)) &&
       (!filters.beds || listing.beds >= Number(filters.beds));
@@ -92,24 +112,20 @@ export const ListingsPlatform: React.FC<ListingsPlatformProps> = ({
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold">
-            {isInternal ? 'Property Listings' : 'Available Properties'}
+            Available Properties
           </h1>
           <p className="text-gray-600">
-            {isInternal 
-              ? 'Manage your property listings and their visibility'
-              : 'Find your perfect home today'}
+            Find your perfect home today
           </p>
         </div>
         
-        {isInternal && (
-          <button
-            onClick={onAddListing}
-            className="mt-4 md:mt-0 px-4 py-2 bg-accent-secondary text-white rounded-lg hover:bg-accent-secondary/90 transition-colors flex items-center"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add New Listing
-          </button>
-        )}
+        <button
+          onClick={() => handleCreateListing({})}
+          className="mt-4 md:mt-0 px-4 py-2 bg-accent-secondary text-white rounded-lg hover:bg-accent-secondary/90 transition-colors flex items-center"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add New Listing
+        </button>
       </div>
 
       <div className="mb-6 bg-white p-4 rounded-lg shadow-sm">
@@ -137,7 +153,6 @@ export const ListingsPlatform: React.FC<ListingsPlatformProps> = ({
                 <option value="all">All Statuses</option>
                 <option value="active">Active</option>
                 <option value="pending">Pending</option>
-                {isInternal && <option value="draft">Draft</option>}
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                 <ChevronDown className="h-4 w-4" />
@@ -203,26 +218,15 @@ export const ListingsPlatform: React.FC<ListingsPlatformProps> = ({
                   </div>
                 )}
                 
-                {isInternal && (
-                  <div className="absolute top-2 right-2 flex space-x-2">
-                    <button
-                      onClick={() => onToggleVisibility(listing.id)}
-                      className={`p-2 rounded-full ${
-                        listing.isPublic ? 'bg-white/90 text-blue-600' : 'bg-white/90 text-gray-600'
-                      } hover:bg-white transition-colors`}
-                      title={listing.isPublic ? 'Make Private' : 'Make Public'}
-                    >
-                      {listing.isPublic ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                    </button>
-                    <button
-                      onClick={() => onEditListing(listing.id)}
-                      className="p-2 rounded-full bg-white/90 text-gray-600 hover:bg-white transition-colors"
-                      title="Edit Listing"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
+                <div className="absolute top-2 right-2">
+                  <button
+                    onClick={() => handleSelectUnit(listing.id)}
+                    className="p-2 rounded-full bg-white/90 text-gray-600 hover:bg-white transition-colors"
+                    title="View Details"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </button>
+                </div>
                 
                 <div className="absolute bottom-2 left-2">
                   {statusBadge(listing.status)}
@@ -276,15 +280,10 @@ export const ListingsPlatform: React.FC<ListingsPlatformProps> = ({
                   </div>
                 )}
                 
-                <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
+                <div className="mt-4 pt-3 border-t border-gray-100">
                   <div className="text-xs text-gray-500">
                     Available: {new Date(listing.availableFrom).toLocaleDateString()}
                   </div>
-                  {isInternal && (
-                    <div className="text-xs text-gray-500">
-                      Last updated: {new Date(listing.lastUpdated).toLocaleDateString()}
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

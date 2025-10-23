@@ -43,9 +43,10 @@ const TextInput: React.FC<{
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
-}> = ({ value, onChange, placeholder, className = '' }) => (
+  type?: string;
+}> = ({ value, onChange, placeholder, className = '', type = 'text' }) => (
   <input
-    type="text"
+    type={type}
     value={value}
     onChange={(e) => onChange(e.target.value)}
     placeholder={placeholder}
