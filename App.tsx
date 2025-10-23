@@ -46,7 +46,13 @@ import { SignUpPage } from './components/SignUpPage';
 import { LoginPage } from './components/LoginPage';
 import { PropertyGroupSelectionPage } from './components/PropertyGroupSelectionPage';
 import { ListingsPlatform } from './components/ListingsPlatform';
-import { AppData, BuildingDetail, Document, UnitDetail, User, UserRole, UnitStatus, RentalApplication, ApplicationStatus, ServiceRequest, RequestStatus, ActivityLogItem, ActivityLogType, ServiceRequestComment, ServiceRequestMedia, Contractor, PropertyListing } from './types';
+import { AppData as BaseAppData, BuildingDetail, Document, UnitDetail, User, UserRole, UnitStatus, RentalApplication, ApplicationStatus, ServiceRequest, RequestStatus, ActivityLogItem, ActivityLogType, ServiceRequestComment, ServiceRequestMedia, Contractor } from './types';
+import { PropertyListing } from './types/listing';
+
+// Extend AppData to use the correct PropertyListing type
+interface AppData extends Omit<BaseAppData, 'propertyListings'> {
+  propertyListings: PropertyListing[];
+}
 import { INITIAL_APP_DATA } from './data';
 
 /**
@@ -648,7 +654,18 @@ const App: React.FC = () => {
       case 'listings':
         // Landlord-only page for property listings
         if (isTenant) return <div className="container mx-auto text-center p-8"><h2 className="text-2xl text-text-secondary">Access Denied</h2></div>;
-        return <ListingsPlatform appData={appData} onCreateListing={handleCreateListing} onSelectUnit={handleSelectUnit} />;
+        return (
+          <ListingsPlatform 
+            isInternal={true}
+            listings={appData.propertyListings || []}
+            onAddListing={() => { /* TODO: Implement add listing navigation */ }}
+            onEditListing={(id) => { /* TODO: Implement edit listing navigation */ }}
+            onToggleVisibility={(id) => { /* TODO: Implement toggle visibility */ }}
+            appData={appData}
+            onCreateListing={handleCreateListing}
+            onSelectUnit={handleSelectUnit}
+          />
+        );
       case 'property-group-selection':
         return currentUser && <PropertyGroupSelectionPage currentUser={currentUser} appData={appData} onSelectGroup={handleSelectPropertyGroup} />;
       case 'login':

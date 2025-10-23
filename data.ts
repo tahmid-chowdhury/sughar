@@ -34,8 +34,8 @@ import {
   Contractor,
   ActivityLogItem,
   ActivityLogType,
-  PropertyListing,
 } from './types';
+import { PropertyListing } from './types/listing';
 
 /**
  * Generates the complete initial dataset for the application
@@ -508,25 +508,45 @@ const generateInitialData = (): AppData => {
     const propertyListings: PropertyListing[] = [
         {
             id: 'PL-1',
-            unitId: 'U-B-LC-2A',
-            buildingId: 'B-LC',
             title: 'Spacious 2BR Apartment in Lalmatia',
-            description: 'Beautiful apartment with modern amenities, great location, close to schools and markets.',
-            rent: 28000,
-            listingType: 'rent',
-            photos: [
+            address: '123 Main Road, Lalmatia, Dhaka',
+            price: 28000,
+            beds: 2,
+            baths: 2,
+            sqft: 1200,
+            status: 'active',
+            isPublic: true,
+            images: [
                 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
                 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800',
             ],
+            description: 'Beautiful apartment with modern amenities, great location, close to schools and markets.',
             amenities: ['Parking', 'Security', 'Elevator', 'Backup Generator'],
+            availableFrom: '2025-11-01',
+            lastUpdated: '2025-10-16',
+            propertyType: 'Apartment',
+            yearBuilt: 2015,
+            deposit: 2, // 2 months rent
+            leaseTerm: '1 year',
+            petsAllowed: true,
+            parkingSpots: 1,
+            location: {
+                lat: 23.7606,
+                lng: 90.3769,
+                neighborhood: 'Lalmatia',
+                city: 'Dhaka',
+                state: 'Dhaka',
+                zipCode: '1207'
+            },
             contactInfo: {
                 name: 'Monir Rahman',
                 phone: '+880-1711-123456',
                 email: 'monir@ashaproperties.com',
             },
-            status: 'active',
+            createdBy: 'U-1',
             createdAt: '2025-10-15',
-            publishedAt: '2025-10-16',
+            updatedAt: '2025-10-16',
+            unitNumber: '2A',
         },
     ];
 

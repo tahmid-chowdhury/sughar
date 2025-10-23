@@ -13,6 +13,7 @@
  */
 
 import React from 'react';
+import { PropertyListing } from './types/listing';
 
 /**
  * User roles in the system
@@ -473,42 +474,6 @@ export interface Contractor {
   specialties: string[];
   /** Active status */
   isActive: boolean;
-}
-
-/**
- * Internal listing for units
- */
-export interface PropertyListing {
-  /** Unique identifier */
-  id: string;
-  /** Associated unit ID */
-  unitId: string;
-  /** Associated building ID */
-  buildingId: string;
-  /** Listing title */
-  title: string;
-  /** Description */
-  description: string;
-  /** Monthly rent */
-  rent: number;
-  /** Listing type */
-  listingType: 'rent' | 'sale';
-  /** Photos */
-  photos: string[];
-  /** Amenities */
-  amenities: string[];
-  /** Contact info */
-  contactInfo: {
-    name: string;
-    phone: string;
-    email: string;
-  };
-  /** Listing status */
-  status: 'active' | 'pending' | 'rented' | 'sold';
-  /** Created date */
-  createdAt: string;
-  /** Published date */
-  publishedAt?: string;
 }
 
 /**

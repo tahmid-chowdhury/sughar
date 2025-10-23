@@ -16,23 +16,7 @@ import {
   Bed,
   Bath
 } from './icons';
-
-interface Listing {
-  id: string;
-  title: string;
-  address: string;
-  price: number;
-  beds: number;
-  baths: number;
-  sqft: number;
-  status: 'active' | 'pending' | 'leased' | 'draft';
-  isPublic: boolean;
-  images: string[];
-  description: string;
-  amenities: string[];
-  availableFrom: string;
-  lastUpdated: string;
-}
+import { PropertyListing } from '../types/listing';
 
 interface AppData {
   // Add the actual properties of appData here
@@ -41,19 +25,29 @@ interface AppData {
 }
 
 interface ListingsPlatformProps {
-  appData: AppData;
-  onCreateListing: (listing: any) => void;
-  onSelectUnit: (unitId: string) => void;
+  isInternal: boolean;
+  listings: PropertyListing[];
+  onAddListing: () => void;
+  onEditListing: (id: string) => void;
+  onToggleVisibility: (id: string) => void;
+  appData?: AppData;
+  onCreateListing?: (listing: any) => void;
+  onSelectUnit?: (unitId: string) => void;
 }
 
+// For backward compatibility
+type Listing = PropertyListing;
+
 export const ListingsPlatform: React.FC<ListingsPlatformProps> = ({
-  appData,
-  onCreateListing,
-  onSelectUnit,
+  isInternal,
+  listings = [],
+  onAddListing,
+  onEditListing,
+  onToggleVisibility,
+  appData = {},
+  onCreateListing = () => {},
+  onSelectUnit = () => {},
 }) => {
-  // Extract listings from appData or use empty array if not available
-  const listings: Listing[] = appData.listings || [];
-  
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filters, setFilters] = React.useState({
     status: '',
@@ -69,7 +63,7 @@ export const ListingsPlatform: React.FC<ListingsPlatformProps> = ({
   
   // Handle the create listing action
   const handleCreateListing = (listingData: any) => {
-    onCreateListing(listingData);
+    onAddListing();
   };
   
   // Handle unit selection
