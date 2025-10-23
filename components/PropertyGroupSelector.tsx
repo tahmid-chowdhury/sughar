@@ -1,7 +1,7 @@
 // components/PropertyGroupSelector.tsx
 import React from 'react';
 import { Card } from './Card';
-import { Building, Home, Key, Users } from './icons';
+import { Building, HomeIcon as Home, Key, Users, ChevronDown } from './icons';
 
 interface PropertyGroup {
   id: string;
