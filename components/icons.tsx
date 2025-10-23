@@ -353,3 +353,48 @@ export const List: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
         <line x1="3" y1="18" x2="3.01" y2="18"></line>
     </Icon>
 );
+
+// Pencil icon
+export const Pencil: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <Icon {...props}>
+    <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+    <path d="m15 5 4 4" />
+  </Icon>
+);
+
+// Bed icon
+export const Bed: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <Icon {...props}>
+    <path d="M2 4v16" />
+    <path d="M2 8h18a2 2 0 0 1 2 2v10" />
+    <path d="M2 12h18" />
+    <path d="M6 8v9" />
+    <path d="M18 8v9" />
+  </Icon>
+);
+
+// Bath icon
+export const Bath: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <Icon {...props}>
+    <path d="M9 6 6.5 3.5a1.5 1.5 0 0 0-1-.5C4.5 3 4 3.5 4 4.5V17a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2H9Z" />
+    <path d="M4 12h16" />
+    <path d="M10 17v-2" />
+    <path d="M14 17v-2" />
+  </Icon>
+);
+
+// Ruler icon
+export const Ruler: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <Icon {...props}>
+    <path d="M16 2v4h-2v-2h-2v2h-2V4h-2v2H8V4H6v2H4v12h2v-2h2v2h2v-2h2v2h2v-2h2v-2h-2v-2h2v-2h-2V8h2V6h-2V4h2V2h-2z" />
+  </Icon>
+);
+
+// MapPin icon
+export const MapPin: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <Icon {...props}>
+    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+    <circle cx="12" cy="10" r="3" />
+  </Icon>
+);
+

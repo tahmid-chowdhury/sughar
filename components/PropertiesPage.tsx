@@ -1,7 +1,23 @@
-// Example usage in a page component
-import { PropertyGroupSelector } from '../components/PropertyGroupSelector';
-import { ListingsPlatform } from '../components/listings/ListingsPlatform';
+import { PropertyGroupSelector } from './PropertyGroupSelector';
+import { ListingsPlatform } from './ListingsPlatform';
 import { useState } from 'react';
+
+interface PropertyListing {
+  id: string;
+  title: string;
+  address: string;
+  price: number;
+  beds: number;
+  baths: number;
+  sqft: number;
+  status: 'active' | 'pending' | 'leased' | 'draft';
+  isPublic: boolean;
+  images: string[];
+  description: string;
+  amenities: string[];
+  availableFrom: string;
+  lastUpdated: string;
+}
 
 const PropertiesPage = () => {
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);

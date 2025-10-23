@@ -1,7 +1,21 @@
-// components/listings/ListingsPlatform.tsx
+// components/ListingsPlatform.tsx
 import React from 'react';
-import { Card } from '../Card';
-import { Search, Filter, Plus, Eye, EyeOff, Home, DollarSign, Ruler, MapPin } from './icons';
+import { Card } from './Card';
+import { 
+  Search, 
+  SlidersHorizontal as Filter, 
+  Plus, 
+  Eye, 
+  EyeOff, 
+  HomeIcon as Home, 
+  DollarSign, 
+  Ruler,
+  MapPin,
+  ChevronDown,
+  Pencil,
+  Bed,
+  Bath
+} from './icons';
 
 interface Listing {
   id: string;

@@ -206,6 +206,21 @@ export const SETTINGS_DATA: SettingsData = {
   },
   security: {
     twoFactorEnabled: true,
+  },
+  profile: {
+    fullName: 'John Doe',
+    email: 'john@example.com',
+    phone: '+880 1XXX-XXXXXX',
+    profilePictureUrl: 'https://i.pravatar.cc/150?u=john@example.com',
+    language: 'English (US)',
+    timezone: '(GMT+6:00) Dhaka'
+  },
+  notifications: {
+    emailNotifications: true,
+    smsNotifications: false,
+    inAppNotifications: true,
+    serviceRequestUpdates: true,
+    paymentReminders: true
   }
 };
 
