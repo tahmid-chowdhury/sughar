@@ -1,9 +1,7 @@
-
 import React from 'react';
 import { Card } from './Card';
-import { User, AppData, RequestStatus, RentStatus } from '../types';
-import { Search, Wrench, DollarSign, FileText, Calendar, Bell, ChevronRight } from './icons';
-import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { HomeIcon, DollarSign, FileText, Wrench, Clock, ChevronRight } from './icons';
+import { AppData, User, Document, ServiceRequest } from '../types';
 
 interface TenantHomeDashboardProps {
   currentUser: User;
@@ -11,286 +9,225 @@ interface TenantHomeDashboardProps {
   onNavigate: (page: string, tab?: string) => void;
 }
 
-const StatCard: React.FC<{ 
-  icon: React.ElementType; 
-  iconBg: string;
-  iconColor: string;
-  label: string; 
-  value: string;
-  subtext?: string;
-}> = ({ icon: Icon, iconBg, iconColor, label, value, subtext }) => {
-    return (
-        <Card className="h-full">
-            <div className="flex items-start justify-between">
-                <div className="flex-1">
-                    <p className="text-xs text-text-secondary mb-2">{label}</p>
-                    <p className="text-2xl font-bold text-text-main">{value}</p>
-                    {subtext && <p className="text-xs text-text-secondary mt-1">{subtext}</p>}
-                </div>
-                <div className={`p-2.5 rounded-lg ${iconBg}`}>
-                    <Icon className={`w-5 h-5 ${iconColor}`} />
-                </div>
-            </div>
-        </Card>
-    );
-};
+// Status badge component
+const StatusBadge = ({ status }: { status: string }) => {
+  const statusColors: { [key: string]: string } = {
+    'completed': 'bg-green-100 text-green-800',
+    'in-progress': 'bg-blue-100 text-blue-800',
+    'pending': 'bg-yellow-100 text-yellow-800',
+    'default': 'bg-gray-100 text-gray-800'
+  };
 
-export const TenantHomeDashboard: React.FC<TenantHomeDashboardProps> = ({ currentUser, appData, onNavigate }) => {
-  const userName = currentUser.name.split(' ')[0];
-  
-  // Find the tenant profile for this user
-  const tenantProfile = appData.tenants.find(t => t.name === currentUser.name);
-  
-  if (!tenantProfile) {
-    return (
-      <div className="container mx-auto text-center p-8">
-        <h2 className="text-2xl text-text-secondary">Tenant profile not found.</h2>
-      </div>
-    );
-  }
-
-  // Get tenant's unit details - filter to only show units where they are the current tenant
-  const tenantUnits = appData.units.filter(u => u.currentTenantId === tenantProfile.id);
-  const tenantUnit = tenantUnits[0]; // Only show the first unit if there are multiple
-  const tenantBuilding = tenantUnit ? appData.buildings.find(b => b.id === tenantUnit.buildingId) : undefined;
-
-  // Calculate tenant-specific stats
-  const myRequests = appData.serviceRequests.filter(sr => sr.tenantId === tenantProfile.id);
-  const activeRequests = myRequests.filter(sr => sr.status !== RequestStatus.Complete).length;
-  const completedRequests = myRequests.filter(sr => sr.status === RequestStatus.Complete).length;
-  const inProgressRequests = myRequests.filter(sr => sr.status === RequestStatus.InProgress).length;
-  const pendingRequests = myRequests.filter(sr => sr.status === RequestStatus.Pending).length;
-  
-  const monthlyRent = tenantUnit?.monthlyRent || 0;
-  
-  // Calculate lease dates
-  const leaseEndDate = tenantUnit?.leaseEndDate ? new Date(tenantUnit.leaseEndDate) : null;
-  const leaseStartDate = tenantUnit?.leaseStartDate ? new Date(tenantUnit.leaseStartDate) : null;
-  const today = new Date();
-  const daysUntilLeaseEnd = leaseEndDate ? Math.ceil((leaseEndDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : 0;
-  
-  // Calculate documents count
-  const myDocuments = appData.documents.filter(doc => 
-    doc.visibleToTenants && doc.visibleToTenantIds?.includes(tenantProfile.id)
-  ).length;
-
-  // Rent payment history data (mock - would come from payment records in real app)
-  const rentPaymentData = [
-    { name: 'On Time', value: 85, color: '#F472B6' },
-    { name: 'Late', value: 15, color: '#EBD4F8' },
-  ];
-
-  // Service request breakdown data
-  const serviceRequestData = [
-    { name: 'Completed', value: completedRequests, color: '#F472B6' },
-    { name: 'In Progress', value: inProgressRequests, color: '#D8B4FE' },
-    { name: 'Pending', value: pendingRequests, color: '#EBD4F8' },
-  ].filter(item => item.value > 0);
-
-  // Building manager info
-  const buildingManager = tenantBuilding?.contact;
-
-  // Important notices data
-  const importantNotices = [
-    { type: 'info', title: 'Monthly Building Meeting - Oct 20', description: 'All residents are invited to the monthly meeting in the lobby at 6:00 PM.', color: 'blue' },
-    { type: 'warning', title: 'Water Maintenance - Oct 25', description: 'Water will be shut off from 9:00 AM to 3:00 PM for routine maintenance work.', color: 'yellow' },
-    { type: 'success', title: 'New Recycling Program Launched', description: 'Separate bins for plastic and paper are now available on each floor.', color: 'green' },
-    { type: 'alert', title: 'Package Delivery Hours Updated', description: 'Packages will now be accepted at the front desk from 8:00 AM to 8:00 PM daily.', color: 'purple' },
-  ];
-
-  const noticeColors = {
-    blue: { bg: 'bg-blue-50', border: 'border-blue-400', text: 'text-blue-800' },
-    yellow: { bg: 'bg-yellow-50', border: 'border-yellow-400', text: 'text-yellow-800' },
-    green: { bg: 'bg-green-50', border: 'border-green-400', text: 'text-green-800' },
-    purple: { bg: 'bg-purple-50', border: 'border-purple-400', text: 'text-purple-800' },
+  const statusText: { [key: string]: string } = {
+    'completed': 'Completed',
+    'in-progress': 'In Progress',
+    'pending': 'Pending',
+    'default': 'Unknown'
   };
 
   return (
-    <div className="container mx-auto">
-      <header className="flex flex-col md:flex-row justify-between md:items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold font-atkinson text-text-main">
-            Welcome Home, {userName}!
-          </h1>
-          <p className="text-text-secondary mt-1">Your apartment dashboard at a glance.</p>
-        </div>
-        <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input 
-                type="text" 
-                placeholder="Search..."
-                className="w-full md:w-72 pl-10 pr-4 py-2 border border-gray-200 bg-white rounded-lg text-sm focus:ring-2 focus:ring-accent-secondary focus:border-transparent"
-            />
-        </div>
-      </header>
-      
-      {/* Top Stats Cards - Tenant Focused */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        <StatCard
-          icon={DollarSign}
-          iconBg="bg-yellow-100"
-          iconColor="text-yellow-600"
-          label="Next Rent Due"
-          value={new Date(today.getFullYear(), today.getMonth() + 1, 1).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-          subtext={`৳${monthlyRent.toLocaleString()}`}
-        />
-        <StatCard
-          icon={Wrench}
-          iconBg="bg-red-100"
-          iconColor="text-red-600"
-          label="Active Requests"
-          value={`${activeRequests} of ${myRequests.length}`}
-          subtext={`${inProgressRequests} in progress, ${pendingRequests} pending`}
-        />
-        <StatCard
-          icon={FileText}
-          iconBg="bg-blue-100"
-          iconColor="text-blue-600"
-          label="My Documents"
-          value={myDocuments.toString()}
-          subtext="Lease, receipts, and more"
-        />
+    <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${statusColors[status] || statusColors['default']}`}>
+      {statusText[status] || statusText['default']}
+    </span>
+  );
+};
+
+export const TenantHomeDashboard: React.FC<TenantHomeDashboardProps> = ({ currentUser, appData, onNavigate }) => {
+  // Get the current tenant's unit
+  const tenantUnit = appData.units.find(unit => unit.currentTenantId === currentUser?.id);
+  
+  // Get the building for this unit
+  const building = tenantUnit ? appData.buildings.find(b => b.id === tenantUnit.buildingId) : null;
+  
+  // Get building manager info (if available)
+  const buildingManager = building?.contact || { name: 'Not assigned', avatar: 'https://i.pravatar.cc/40?u=unassigned' };
+
+  // Filter documents for this tenant (showing only the 3 most recent)
+  const tenantDocuments = appData.documents
+    .filter(doc => doc.uploadedBy === currentUser?.id || doc.sharedWith?.includes(currentUser?.id || ''))
+    .slice(0, 3);
+
+  // Filter service requests for this tenant
+  const tenantServiceRequests = appData.serviceRequests.filter(
+    req => req.tenantId === currentUser?.id
+  );
+
+  // Get the most recent service request
+  const latestRequest = tenantServiceRequests.length > 0 
+    ? tenantServiceRequests[0] 
+    : null;
+
+  // Calculate days until next rent is due (example: 5 days from now)
+  const daysUntilRentDue = 5;
+  const nextRentDue = new Date();
+  nextRentDue.setDate(nextRentDue.getDate() + daysUntilRentDue);
+  const formattedDueDate = nextRentDue.toLocaleDateString('en-US', { 
+    month: 'short', 
+    day: 'numeric' 
+  });
+
+  // Calculate rent amount (example: get from unit or use default)
+  const rentAmount = tenantUnit?.monthlyRent || 0;
+  const formattedRent = rentAmount.toLocaleString('en-BD', {
+    style: 'currency',
+    currency: 'BDT',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
+
+  return (
+    <div className="space-y-6 pb-20"> {/* Added pb-20 to account for bottom navigation */}
+      {/* Welcome Header */}
+      <div className="bg-white p-6 rounded-2xl shadow-sm">
+        <h1 className="text-2xl font-bold text-gray-900">Welcome back, {currentUser?.name?.split(' ')[0] || 'Tenant'}</h1>
+        <p className="text-gray-500 mt-1">Here's what's happening with your property today</p>
       </div>
 
-      {/* Important Notices */}
-      <Card className="mb-8">
-        <h3 className="font-atkinson text-lg font-bold text-text-main mb-4">Important Notices</h3>
-        <div className="space-y-3">
-          {importantNotices.map((notice, i) => {
-            const colors = noticeColors[notice.color as keyof typeof noticeColors];
-            return (
-              <div key={i} className={`p-3 ${colors.bg} border-l-4 ${colors.border} rounded`}>
-                <p className={`text-sm font-medium ${colors.text}`}>{notice.title}</p>
-                <p className="text-xs text-text-secondary mt-1">{notice.description}</p>
-              </div>
-            );
-          })}
+      {/* Pay Rent Card */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-500 rounded-2xl p-6 text-white">
+        <div className="flex justify-between items-start">
+          <div>
+            <p className="text-blue-100 text-sm mb-1">Upcoming Payment</p>
+            <h3 className="text-2xl font-bold">{formattedRent}</h3>
+            <p className="text-blue-100 text-sm mt-1">Due {formattedDueDate}</p>
+          </div>
+          <button 
+            onClick={() => onNavigate('make-payment')}
+            className="bg-white text-blue-600 px-6 py-3 rounded-xl font-semibold hover:bg-opacity-90 transition-all transform hover:scale-105"
+          >
+            Pay Rent
+          </button>
         </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-2 gap-4">
+        <button 
+          onClick={() => onNavigate('service-requests')}
+          className="bg-white p-4 rounded-2xl shadow-sm flex items-center justify-between hover:shadow-md transition-shadow"
+        >
+          <div className="flex items-center">
+            <div className="bg-blue-100 p-2 rounded-lg mr-3">
+              <Wrench className="w-5 h-5 text-blue-600" />
+            </div>
+            <span className="font-medium">Service Request</span>
+          </div>
+          <ChevronRight className="w-5 h-5 text-gray-400" />
+        </button>
+        
+        <button 
+          onClick={() => onNavigate('documents')}
+          className="bg-white p-4 rounded-2xl shadow-sm flex items-center justify-between hover:shadow-md transition-shadow"
+        >
+          <div className="flex items-center">
+            <div className="bg-green-100 p-2 rounded-lg mr-3">
+              <FileText className="w-5 h-5 text-green-600" />
+            </div>
+            <span className="font-medium">Documents</span>
+          </div>
+          <ChevronRight className="w-5 h-5 text-gray-400" />
+        </button>
+      </div>
+
+      {/* Service Request Status */}
+      <Card className="p-0 overflow-hidden">
+        <div className="p-4 border-b flex justify-between items-center">
+          <h3 className="font-semibold">Service Requests</h3>
+          <button 
+            onClick={() => onNavigate('service-requests')}
+            className="text-sm text-blue-600 font-medium"
+          >
+            View All
+          </button>
+        </div>
+        
+        {latestRequest ? (
+          <div className="p-4">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium text-gray-500">#{latestRequest.id.split('-')[1]}</span>
+              <StatusBadge status={latestRequest.status.toLowerCase()} />
+            </div>
+            <p className="text-gray-800 text-sm mb-3">{latestRequest.description}</p>
+            <div className="flex items-center text-xs text-gray-500">
+              <Clock className="w-4 h-4 mr-1" />
+              <span>Updated {new Date(latestRequest.requestDate).toLocaleDateString()}</span>
+            </div>
+          </div>
+        ) : (
+          <div className="p-6 text-center">
+            <div className="bg-gray-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+              <Wrench className="w-6 h-6 text-gray-400" />
+            </div>
+            <p className="text-gray-500 text-sm mb-3">No active service requests</p>
+            <button 
+              onClick={() => onNavigate('service-requests')}
+              className="text-blue-600 text-sm font-medium"
+            >
+              Create a request
+            </button>
+          </div>
+        )}
       </Card>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* My Unit */}
-        {tenantUnit && (
-          <Card>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-atkinson text-lg font-bold text-text-main">My Unit</h3>
-              <button 
+      {/* Recent Documents */}
+      <Card className="p-0 overflow-hidden">
+        <div className="p-4 border-b flex justify-between items-center">
+          <h3 className="font-semibold">Recent Documents</h3>
+          <button 
+            onClick={() => onNavigate('documents')}
+            className="text-sm text-blue-600 font-medium"
+          >
+            View All
+          </button>
+        </div>
+        
+        {tenantDocuments.length > 0 ? (
+          <div className="divide-y">
+            {tenantDocuments.map((doc) => (
+              <div 
+                key={doc.id} 
+                className="p-4 flex justify-between items-center hover:bg-gray-50 active:bg-gray-100 transition-colors"
                 onClick={() => onNavigate('documents')}
-                className="text-xs text-brand-pink hover:underline"
               >
-                View Details
-              </button>
-            </div>
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-text-secondary">Unit</span>
-                <span className="font-medium text-text-main">
-                  {tenantBuilding?.name || 'N/A'}, {tenantUnit.unitNumber}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-text-secondary">Move-in Date</span>
-                <span className="font-medium text-text-main">
-                  {leaseStartDate?.toLocaleDateString() || 'N/A'}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-text-secondary">Lease End</span>
-                <span className="font-medium text-text-main">
-                  {leaseEndDate?.toLocaleDateString() || 'Month-to-Month'}
-                </span>
-              </div>
-              <div className="pt-2 mt-2 border-t">
-                <p className="text-xs text-text-secondary mb-2">Building Manager</p>
-                {buildingManager ? (
-                  <div className="flex items-center">
-                    <img 
-                      src={buildingManager.avatar} 
-                      alt={buildingManager.name} 
-                      className="w-8 h-8 rounded-full" 
-                    />
-                    <div className="ml-2">
-                      <p className="text-sm font-medium">{buildingManager.name}</p>
-                      {buildingManager.phone ? (
-                        <p className="text-xs text-text-secondary">{buildingManager.phone}</p>
-                      ) : (
-                        <p className="text-xs text-text-secondary">No contact info</p>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm text-text-secondary">No manager assigned</p>
-                )}
-              </div>
-            </div>
-          </Card>
-        )}
-
-        {/* My Service Requests */}
-        <div className="lg:col-span-2">
-        <Card className="h-full">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-atkinson text-lg font-bold text-text-main">My Service Requests</h3>
-            <button onClick={() => onNavigate('service-requests')} className="text-xs text-brand-pink hover:underline">view all</button>
-          </div>
-          <div className="h-64 flex items-center justify-center">
-            {serviceRequestData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={serviceRequestData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={85}
-                    paddingAngle={3}
-                    dataKey="value"
-                  >
-                    {serviceRequestData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-text-secondary text-sm">No service requests</p>
-            )}
-          </div>
-          <div className="mt-4 space-y-2">
-            {serviceRequestData.map((item, index) => (
-              <div key={index} className="flex items-center justify-between text-sm">
                 <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: item.color }}></div>
-                  <span className="text-text-secondary">{item.name}:</span>
+                  <div className="bg-blue-50 p-2 rounded-lg mr-3">
+                    <FileText className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">{doc.name}</p>
+                    <p className="text-xs text-gray-500">{doc.uploadDate}</p>
+                  </div>
                 </div>
-                <span className="font-medium text-text-main">{item.value}</span>
+                <ChevronRight className="w-5 h-5 text-gray-400" />
               </div>
             ))}
           </div>
-        </Card>
-        </div>
+        ) : (
+          <div className="p-6 text-center">
+            <div className="bg-gray-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+              <FileText className="w-6 h-6 text-gray-400" />
+            </div>
+            <p className="text-gray-500 text-sm mb-3">No documents available</p>
+          </div>
+        )}
+      </Card>
 
-        {/* Lease Snapshot & Action Center */}
-        <div className="lg:col-span-1 space-y-6">
-          <Card>
-            <h3 className="font-atkinson text-lg font-bold text-text-main mb-4">Lease Snapshot</h3>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between">
-                <span className="text-text-secondary">Start Date</span>
-                <span className="text-text-main font-medium">{leaseStartDate?.toLocaleDateString() || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-text-secondary">End Date</span>
-                <span className="text-text-main font-medium">{leaseEndDate?.toLocaleDateString() || 'N/A'}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-text-secondary">Monthly Rent</span>
-                <span className="text-text-main font-medium">৳{monthlyRent.toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-text-secondary">Deposit</span>
-                <span className="text-text-main font-medium">৳{(monthlyRent * 2).toLocaleString()}</span>
+      {/* Building Manager */}
+      <Card className="p-4">
+        <h3 className="font-semibold mb-3">Building Manager</h3>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <img 
+              src={buildingManager.avatar} 
+              alt={buildingManager.name} 
+              className="w-12 h-12 rounded-xl mr-3" 
+            />
+            <div>
+              <p className="font-medium">{buildingManager.name}</p>
+              <p className="text-sm text-gray-500">Building Manager</p>
+              {'phone' in buildingManager && buildingManager.phone && (
+                <p className="text-sm text-gray-600 mt-1">{buildingManager.phone}</p>
+              )}
               </div>
               {buildingManager && (
                 <div className="pt-3 border-t">
