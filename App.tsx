@@ -26,6 +26,7 @@ import { TenantPaymentsPage } from './components/TenantPaymentsPage';
 import { TenantPaymentPage } from './components/TenantPaymentPage';
 import { PaymentSuccessPage } from './components/PaymentSuccessPage';
 import { TenantDocumentsPage } from './components/TenantDocumentsPage';
+import { TenantListingsPage } from './components/TenantListingsPage';
 import { FinancialsDashboard } from './components/FinancialsDashboard';
 import { BuildingsUnitsDashboard } from './components/BuildingsUnitsDashboard';
 import { ServiceRequestsPage } from './components/ServiceRequestsPage';
@@ -652,18 +653,26 @@ const App: React.FC = () => {
         if (isTenant) return <div className="container mx-auto text-center p-8"><h2 className="text-2xl text-text-secondary">Access Denied</h2></div>;
         return <LeasesExpiredPage appData={appData} setViewingTenantId={handleSetViewingTenantId} onSelectBuilding={handleSelectBuilding} onSelectUnit={handleSelectUnit} />;
       case 'listings':
-        // Landlord-only page for property listings
-        if (isTenant) return <div className="container mx-auto text-center p-8"><h2 className="text-2xl text-text-secondary">Access Denied</h2></div>;
+        // Show tenant-optimized listings page for tenants
+        if (isTenant && currentUser) {
+          return (
+            <TenantListingsPage 
+              listings={appData.propertyListings}
+              onSelectListing={(id) => {
+                // Handle listing selection if needed
+                console.log('Selected listing:', id);
+              }}
+              onBack={() => handleBackTo('home')}
+            />
+          );
+        }
+        // Show landlord listings management for landlords
         return (
           <ListingsPlatform 
             isInternal={true}
-            listings={appData.propertyListings || []}
-            onAddListing={() => { /* TODO: Implement add listing navigation */ }}
-            onEditListing={(id) => { /* TODO: Implement edit listing navigation */ }}
-            onToggleVisibility={(id) => { /* TODO: Implement toggle visibility */ }}
-            appData={appData}
+            listings={appData.propertyListings} 
             onCreateListing={handleCreateListing}
-            onSelectUnit={handleSelectUnit}
+            onBack={() => handleBackTo('home')}
           />
         );
       case 'property-group-selection':

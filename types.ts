@@ -124,6 +124,10 @@ export interface Document {
   uploadedBy?: string;
   /** Array of tenant IDs who can access this document */
   sharedWith?: string[];
+  /** Whether this document is visible to tenants */
+  visibleToTenants?: boolean;
+  /** Specific tenant IDs who can view this document (if visibleToTenants is true) */
+  visibleToTenantIds?: string[];
   /** File URL or base64 data */
   fileUrl?: string;
 }
@@ -211,8 +215,12 @@ export interface BuildingDetail {
     contact: {
         /** Contact person's name */
         name: string;
-        /** URL to contact's avatar image */
+        /** URL to contact person's avatar */
         avatar: string;
+        /** Contact phone number */
+        phone?: string;
+        /** Contact email address */
+        email?: string;
     };
 }
 

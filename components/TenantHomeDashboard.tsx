@@ -49,8 +49,9 @@ export const TenantHomeDashboard: React.FC<TenantHomeDashboardProps> = ({ curren
     );
   }
 
-  // Get tenant's unit details
-  const tenantUnit = appData.units.find(u => u.currentTenantId === tenantProfile.id);
+  // Get tenant's unit details - filter to only show units where they are the current tenant
+  const tenantUnits = appData.units.filter(u => u.currentTenantId === tenantProfile.id);
+  const tenantUnit = tenantUnits[0]; // Only show the first unit if there are multiple
   const tenantBuilding = tenantUnit ? appData.buildings.find(b => b.id === tenantUnit.buildingId) : undefined;
 
   // Calculate tenant-specific stats
@@ -67,6 +68,11 @@ export const TenantHomeDashboard: React.FC<TenantHomeDashboardProps> = ({ curren
   const leaseStartDate = tenantUnit?.leaseStartDate ? new Date(tenantUnit.leaseStartDate) : null;
   const today = new Date();
   const daysUntilLeaseEnd = leaseEndDate ? Math.ceil((leaseEndDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : 0;
+  
+  // Calculate documents count
+  const myDocuments = appData.documents.filter(doc => 
+    doc.visibleToTenants && doc.visibleToTenantIds?.includes(tenantProfile.id)
+  ).length;
 
   // Rent payment history data (mock - would come from payment records in real app)
   const rentPaymentData = [
@@ -118,36 +124,31 @@ export const TenantHomeDashboard: React.FC<TenantHomeDashboardProps> = ({ curren
         </div>
       </header>
       
-      {/* Top Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      {/* Top Stats Cards - Tenant Focused */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         <StatCard
           icon={DollarSign}
           iconBg="bg-yellow-100"
           iconColor="text-yellow-600"
-          label="Upcoming Rent Due"
-          value={`৳${monthlyRent.toLocaleString()}`}
+          label="Next Rent Due"
+          value={new Date(today.getFullYear(), today.getMonth() + 1, 1).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          subtext={`৳${monthlyRent.toLocaleString()}`}
         />
         <StatCard
           icon={Wrench}
           iconBg="bg-red-100"
           iconColor="text-red-600"
-          label="Active Service Requests"
-          value={activeRequests.toString()}
+          label="Active Requests"
+          value={`${activeRequests} of ${myRequests.length}`}
+          subtext={`${inProgressRequests} in progress, ${pendingRequests} pending`}
         />
         <StatCard
-          icon={Calendar}
-          iconBg="bg-green-100"
-          iconColor="text-green-600"
-          label="Days Remaining in Lease"
-          value={`${daysUntilLeaseEnd} days`}
-          subtext={leaseStartDate && leaseEndDate ? `${leaseStartDate.toLocaleDateString()} - ${leaseEndDate.toLocaleDateString()}` : undefined}
-        />
-        <StatCard
-          icon={Bell}
-          iconBg="bg-pink-100"
-          iconColor="text-pink-600"
-          label="Unread Notices"
-          value="3"
+          icon={FileText}
+          iconBg="bg-blue-100"
+          iconColor="text-blue-600"
+          label="My Documents"
+          value={myDocuments.toString()}
+          subtext="Lease, receipts, and more"
         />
       </div>
 
@@ -168,46 +169,63 @@ export const TenantHomeDashboard: React.FC<TenantHomeDashboardProps> = ({ curren
       </Card>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
-        {/* Rent Payment Record */}
-        <div className="lg:col-span-2">
-        <Card className="h-full">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-atkinson text-lg font-bold text-text-main">Rent Payment Record</h3>
-            <button className="text-xs text-brand-pink hover:underline">view all</button>
-          </div>
-          <div className="h-64 flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={rentPaymentData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={85}
-                  paddingAngle={3}
-                  dataKey="value"
-                >
-                  {rentPaymentData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="mt-4 space-y-2">
-            {rentPaymentData.map((item, index) => (
-              <div key={index} className="flex items-center justify-between text-sm">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: item.color }}></div>
-                  <span className="text-text-secondary">{item.name}:</span>
-                </div>
-                <span className="font-medium text-text-main">{item.value}%</span>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* My Unit */}
+        {tenantUnit && (
+          <Card>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-atkinson text-lg font-bold text-text-main">My Unit</h3>
+              <button 
+                onClick={() => onNavigate('documents')}
+                className="text-xs text-brand-pink hover:underline"
+              >
+                View Details
+              </button>
+            </div>
+            <div className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-text-secondary">Unit</span>
+                <span className="font-medium text-text-main">
+                  {tenantBuilding?.name || 'N/A'}, {tenantUnit.unitNumber}
+                </span>
               </div>
-            ))}
-          </div>
-        </Card>
-        </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-text-secondary">Move-in Date</span>
+                <span className="font-medium text-text-main">
+                  {leaseStartDate?.toLocaleDateString() || 'N/A'}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-text-secondary">Lease End</span>
+                <span className="font-medium text-text-main">
+                  {leaseEndDate?.toLocaleDateString() || 'Month-to-Month'}
+                </span>
+              </div>
+              <div className="pt-2 mt-2 border-t">
+                <p className="text-xs text-text-secondary mb-2">Building Manager</p>
+                {buildingManager ? (
+                  <div className="flex items-center">
+                    <img 
+                      src={buildingManager.avatar} 
+                      alt={buildingManager.name} 
+                      className="w-8 h-8 rounded-full" 
+                    />
+                    <div className="ml-2">
+                      <p className="text-sm font-medium">{buildingManager.name}</p>
+                      {buildingManager.phone ? (
+                        <p className="text-xs text-text-secondary">{buildingManager.phone}</p>
+                      ) : (
+                        <p className="text-xs text-text-secondary">No contact info</p>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-text-secondary">No manager assigned</p>
+                )}
+              </div>
+            </div>
+          </Card>
+        )}
 
         {/* My Service Requests */}
         <div className="lg:col-span-2">

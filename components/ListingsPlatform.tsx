@@ -25,28 +25,30 @@ interface AppData {
 }
 
 interface ListingsPlatformProps {
-  isInternal: boolean;
+  isInternal?: boolean;
   listings: PropertyListing[];
-  onAddListing: () => void;
-  onEditListing: (id: string) => void;
-  onToggleVisibility: (id: string) => void;
+  onAddListing?: () => void;
+  onEditListing?: (id: string) => void;
+  onToggleVisibility?: (id: string) => void;
   appData?: AppData;
   onCreateListing?: (listing: any) => void;
   onSelectUnit?: (unitId: string) => void;
+  onBack?: () => void;
 }
 
 // For backward compatibility
 type Listing = PropertyListing;
 
 export const ListingsPlatform: React.FC<ListingsPlatformProps> = ({
-  isInternal,
+  isInternal = false,
   listings = [],
-  onAddListing,
-  onEditListing,
-  onToggleVisibility,
+  onAddListing = () => {},
+  onEditListing = () => {},
+  onToggleVisibility = () => {},
   appData = {},
   onCreateListing = () => {},
   onSelectUnit = () => {},
+  onBack,
 }) => {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filters, setFilters] = React.useState({
@@ -102,7 +104,18 @@ export const ListingsPlatform: React.FC<ListingsPlatformProps> = ({
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto p-4">
+      {onBack && (
+        <button 
+          onClick={onBack}
+          className="flex items-center text-text-secondary hover:text-text-main mb-4"
+        >
+          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          Back
+        </button>
+      )}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold">

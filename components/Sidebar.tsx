@@ -13,7 +13,7 @@
  */
 
 import React from 'react';
-import { HomeIcon, DollarSign, Building, Wrench, Users, FileText, Settings, LogOut, List } from './icons';
+import { HomeIcon, DollarSign, Building, Wrench, Users, FileText, Settings, LogOut, List, CreditCard } from './icons';
 // FIX: Changed import to relative path.
 import { User, UserRole } from '../types';
 
@@ -110,7 +110,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage, c
   // Tenant-only navigation items (simplified)
   const tenantNavItems = [
     { icon: HomeIcon, label: 'Dashboard', page: 'home' },
-    { icon: DollarSign, label: 'Payments', page: 'payments' },
+    { icon: CreditCard, label: 'Payments', page: 'payments' },
     { icon: Wrench, label: 'Service Requests', page: 'service-requests' },
     { icon: FileText, label: 'Documents', page: 'documents' },
   ];

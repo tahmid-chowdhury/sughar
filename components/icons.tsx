@@ -393,8 +393,29 @@ export const Ruler: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 // MapPin icon
 export const MapPin: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <Icon {...props}>
-    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
     <circle cx="12" cy="10" r="3" />
+  </Icon>
+);
+
+export const Filter: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <Icon {...props}>
+    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+  </Icon>
+);
+
+export const Home: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <Icon {...props}>
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-9z" />
+    <polyline points="9 22 9 12 15 12 15 22" />
+  </Icon>
+);
+
+export const Map: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <Icon {...props}>
+    <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
+    <line x1="8" y1="2" x2="8" y2="18" />
+    <line x1="16" y1="6" x2="16" y2="22" />
   </Icon>
 );
 
@@ -403,4 +424,3 @@ export const Key: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
   </Icon>
 );
-
