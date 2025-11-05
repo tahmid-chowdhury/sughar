@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card } from './Card';
-import { HomeIcon, DollarSign, FileText, Wrench, Clock, ChevronRight } from './icons';
-import { AppData, User, Document, ServiceRequest } from '../types';
+import { HomeIcon, DollarSign, FileText, Wrench, Clock, ChevronRight, Search, Plus, CreditCard } from './icons';
+import { AppData, User, Document, ServiceRequest, UnitStatus } from '../types';
 
 interface TenantHomeDashboardProps {
   currentUser: User;
@@ -33,7 +33,7 @@ const StatusBadge = ({ status }: { status: string }) => {
 };
 
 export const TenantHomeDashboard: React.FC<TenantHomeDashboardProps> = ({ currentUser, appData, onNavigate }) => {
-  // Get the current tenant's unit
+  // Get tenant's current unit
   const tenantUnit = appData.units.find(unit => unit.currentTenantId === currentUser?.id);
   
   // Get the building for this unit
@@ -42,23 +42,27 @@ export const TenantHomeDashboard: React.FC<TenantHomeDashboardProps> = ({ curren
   // Get building manager info (if available)
   const buildingManager = building?.contact || { name: 'Not assigned', avatar: 'https://i.pravatar.cc/40?u=unassigned' };
 
-  // Filter documents for this tenant (showing only the 3 most recent)
+  // Filter service requests for this tenant
+  const tenantServiceRequests = appData.serviceRequests.filter(req => req.tenantId === currentUser?.id);
+
+  // Filter documents for this tenant
   const tenantDocuments = appData.documents
     .filter(doc => doc.uploadedBy === currentUser?.id || doc.sharedWith?.includes(currentUser?.id || ''))
     .slice(0, 3);
-
-  // Filter service requests for this tenant
-  const tenantServiceRequests = appData.serviceRequests.filter(
-    req => req.tenantId === currentUser?.id
-  );
 
   // Get the most recent service request
   const latestRequest = tenantServiceRequests.length > 0 
     ? tenantServiceRequests[0] 
     : null;
 
-  // Calculate days until next rent is due (example: 5 days from now)
-  const daysUntilRentDue = 5;
+  // Get next rent due date from lease or use a default
+  const daysUntilRentDue = tenantUnit?.leaseEndDate 
+    ? Math.ceil((new Date(tenantUnit.leaseEndDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+    : 30; // Default to 30 days if no lease end date
+    
+  // Default lease status if not available
+  const leaseStatus = tenantUnit?.status === UnitStatus.Rented ? 'Lease Active' : 'Month-to-Month';
+    
   const nextRentDue = new Date();
   nextRentDue.setDate(nextRentDue.getDate() + daysUntilRentDue);
   const formattedDueDate = nextRentDue.toLocaleDateString('en-US', { 
@@ -66,7 +70,7 @@ export const TenantHomeDashboard: React.FC<TenantHomeDashboardProps> = ({ curren
     day: 'numeric' 
   });
 
-  // Calculate rent amount (example: get from unit or use default)
+  // Get rent amount from unit
   const rentAmount = tenantUnit?.monthlyRent || 0;
   const formattedRent = rentAmount.toLocaleString('en-BD', {
     style: 'currency',
@@ -76,26 +80,51 @@ export const TenantHomeDashboard: React.FC<TenantHomeDashboardProps> = ({ curren
   });
 
   return (
-    <div className="space-y-6 pb-20"> {/* Added pb-20 to account for bottom navigation */}
-      {/* Welcome Header */}
+    <div className="space-y-6 pb-20">
+      {/* Welcome Header with Rent Status */}
       <div className="bg-white p-6 rounded-2xl shadow-sm">
-        <h1 className="text-2xl font-bold text-gray-900">Welcome back, {currentUser?.name?.split(' ')[0] || 'Tenant'}</h1>
-        <p className="text-gray-500 mt-1">Here's what's happening with your property today</p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Welcome back, {currentUser?.name?.split(' ')[0] || 'Tenant'}</h1>
+            <p className="text-gray-500 mt-1">Here's what's happening with your unit</p>
+          </div>
+          {tenantUnit && (
+            <div className="bg-blue-50 text-blue-800 text-xs font-medium px-3 py-1 rounded-full">
+              Unit {tenantUnit.unitNumber}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Pay Rent Card */}
+      {/* Rent Status Card */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-500 rounded-2xl p-6 text-white">
         <div className="flex justify-between items-start">
           <div>
-            <p className="text-blue-100 text-sm mb-1">Upcoming Payment</p>
-            <h3 className="text-2xl font-bold">{formattedRent}</h3>
-            <p className="text-blue-100 text-sm mt-1">Due {formattedDueDate}</p>
+            <p className="text-blue-100 text-sm mb-1">Rent Status</p>
+            <div className="flex items-center">
+              <h3 className="text-2xl font-bold mr-3">{formattedRent}</h3>
+              <span className="bg-white bg-opacity-20 px-2 py-1 rounded-full text-xs">
+                {leaseStatus}
+              </span>
+            </div>
+            <p className="text-blue-100 text-sm mt-2">
+              {daysUntilRentDue > 0 
+                ? `Next payment due ${formattedDueDate}`
+                : 'Please contact property manager for lease renewal'}
+            </p>
+            {daysUntilRentDue <= 3 && daysUntilRentDue > 0 && (
+              <p className="text-yellow-200 text-xs mt-2">
+                {daysUntilRentDue === 0 
+                  ? "Due today!" 
+                  : `Due in ${daysUntilRentDue} day${daysUntilRentDue === 1 ? '' : 's'}`}
+              </p>
+            )}
           </div>
           <button 
             onClick={() => onNavigate('make-payment')}
             className="bg-white text-blue-600 px-6 py-3 rounded-xl font-semibold hover:bg-opacity-90 transition-all transform hover:scale-105"
           >
-            Pay Rent
+            {daysUntilRentDue > 0 ? 'Pay Now' : 'Contact Manager'}
           </button>
         </div>
       </div>
@@ -104,26 +133,32 @@ export const TenantHomeDashboard: React.FC<TenantHomeDashboardProps> = ({ curren
       <div className="grid grid-cols-2 gap-4">
         <button 
           onClick={() => onNavigate('service-requests')}
-          className="bg-white p-4 rounded-2xl shadow-sm flex items-center justify-between hover:shadow-md transition-shadow"
+          className="bg-white p-4 rounded-2xl shadow-sm flex items-center justify-between hover:shadow-md transition-all active:scale-95"
         >
           <div className="flex items-center">
             <div className="bg-blue-100 p-2 rounded-lg mr-3">
               <Wrench className="w-5 h-5 text-blue-600" />
             </div>
-            <span className="font-medium">Service Request</span>
+            <div className="text-left">
+              <p className="font-medium text-sm">Service Request</p>
+              <p className="text-xs text-gray-500">Report an issue</p>
+            </div>
           </div>
           <ChevronRight className="w-5 h-5 text-gray-400" />
         </button>
         
         <button 
           onClick={() => onNavigate('documents')}
-          className="bg-white p-4 rounded-2xl shadow-sm flex items-center justify-between hover:shadow-md transition-shadow"
+          className="bg-white p-4 rounded-2xl shadow-sm flex items-center justify-between hover:shadow-md transition-all active:scale-95"
         >
           <div className="flex items-center">
             <div className="bg-green-100 p-2 rounded-lg mr-3">
               <FileText className="w-5 h-5 text-green-600" />
             </div>
-            <span className="font-medium">Documents</span>
+            <div className="text-left">
+              <p className="font-medium text-sm">Documents</p>
+              <p className="text-xs text-gray-500">Lease & receipts</p>
+            </div>
           </div>
           <ChevronRight className="w-5 h-5 text-gray-400" />
         </button>
@@ -133,24 +168,56 @@ export const TenantHomeDashboard: React.FC<TenantHomeDashboardProps> = ({ curren
       <Card className="p-0 overflow-hidden">
         <div className="p-4 border-b flex justify-between items-center">
           <h3 className="font-semibold">Service Requests</h3>
-          <button 
-            onClick={() => onNavigate('service-requests')}
-            className="text-sm text-blue-600 font-medium"
-          >
-            View All
-          </button>
+          <div className="flex items-center">
+            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full mr-2">
+              {tenantServiceRequests.length} total
+            </span>
+            <button 
+              onClick={() => onNavigate('service-requests')}
+              className="text-sm text-blue-600 font-medium"
+            >
+              View All
+            </button>
+          </div>
         </div>
         
-        {latestRequest ? (
-          <div className="p-4">
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium text-gray-500">#{latestRequest.id.split('-')[1]}</span>
-              <StatusBadge status={latestRequest.status.toLowerCase()} />
-            </div>
-            <p className="text-gray-800 text-sm mb-3">{latestRequest.description}</p>
-            <div className="flex items-center text-xs text-gray-500">
-              <Clock className="w-4 h-4 mr-1" />
-              <span>Updated {new Date(latestRequest.requestDate).toLocaleDateString()}</span>
+        {tenantServiceRequests.length > 0 ? (
+          <div className="divide-y">
+            {tenantServiceRequests.slice(0, 3).map((request) => (
+              <div key={request.id} className="p-4 hover:bg-gray-50 cursor-pointer" 
+                   onClick={() => onNavigate('service-requests')}>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium text-gray-900">
+                    {request.title || 'Service Request'}
+                  </span>
+                  <StatusBadge status={request.status.toLowerCase()} />
+                </div>
+                <p className="text-gray-600 text-sm mb-2 line-clamp-2">
+                  {request.description}
+                </p>
+                <div className="flex items-center justify-between text-xs text-gray-500">
+                  <span>#{request.id.split('-')[0]}</span>
+                  <span>Updated {new Date(request.requestDate).toLocaleDateString()}</span>
+                </div>
+              </div>
+            ))}
+            <div className="p-4 border-t">
+              <div className="flex justify-between items-center">
+                {tenantServiceRequests.length > 3 && (
+                  <button 
+                    onClick={() => onNavigate('service-requests')}
+                    className="text-blue-600 text-sm font-medium"
+                  >
+                    View all {tenantServiceRequests.length} requests
+                  </button>
+                )}
+                <button
+                  onClick={() => onNavigate('service-requests', 'new')}
+                  className="text-accent-secondary text-sm font-medium"
+                >
+                  + Submit New Request
+                </button>
+              </div>
             </div>
           </div>
         ) : (
@@ -160,10 +227,11 @@ export const TenantHomeDashboard: React.FC<TenantHomeDashboardProps> = ({ curren
             </div>
             <p className="text-gray-500 text-sm mb-3">No active service requests</p>
             <button 
-              onClick={() => onNavigate('service-requests')}
-              className="text-blue-600 text-sm font-medium"
+              onClick={() => onNavigate('service-requests', 'new')}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              Create a request
+              <Plus className="-ml-1 mr-2 h-4 w-4" />
+              New Request
             </button>
           </div>
         )}
@@ -205,81 +273,67 @@ export const TenantHomeDashboard: React.FC<TenantHomeDashboardProps> = ({ curren
         ) : (
           <div className="p-6 text-center">
             <div className="bg-gray-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-              <FileText className="w-6 h-6 text-gray-400" />
+              <Wrench className="w-6 h-6 text-gray-400" />
             </div>
-            <p className="text-gray-500 text-sm mb-3">No documents available</p>
+            <p className="text-gray-500 text-sm mb-3">No service requests yet</p>
+            <button
+              onClick={() => onNavigate('service-requests', 'new')}
+              className="text-accent-secondary text-sm font-medium"
+            >
+              + Submit Your First Request
+            </button>
           </div>
         )}
       </Card>
-
-      {/* Building Manager */}
+      {/* Building Manager & Contact */}
       <Card className="p-4">
-        <h3 className="font-semibold mb-3">Building Manager</h3>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <img 
-              src={buildingManager.avatar} 
-              alt={buildingManager.name} 
-              className="w-12 h-12 rounded-xl mr-3" 
-            />
-            <div>
-              <p className="font-medium">{buildingManager.name}</p>
-              <p className="text-sm text-gray-500">Building Manager</p>
-              {'phone' in buildingManager && buildingManager.phone && (
-                <p className="text-sm text-gray-600 mt-1">{buildingManager.phone}</p>
-              )}
+        <h3 className="font-semibold mb-3">Need Help?</h3>
+        <div className="space-y-4">
+          {/* Emergency Contact */}
+          <div className="bg-red-50 border border-red-100 rounded-xl p-3">
+            <div className="flex items-center">
+              <div className="bg-red-100 p-2 rounded-lg mr-3">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-600" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
               </div>
-              {buildingManager && (
-                <div className="pt-3 border-t">
-                  <p className="text-text-secondary text-xs mb-2">Building Manager</p>
-                  <div className="flex items-center">
-                    <img src={buildingManager.avatar} alt={buildingManager.name} className="w-8 h-8 rounded-full" />
-                    <div className="ml-2">
-                      <p className="text-sm font-medium text-text-main">{buildingManager.name}</p>
-                      <p className="text-xs text-text-secondary">+880 1234-567890</p>
-                      <p className="text-xs text-text-secondary">manager@sughar.com</p>
-                    </div>
-                  </div>
-                </div>
-              )}
+              <div>
+                <p className="font-medium text-sm">Emergency Maintenance</p>
+                <p className="text-xs text-gray-500">Available 24/7</p>
+              </div>
+              <a href="tel:+8801234567890" className="ml-auto bg-white px-3 py-1.5 rounded-lg text-sm font-medium text-red-600 border border-red-200">
+                Call Now
+              </a>
             </div>
-          </Card>
+          </div>
 
-          <Card>
-            <h3 className="font-atkinson text-lg font-bold text-text-main mb-4">Action Center</h3>
-            <div className="space-y-2">
-              <button onClick={() => onNavigate('payments')} className="w-full flex items-center justify-between p-3 bg-pink-50 hover:bg-pink-100 rounded-lg transition-colors text-left border border-pink-200">
-                <div className="flex items-center">
-                  <DollarSign className="w-5 h-5 text-pink-600 mr-3" />
-                  <span className="text-sm font-medium text-pink-600">Pay Rent Now</span>
-                </div>
-                <ChevronRight className="w-4 h-4 text-pink-600" />
-              </button>
-              <button onClick={() => onNavigate('service-requests')} className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors text-left">
-                <div className="flex items-center">
-                  <Wrench className="w-5 h-5 text-text-secondary mr-3" />
-                  <span className="text-sm font-medium text-text-main">Submit New Request</span>
-                </div>
-                <ChevronRight className="w-4 h-4 text-text-secondary" />
-              </button>
-              <button onClick={() => onNavigate('documents')} className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors text-left">
-                <div className="flex items-center">
-                  <FileText className="w-5 h-5 text-text-secondary mr-3" />
-                  <span className="text-sm font-medium text-text-main">View Documents</span>
-                </div>
-                <ChevronRight className="w-4 h-4 text-text-secondary" />
-              </button>
-              <button onClick={() => onNavigate('settings')} className="w-full flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors text-left">
-                <div className="flex items-center">
-                  <Search className="w-5 h-5 text-text-secondary mr-3" />
-                  <span className="text-sm font-medium text-text-main">Help & Support</span>
-                </div>
-                <ChevronRight className="w-4 h-4 text-text-secondary" />
-              </button>
+          {/* Building Manager */}
+          {buildingManager && (
+            <div className="flex items-center p-3 bg-gray-50 rounded-xl">
+              <img 
+                src={buildingManager.avatar} 
+                alt={buildingManager.name} 
+                className="w-12 h-12 rounded-xl mr-3" 
+              />
+              <div className="flex-1">
+                <p className="font-medium text-sm">{buildingManager.name}</p>
+                <p className="text-xs text-gray-500">Building Manager</p>
+                {'phone' in buildingManager && buildingManager.phone && (
+                  <p className="text-xs text-blue-600 mt-1">{buildingManager.phone}</p>
+                )}
+              </div>
+              <a 
+                href={`tel:${'phone' in buildingManager ? buildingManager.phone : ''}`}
+                className="p-2 bg-white rounded-lg border border-gray-200"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+              </a>
             </div>
-          </Card>
+          )}
         </div>
-      </div>
+      </Card>
     </div>
   );
 };

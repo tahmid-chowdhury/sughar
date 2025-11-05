@@ -187,6 +187,16 @@ export const SettingsPage: React.FC = () => {
     }));
   };
 
+  const handleSaveProfile = async () => {
+    try {
+      // TODO: Add API call to update profile
+      // For now, just show a success message
+      alert('Profile updated successfully!');
+    } catch (error) {
+      alert('Failed to update profile. Please try again.');
+    }
+  };
+
   // Render active tab content
   const renderTabContent = () => {
     switch (activeTab) {
@@ -244,6 +254,15 @@ export const SettingsPage: React.FC = () => {
                 placeholder="+1 (___) ___-____"
               />
             </SettingsRow>
+
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={handleSaveProfile}
+                className="px-4 py-2 bg-accent-secondary text-white rounded-lg hover:bg-accent-secondary/90 transition-colors"
+              >
+                Save Profile Changes
+              </button>
+            </div>
 
             <SettingsRow
               label="Language"

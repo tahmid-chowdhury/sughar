@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card } from './Card';
 import { User, AppData, DocumentType } from '../types';
 import { FileText, HomeIcon, Mail, Zap, Wrench, Star, MoreHorizontal, Search } from './icons';
@@ -38,57 +38,139 @@ export const TenantDocumentsPage: React.FC<TenantDocumentsPageProps> = ({ curren
   const [activeTab, setActiveTab] = useState<TabType>('Overview');
 
   // Find the tenant profile for this user
-  const tenantProfile = appData.tenants.find(t => t.name === currentUser.name);
+  const tenantProfile = appData.tenants.find(t => t.id === currentUser.id || t.name === currentUser.name);
   const tenantUnit = tenantProfile ? appData.units.find(u => u.currentTenantId === tenantProfile.id) : undefined;
   const tenantBuilding = tenantUnit ? appData.buildings.find(b => b.id === tenantUnit.buildingId) : undefined;
 
   // Get documents for this tenant (filter by building and unit)
-  const tenantDocuments = appData.documents.filter(doc => 
-    doc.building === tenantBuilding?.id && doc.unit === tenantProfile?.unit
-  );
+  const tenantDocuments = appData.documents.filter(doc => {
+    // Show documents that are either:
+    // 1. Uploaded by this tenant
+    // 2. Shared with this tenant
+    // 3. Associated with this tenant's unit
+    const isUploadedByTenant = doc.uploadedBy === currentUser.id;
+    const isSharedWithTenant = doc.sharedWith?.includes(currentUser.id);
+    const isForTenantUnit = doc.unit === tenantUnit?.id || doc.tenant === tenantProfile?.id;
+    
+    return isUploadedByTenant || isSharedWithTenant || isForTenantUnit;
+  });
+  
+  // Group documents by type for the overview
+  const documentsByType = tenantDocuments.reduce((acc, doc) => {
+    const type = doc.type || 'Other';
+    if (!acc[type]) {
+      acc[type] = [];
+    }
+    acc[type].push(doc);
+    return acc;
+  }, {} as Record<string, typeof tenantDocuments>);
 
-  // Document type distribution data
-  const documentTypeData = [
-    { name: 'Leases', value: 35, color: '#10B981' },
-    { name: 'Service Contracts / Invoices', value: 30, color: '#A78BFA' },
-    { name: 'Utilities / Bills', value: 25, color: '#F59E0B' },
-    { name: 'Income / Tax Docs', value: 10, color: '#EC4899' },
-  ];
+  // Generate document type distribution from actual data
+  const documentTypeData = Object.entries(documentsByType).map(([type, docs]) => {
+    const colorMap: Record<string, string> = {
+      'lease': '#10B981',
+      'contract': '#A78BFA',
+      'invoice': '#3B82F6',
+      'utility': '#F59E0B',
+      'tax': '#EC4899',
+      'other': '#9CA3AF'
+    };
+    
+    const typeKey = type.toLowerCase();
+    const color = Object.keys(colorMap).find(key => typeKey.includes(key)) ? 
+      colorMap[Object.keys(colorMap).find(key => typeKey.includes(key))!] : 
+      colorMap['other'];
+      
+    return {
+      name: type,
+      value: docs.length,
+      color,
+      count: docs.length
+    };
+  }).filter(item => item.count > 0);
 
-  // Documents uploaded over time (mock data)
-  const uploadTrendData = [
-    { month: 'Jan', count: 130 },
-    { month: 'Feb', count: 140 },
-    { month: 'Mar', count: 145 },
-    { month: 'Apr', count: 155 },
-    { month: 'May', count: 165 },
-    { month: 'Jun', count: 180 },
-    { month: 'Jul', count: 195 },
-    { month: 'Aug', count: 210 },
-    { month: 'Sep', count: 230 },
-    { month: 'Oct', count: 245 },
-    { month: 'Nov', count: 260 },
-    { month: 'Dec', count: 280 },
-  ];
+  // Generate upload trend data from actual documents
+  const uploadTrendData = useMemo(() => {
+    const now = new Date();
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(now.getMonth() - 5); // Get last 6 months
+    
+    // Initialize monthly counts
+    const monthlyCounts: Record<string, number> = {};
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    // Initialize with 0 counts for the last 6 months
+    for (let i = 0; i < 6; i++) {
+      const date = new Date();
+      date.setMonth(now.getMonth() - i);
+      const monthKey = `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+      monthlyCounts[monthKey] = 0;
+    }
+    
+    // Count documents per month
+    tenantDocuments.forEach(doc => {
+      if (!doc.uploadDate) return;
+      
+      const uploadDate = new Date(doc.uploadDate);
+      if (uploadDate >= sixMonthsAgo) {
+        const monthKey = `${monthNames[uploadDate.getMonth()]} ${uploadDate.getFullYear()}`;
+        monthlyCounts[monthKey] = (monthlyCounts[monthKey] || 0) + 1;
+      }
+    });
+    
+    // Convert to array and sort by date
+    return Object.entries(monthlyCounts)
+      .map(([month, count]) => ({
+        month: month.split(' ')[0],
+        count
+      }))
+      .sort((a, b) => {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return months.indexOf(a.month) - months.indexOf(b.month);
+      });
+  }, [tenantDocuments]);
 
-  // Sample recent documents (would come from actual data)
-  const recentDocuments = [
-    { name: 'Unit 12A Lease Agreement', building: 'BLDG-0001', unit: 'A1', type: 'Lease', date: '10/10/2025' },
-    { name: 'Basundhara Electric Invoice', building: 'BLDG-0001', unit: 'A2', type: 'Utilities / Bills', date: '10/15/2025' },
-    { name: 'Gulshan Towers Water Bill', building: 'BLDG-0004', unit: 'A7', type: 'Utilities / Bills', date: '9/28/2025' },
-    { name: 'Shakti Pest Svcs Contract', building: 'BLDG-0023', unit: 'B2', type: 'Service / Contract', date: '9/31/2025' },
-    { name: 'Jamuna Palaces Income Statement', building: 'BLDG-0014', unit: 'B9', type: 'Income / Tax', date: '11/14/2025' },
-    { name: 'Baridhara Court Compliance Certificate', building: 'BLDG-0009', unit: 'C3', type: 'Certifications', date: '11/23/2025' },
-    { name: 'Green View Apartments Insurance Policy', building: 'BLDG-0003', unit: 'C5', type: 'Insurance', date: '12/14/2025' },
-    { name: 'Mirpur Elevator Maintenance Contract', building: 'BLDG-0005', unit: 'C6', type: 'Service / Contract', date: '12/24/2025' },
-    { name: 'Lakeview Residences Tax Receipt', building: 'BLDG-0008', unit: 'C11', type: 'Income / Tax', date: '12/27/2025' },
-    { name: 'City Lights Plumbing Service Invoice', building: 'BLDG-0012', unit: 'D1', type: 'Service / Contract', date: '12/28/2025' },
-    { name: 'Uttara Regency Renovation Permit', building: 'BLDG-0009', unit: 'D3', type: 'Certifications', date: '12/31/2025' },
-  ];
+  // Get recent documents (most recent 5)
+  const recentDocuments = useMemo(() => {
+    return [...tenantDocuments]
+      .sort((a, b) => new Date(b.uploadDate || 0).getTime() - new Date(a.uploadDate || 0).getTime())
+      .slice(0, 5)
+      .map(doc => {
+        const building = doc.building ? appData.buildings.find(b => b.id === doc.building) : null;
+        const unit = doc.unit ? appData.units.find(u => u.id === doc.unit) : null;
+        
+        return {
+          id: doc.id,
+          name: doc.name,
+          building: building?.name || 'Unknown Building',
+          unit: unit?.unitNumber || 'Unknown Unit',
+          type: doc.type || 'Document',
+          date: doc.uploadDate ? new Date(doc.uploadDate).toLocaleDateString() : 'N/A',
+          fileUrl: doc.fileUrl,
+          isStarred: doc.isStarred
+        };
+      });
+  }, [tenantDocuments, appData.buildings, appData.units]);
 
-  const starredDocuments = [
-    { name: 'Unit 12A Lease Agreement', building: 'BLDG-0001', unit: 'A1', type: 'Lease', date: '10/10/2025' },
-  ];
+  // Get starred documents
+  const starredDocuments = useMemo(() => {
+    return tenantDocuments
+      .filter(doc => doc.isStarred)
+      .map(doc => {
+        const building = doc.building ? appData.buildings.find(b => b.id === doc.building) : null;
+        const unit = doc.unit ? appData.units.find(u => u.id === doc.unit) : null;
+        
+        return {
+          id: doc.id,
+          name: doc.name,
+          building: building?.name || 'Unknown Building',
+          unit: unit?.unitNumber || 'Unknown Unit',
+          type: doc.type || 'Document',
+          date: doc.uploadDate ? new Date(doc.uploadDate).toLocaleDateString() : 'N/A',
+          fileUrl: doc.fileUrl
+        };
+      });
+  }, [tenantDocuments, appData.buildings, appData.units]);
 
   const tabs: TabType[] = ['Overview', 'All Documents'];
 

@@ -87,6 +87,46 @@ export interface RevenueData {
 /**
  * Enumeration of all document types supported by the system
  */
+/**
+ * Filter preset types for document sharing
+ */
+export enum FilterPreset {
+  AllTenants = 'all_tenants',
+  GoodStanding = 'good_standing',
+  RecentlyActive = 'recently_active',
+  LongTermTenants = 'long_term_tenants',
+  PerfectPayment = 'perfect_payment'
+}
+
+/**
+ * Advanced search operators
+ */
+export enum SearchOperator {
+  AND = 'AND',
+  OR = 'OR',
+  NOT = 'NOT'
+}
+
+/**
+ * Extended search configuration
+ */
+export interface AdvancedSearch {
+  query: string;
+  operator: SearchOperator;
+  fields: string[];
+  fuzzyMatch: boolean;
+}
+
+/**
+ * Extended filter configuration
+ */
+export interface AdvancedFilters extends SearchFilters {
+  leaseMinDuration: number;
+  paymentHistoryMonths: number;
+  activeServiceRequests: boolean;
+  includeEndingSoon: boolean;
+}
+
 export enum DocumentType {
   Lease = 'Lease Agreement',
   Utilities = 'Utility Bill',
@@ -243,6 +283,67 @@ export enum RentStatus {
 }
 
 /**
+ * Tenant rating score (1-5)
+ * - 5: Excellent tenant
+ * - 4: Good tenant
+ * - 3: Average tenant
+ * - 2: Below average
+ * - 1: Poor tenant
+ */
+export type TenantRating = 1 | 2 | 3 | 4 | 5;
+
+/**
+ * Payment incident types
+ */
+export enum PaymentIncidentType {
+    Late = 'Late',
+    Bounced = 'Bounced',
+    Dispute = 'Dispute',
+    Other = 'Other',
+}
+
+/**
+ * Payment incident record
+ */
+export interface PaymentIncident {
+    date: string;
+    type: PaymentIncidentType;
+    amount: number;
+    resolved: boolean;
+    notes?: string;
+}
+
+/**
+ * Extended tenant interface with detailed tenant information
+ */
+export interface Tenant extends User {
+    /** Building ID where tenant resides */
+    building?: string;
+    /** Unit number tenant occupies */
+    unit?: string;
+    /** Tenant's current rent payment status */
+    rentStatus: RentStatus;
+    /** Progress through current lease term (0-100) */
+    leaseProgress: number;
+    /** Tenant rating based on payment history and property care */
+    rating: TenantRating;
+    /** History of payment incidents */
+    paymentIncidents: PaymentIncident[];
+    /** Start date of current lease */
+    leaseStart?: string;
+    /** End date of current lease */
+    leaseEnd?: string;
+    /** Monthly rent amount */
+    rentAmount?: number;
+    /** Whether tenant has active insurance */
+    hasInsurance?: boolean;
+    /** Whether tenant has pets */
+    hasPets?: boolean;
+    /** Number of residents in unit */
+    occupants?: number;
+}
+
+/**
  * Detailed information about a rental unit
  */
 export interface UnitDetail {
@@ -339,12 +440,22 @@ export interface Tenant {
     rentStatus: RentStatus;
     /** Number of service requests submitted by this tenant */
     requests: number;
-    /** Overall tenant rating (0.0-5.0) based on reviews */
-    rating: number;
+    /** Overall tenant rating (1-5) based on reviews */
+    rating: TenantRating;
+    /** History of payment incidents */
+    paymentIncidents: PaymentIncident[];
     /** Historical reviews of the tenant's behavior and payments */
     reviewHistory: TenantReview[];
     /** Date when tenant joined (YYYY-MM-DD format) */
     joinDate: string;
+    /** Monthly rent amount */
+    rentAmount?: number;
+    /** Start date of current lease */
+    leaseStart?: string;
+    /** End date of current lease */
+    leaseEnd?: string;
+    /** Whether tenant has active insurance */
+    hasInsurance?: boolean;
 }
 
 /**
