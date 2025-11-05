@@ -16,15 +16,6 @@ interface ErrorState {
     type?: 'error' | 'warning' | 'info';
 }
 
-interface SearchResults {
-    tenants: Tenant[];
-    noResults: boolean;
-    totalResults: number;
-    currentPage: number;
-    pageCount: number;
-    hasMore: boolean;
-}
-
 interface DocumentSharingModalProps {
     document: Document;
     appData: AppData;
@@ -55,14 +46,6 @@ export const DocumentSharingModal: React.FC<DocumentSharingModalProps> = ({
     const [isFilterVisible, setIsFilterVisible] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<ErrorState>({ message: '', isVisible: false });
-
-    // Initialize sharing logic
-    const sharing = useDocumentSharing({
-        document,
-        tenants: appData.tenants,
-        initialSelection: document.sharedWith || [],
-        pageSize: 10
-    });
 
     // Get filtered list of eligible tenants
     const activeTenants = useMemo(() => appData.tenants.filter(tenant => {
@@ -194,33 +177,23 @@ export const DocumentSharingModal: React.FC<DocumentSharingModalProps> = ({
     };
 
     // Focus management
-    // Store and restore focus
     useEffect(() => {
-        const doc = window.document;
-        if (!doc.body.contains(doc.activeElement)) {
-            modalRef.current?.focus();
-        }
-        
-        const previouslyFocused = doc.activeElement as HTMLElement;
-        lastActiveElementRef.current = previouslyFocused;
+        lastActiveElementRef.current = document.activeElement as HTMLElement;
+        modalRef.current?.focus();
 
         return () => {
-            if (previouslyFocused && doc.body.contains(previouslyFocused)) {
-                previouslyFocused.focus();
-            }
+            lastActiveElementRef.current?.focus();
         };
     }, []);
 
     // Close on escape key
     useEffect(() => {
-        const handleEscape = (event: globalThis.KeyboardEvent): void => {
-            if (event.key === 'Escape') onClose();
+        const handleEscape = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onClose();
         };
         
-        const doc = window.document;
-        const handler = handleEscape as EventListener;
-        doc.addEventListener('keydown', handler);
-        return () => doc.removeEventListener('keydown', handler);
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
     }, [onClose]);
 
     return (
@@ -463,13 +436,11 @@ export const DocumentSharingModal: React.FC<DocumentSharingModalProps> = ({
                                                         {isSelected && <Check className="w-3 h-3 text-white" />}
                                                     </div>
 
-                                                    {tenant.avatar && (
-                                                        <img 
-                                                            src={tenant.avatar} 
-                                                            alt=""
-                                                            className="w-10 h-10 rounded-full object-cover"
-                                                        />
-                                                    )}
+                                                    <img 
+                                                        src={tenant.avatar} 
+                                                        alt=""
+                                                        className="w-10 h-10 rounded-full object-cover"
+                                                    />
 
                                                     <div className="flex-1 text-left min-w-0">
                                                         <div className="font-medium text-gray-900">{tenant.name}</div>
