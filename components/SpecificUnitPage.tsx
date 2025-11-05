@@ -57,11 +57,11 @@ export const SpecificUnitPage: React.FC<SpecificUnitPageProps> = ({ unitId, appD
             const updatedTenants = prevData.tenants.map(tenant => {
                 if (tenant.id === previousTenant.id) {
                     const allRatings = [...tenant.reviewHistory.map(r => (r.ratings.payment + r.ratings.propertyCare + r.ratings.communication + r.ratings.cleanliness + r.ratings.ruleAdherence) / 5), newRating];
-                    const avgRating = Math.round(allRatings.reduce((sum, r) => sum + r, 0) / allRatings.length) as TenantRating;
+                    const avgRating = Math.min(5, Math.max(1, Math.round(allRatings.reduce((sum, r) => sum + r, 0) / allRatings.length))) as TenantRating;
                     
                     return {
                         ...tenant,
-                        rating: parseFloat(avgRating.toFixed(1)),
+                        rating: avgRating,
                         reviewHistory: [
                             ...tenant.reviewHistory,
                             {

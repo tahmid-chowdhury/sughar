@@ -306,27 +306,27 @@ const generateInitialData = (): AppData => {
     
     // ============ Service Requests ============
     // Sample maintenance requests with realistic issues
-    const srDetails: {[key: string]: { unit: string; tenant: string; title: string; desc: string; date: string; status: RequestStatus; priority: 'High' | 'Medium' | 'Low'; completionDate?: string }} = {
-        'SR-0001': { unit: 'U-B-LC-4A', tenant: 'Tania Akter', title: 'Leak under kitchen sink', desc: 'Tenant reports water pooling under sink; cabinet getting damaged.', date: '2025-09-20', status: RequestStatus.InProgress, priority: 'High' },
-        'SR-0002': { unit: 'U-B-LC-2B', tenant: 'Sumi Akhter', title: 'Bathroom faucet dripping', desc: 'Constant dripping, wasting water and raising bill.', date: '2025-09-22', status: RequestStatus.Complete, priority: 'Low', completionDate: '2025-09-28' },
-        'SR-0003': { unit: 'U-B-LC-1C', tenant: 'Maruf Khan', title: 'AC not cooling properly', desc: 'AC blows warm air even after filter cleaning.', date: '2025-09-19', status: RequestStatus.InProgress, priority: 'High' },
-        'SR-0004': { unit: 'U-B-BH-2A', tenant: 'Kamal Uddin', title: 'Electrical outage in living room', desc: 'Circuit breaker keeps tripping, no power in living room.', date: '2025-09-18', status: RequestStatus.Complete, priority: 'High', completionDate: '2025-09-25' },
-        'SR-0005': { unit: 'U-B-BH-4A', tenant: 'Tanvir Ahmed', title: 'Window glass cracked', desc: 'Small crack in bedroom window, risk of shattering.', date: '2025-09-23', status: RequestStatus.Pending, priority: 'Medium' },
-        'SR-0006': { unit: 'U-B-BH-3B', tenant: 'Zahid Hasan', title: 'Clogged kitchen drain', desc: 'Water not draining; possible grease buildup.', date: '2025-09-24', status: RequestStatus.InProgress, priority: 'Medium' },
-        'SR-0007': { unit: 'U-B-DR-2A', tenant: 'Shila Rahman', title: 'Bedroom light fixture sparking', desc: 'Sparks seen when switching light on/off.', date: '2025-09-21', status: RequestStatus.Pending, priority: 'High' },
-        'SR-0008': { unit: 'U-B-DR-4A', tenant: 'Rezaul Karim', title: 'Pest infestation (cockroaches)', desc: 'Cockroaches in kitchen; needs pest control service.', date: '2025-09-15', status: RequestStatus.Complete, priority: 'Medium', completionDate: '2025-09-26' },
-        'SR-0009': { unit: 'U-B-UG-1', tenant: 'Selina Yasmin', title: 'Water heater not working', desc: 'Tenant reports no hot water for past two days.', date: '2025-09-25', status: RequestStatus.Pending, priority: 'High' },
-        'SR-0010': { unit: 'U-B-LC-1A', tenant: 'Farzana Akhter', title: 'Broken door lock', desc: 'Front door lock is stuck and difficult to open.', date: '2025-10-01', status: RequestStatus.Pending, priority: 'High' },
-        'SR-0011': { unit: 'U-B-LC-1A', tenant: 'Farzana Akhter', title: 'Ceiling fan making noise', desc: 'Bedroom ceiling fan has been making a loud grinding noise.', date: '2025-09-28', status: RequestStatus.Complete, priority: 'Low', completionDate: '2025-10-05' },
-        'SR-0012': { unit: 'U-B-LC-3A', tenant: 'Shahriar Karim', title: 'Leaky balcony door', desc: 'Water seeps through balcony door during rain.', date: '2025-10-03', status: RequestStatus.Pending, priority: 'Medium' },
-        'SR-0013': { unit: 'U-B-BH-1A', tenant: 'Imran Chowdhury', title: 'Washing machine drain issue', desc: 'Washing machine drains slowly and water backs up.', date: '2025-10-02', status: RequestStatus.InProgress, priority: 'Medium' },
-        'SR-0014': { unit: 'U-B-BH-1A', tenant: 'Imran Chowdhury', title: 'Smoke detector chirping', desc: 'Smoke detector beeps intermittently even with new battery.', date: '2025-09-30', status: RequestStatus.Complete, priority: 'Low', completionDate: '2025-10-04' },
-        'SR-0015': { unit: 'U-B-LC-4A', tenant: 'Tania Akter', title: 'Refrigerator not cooling', desc: 'Fridge stopped cooling, food is spoiling.', date: '2025-10-06', status: RequestStatus.Pending, priority: 'High' },
-        'SR-0016': { unit: 'U-B-DR-3A', tenant: 'Arefin Chowdhury', title: 'Mold in bathroom', desc: 'Black mold growing on bathroom ceiling and walls.', date: '2025-10-05', status: RequestStatus.InProgress, priority: 'High' },
-        'SR-0017': { unit: 'U-B-BH-3A', tenant: 'Mehnaz Sultana', title: 'Internet connection issues', desc: 'WiFi router needs replacement, frequent disconnections.', date: '2025-10-07', status: RequestStatus.Pending, priority: 'Low' },
-        'SR-0018': { unit: 'U-B-UG-2', tenant: 'Abdul Malek', title: 'Loose tiles in kitchen', desc: 'Several floor tiles are loose and need re-grouting.', date: '2025-10-04', status: RequestStatus.Pending, priority: 'Medium' },
-        'SR-0019': { unit: 'U-B-LC-1C', tenant: 'Maruf Khan', title: 'Garbage disposal not working', desc: 'Kitchen garbage disposal unit makes humming noise but does not grind.', date: '2025-10-08', status: RequestStatus.Pending, priority: 'Low' },
-        'SR-0020': { unit: 'U-B-BH-3B', tenant: 'Zahid Hasan', title: 'Door hinge needs repair', desc: 'Bedroom door sags and scrapes the floor when opening.', date: '2025-10-09', status: RequestStatus.InProgress, priority: 'Low' },
+    const srDetails: {[key: string]: { unit: string; tenant: string; title: string; desc: string; date: string; status: RequestStatus; priority: 'High' | 'Medium' | 'Low'; type: string; completionDate?: string }} = {
+        'SR-0001': { unit: 'U-B-LC-4A', tenant: 'Tania Akter', title: 'Leak under kitchen sink', desc: 'Tenant reports water pooling under sink; cabinet getting damaged.', date: '2025-09-20', status: RequestStatus.InProgress, priority: 'High', type: 'Plumbing' },
+        'SR-0002': { unit: 'U-B-LC-2B', tenant: 'Sumi Akhter', title: 'Bathroom faucet dripping', desc: 'Constant dripping, wasting water and raising bill.', date: '2025-09-22', status: RequestStatus.Complete, priority: 'Low', type: 'Plumbing', completionDate: '2025-09-28' },
+        'SR-0003': { unit: 'U-B-LC-1C', tenant: 'Maruf Khan', title: 'AC not cooling properly', desc: 'AC blows warm air even after filter cleaning.', date: '2025-09-19', status: RequestStatus.InProgress, priority: 'High', type: 'HVAC' },
+        'SR-0004': { unit: 'U-B-BH-2A', tenant: 'Kamal Uddin', title: 'Electrical outage in living room', desc: 'Circuit breaker keeps tripping, no power in living room.', date: '2025-09-18', status: RequestStatus.Complete, priority: 'High', type: 'Electrical', completionDate: '2025-09-25' },
+        'SR-0005': { unit: 'U-B-BH-4A', tenant: 'Tanvir Ahmed', title: 'Window glass cracked', desc: 'Small crack in bedroom window, risk of shattering.', date: '2025-09-23', status: RequestStatus.Pending, priority: 'Medium', type: 'Windows' },
+        'SR-0006': { unit: 'U-B-BH-3B', tenant: 'Zahid Hasan', title: 'Clogged kitchen drain', desc: 'Water not draining; possible grease buildup.', date: '2025-09-24', status: RequestStatus.InProgress, priority: 'Medium', type: 'Plumbing' },
+        'SR-0007': { unit: 'U-B-DR-2A', tenant: 'Shila Rahman', title: 'Bedroom light fixture sparking', desc: 'Sparks seen when switching light on/off.', date: '2025-09-21', status: RequestStatus.Pending, priority: 'High', type: 'Electrical' },
+        'SR-0008': { unit: 'U-B-DR-4A', tenant: 'Rezaul Karim', title: 'Pest infestation (cockroaches)', desc: 'Cockroaches in kitchen; needs pest control service.', date: '2025-09-15', status: RequestStatus.Complete, priority: 'Medium', type: 'Pest Control', completionDate: '2025-09-26' },
+        'SR-0009': { unit: 'U-B-UG-1', tenant: 'Selina Yasmin', title: 'Water heater not working', desc: 'Tenant reports no hot water for past two days.', date: '2025-09-25', status: RequestStatus.Pending, priority: 'High', type: 'Plumbing' },
+        'SR-0010': { unit: 'U-B-LC-1A', tenant: 'Farzana Akhter', title: 'Broken door lock', desc: 'Front door lock is stuck and difficult to open.', date: '2025-10-01', status: RequestStatus.Pending, priority: 'High', type: 'Security' },
+        'SR-0011': { unit: 'U-B-LC-1A', tenant: 'Farzana Akhter', title: 'Ceiling fan making noise', desc: 'Bedroom ceiling fan has been making a loud grinding noise.', date: '2025-09-28', status: RequestStatus.Complete, priority: 'Low', type: 'Electrical', completionDate: '2025-10-05' },
+        'SR-0012': { unit: 'U-B-LC-3A', tenant: 'Shahriar Karim', title: 'Leaky balcony door', desc: 'Water seeps through balcony door during rain.', date: '2025-10-03', status: RequestStatus.Pending, priority: 'Medium', type: 'Windows' },
+        'SR-0013': { unit: 'U-B-BH-1A', tenant: 'Imran Chowdhury', title: 'Washing machine drain issue', desc: 'Washing machine drains slowly and water backs up.', date: '2025-10-02', status: RequestStatus.InProgress, priority: 'Medium', type: 'Plumbing' },
+        'SR-0014': { unit: 'U-B-BH-1A', tenant: 'Imran Chowdhury', title: 'Smoke detector chirping', desc: 'Smoke detector beeps intermittently even with new battery.', date: '2025-09-30', status: RequestStatus.Complete, priority: 'Low', type: 'Safety', completionDate: '2025-10-04' },
+        'SR-0015': { unit: 'U-B-LC-4A', tenant: 'Tania Akter', title: 'Refrigerator not cooling', desc: 'Fridge stopped cooling, food is spoiling.', date: '2025-10-06', status: RequestStatus.Pending, priority: 'High', type: 'Appliances' },
+        'SR-0016': { unit: 'U-B-DR-3A', tenant: 'Arefin Chowdhury', title: 'Mold in bathroom', desc: 'Black mold growing on bathroom ceiling and walls.', date: '2025-10-05', status: RequestStatus.InProgress, priority: 'High', type: 'Health and Safety' },
+        'SR-0017': { unit: 'U-B-BH-3A', tenant: 'Mehnaz Sultana', title: 'Internet connection issues', desc: 'WiFi router needs replacement, frequent disconnections.', date: '2025-10-07', status: RequestStatus.Pending, priority: 'Low', type: 'Internet and Cable' },
+        'SR-0018': { unit: 'U-B-UG-2', tenant: 'Abdul Malek', title: 'Loose tiles in kitchen', desc: 'Several floor tiles are loose and need re-grouting.', date: '2025-10-04', status: RequestStatus.Pending, priority: 'Medium', type: 'Flooring' },
+        'SR-0019': { unit: 'U-B-LC-1C', tenant: 'Maruf Khan', title: 'Garbage disposal not working', desc: 'Kitchen garbage disposal unit makes humming noise but does not grind.', date: '2025-10-08', status: RequestStatus.Pending, priority: 'Low', type: 'Appliances' },
+        'SR-0020': { unit: 'U-B-BH-3B', tenant: 'Zahid Hasan', title: 'Door hinge needs repair', desc: 'Bedroom door sags and scrapes the floor when opening.', date: '2025-10-09', status: RequestStatus.InProgress, priority: 'Low', type: 'Carpentry' },
     };
 
     // Convert service request details into full ServiceRequest objects
@@ -347,6 +347,7 @@ const generateInitialData = (): AppData => {
             priority: details.priority,
             assignedContact: { name: 'Karim Ahmed', avatar: 'https://i.pravatar.cc/40?u=karim' },
             completionDate: details.completionDate,
+            type: details.type || 'Maintenance',
         }
     });
 

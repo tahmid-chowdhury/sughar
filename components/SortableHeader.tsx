@@ -27,7 +27,7 @@ export const SortableHeader = <T extends Record<string, any>>({
     if (!isSorted) {
       return <ArrowUpDown className="w-4 h-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />;
     }
-    if (direction === 'ascending') {
+    if (direction === 'asc') {
       return <ArrowUp className="w-4 h-4 text-gray-600" />;
     }
     return <ArrowDown className="w-4 h-4 text-gray-600" />;
