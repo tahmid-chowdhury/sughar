@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Card } from './Card';
-import { AppData, UnitStatus } from '../types';
+import { AppData, UnitStatus, TenantRating } from '../types';
 import { ArrowLeft, Calendar, DollarSign, HomeIcon, User, Star } from './icons';
 import { TenantReviewForm } from './TenantReviewForm';
 import { UnitDetailsTab } from './UnitDetailsTab';
@@ -57,7 +57,7 @@ export const SpecificUnitPage: React.FC<SpecificUnitPageProps> = ({ unitId, appD
             const updatedTenants = prevData.tenants.map(tenant => {
                 if (tenant.id === previousTenant.id) {
                     const allRatings = [...tenant.reviewHistory.map(r => (r.ratings.payment + r.ratings.propertyCare + r.ratings.communication + r.ratings.cleanliness + r.ratings.ruleAdherence) / 5), newRating];
-                    const avgRating = allRatings.reduce((sum, r) => sum + r, 0) / allRatings.length;
+                    const avgRating = Math.round(allRatings.reduce((sum, r) => sum + r, 0) / allRatings.length) as TenantRating;
                     
                     return {
                         ...tenant,

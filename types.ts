@@ -158,12 +158,14 @@ export interface Document {
   amount?: number;
   /** Financial category (used for accounting) */
   category?: 'Income' | 'Expense';
-  /** Whether the document is starred/favorited */
-  isStarred?: boolean;
+  /** ID of the tenant this document belongs to */
+  tenant?: string;
   /** User ID who uploaded the document */
   uploadedBy?: string;
   /** Array of tenant IDs who can access this document */
   sharedWith?: string[];
+  /** Whether the document is starred/favorited */
+  isStarred?: boolean;
   /** Whether this document is visible to tenants */
   visibleToTenants?: boolean;
   /** Specific tenant IDs who can view this document (if visibleToTenants is true) */
@@ -494,6 +496,10 @@ export interface ServiceRequest {
     status: RequestStatus;
     /** Priority level for handling the request */
     priority: 'High' | 'Medium' | 'Low';
+    /** Type of request (e.g., Plumbing, Electrical, etc.) */
+    type: string;
+    /** Location within the unit where the issue is occurring */
+    location?: string;
     /** Detailed description of the issue */
     description: string;
     /** Media attachments (photos/videos) */

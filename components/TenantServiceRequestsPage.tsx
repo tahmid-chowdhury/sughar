@@ -4,6 +4,11 @@ import { ServiceRequest, RequestStatus, AppData, User } from '../types';
 import { SlidersHorizontal, Plus, X, Search, Wrench } from './icons';
 import { SortableHeader } from './SortableHeader';
 
+interface SortConfig<T> {
+  key: keyof T;
+  direction: 'asc' | 'desc';
+}
+
 interface TenantServiceRequestsPageProps {
   currentUser: User;
   onSelectServiceRequest: (id: string) => void;
@@ -40,7 +45,7 @@ export const TenantServiceRequestsPage: React.FC<TenantServiceRequestsPageProps>
 }) => {
     // State management
     const [activeTab, setActiveTab] = useState<TabType>('Current');
-    const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+    const [sortConfig, setSortConfig] = useState<SortConfig<ServiceRequest>>(null);
     const [showNewRequestModal, setShowNewRequestModal] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [priorityFilter, setPriorityFilter] = useState<string>('all');
@@ -196,7 +201,7 @@ export const TenantServiceRequestsPage: React.FC<TenantServiceRequestsPageProps>
     }, [tenantRequests, activeTab, searchQuery, priorityFilter, requestTypeFilter, sortConfig]);
 
     // Request sort handler
-    const requestSort = (key: string) => {
+    const requestSort = (key: keyof ServiceRequest) => {
         setSortConfig(current => {
             if (!current || current.key !== key) {
                 return { key, direction: 'asc' };

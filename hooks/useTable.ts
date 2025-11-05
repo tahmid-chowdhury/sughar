@@ -3,7 +3,7 @@ import { useState, useMemo } from 'react';
 export type SortConfig<T> = {
   // FIX: Constrain key to be a string to avoid type errors with `keyof T` resolving to symbol.
   key: keyof T & string;
-  direction: 'ascending' | 'descending';
+  direction: 'asc' | 'desc';
 } | null;
 
 export const useTable = <T extends Record<string, any>>(
@@ -42,10 +42,10 @@ export const useTable = <T extends Record<string, any>>(
         if (bVal === null || bVal === undefined) return -1;
         
         if (aVal < bVal) {
-          return sortConfig.direction === 'ascending' ? -1 : 1;
+            return sortConfig.direction === 'asc' ? -1 : 1;
         }
         if (aVal > bVal) {
-          return sortConfig.direction === 'ascending' ? 1 : -1;
+            return sortConfig.direction === 'asc' ? 1 : -1;
         }
         return 0;
       });
@@ -56,9 +56,9 @@ export const useTable = <T extends Record<string, any>>(
 
   // FIX: Constrain key to be a string.
   const requestSort = (key: keyof T & string) => {
-    let direction: 'ascending' | 'descending' = 'ascending';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
-      direction = 'descending';
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
     }
     setSortConfig({ key, direction });
   };
