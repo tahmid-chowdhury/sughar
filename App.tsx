@@ -669,9 +669,47 @@ const App: React.FC = () => {
         // Show landlord listings management for landlords
         return (
           <ListingsPlatform 
+            listings={appData.propertyListings}
             isInternal={true}
-            listings={appData.propertyListings} 
-            onCreateListing={handleCreateListing}
+            onAddListing={() => handleCreateListing({
+              id: `L-${Date.now()}`,
+              title: '',
+              address: '',
+              price: 0,
+              beds: 0,
+              baths: 0,
+              sqft: 0,
+              status: 'draft',
+              isPublic: false,
+              images: [],
+              description: '',
+              amenities: [],
+              availableFrom: new Date().toISOString(),
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              lastUpdated: new Date().toISOString()
+            })}
+            onEditListing={(id: string) => {
+              const listing = appData.propertyListings.find(l => l.id === id);
+              if (listing) {
+                handleCreateListing({
+                  ...listing,
+                  updatedAt: new Date().toISOString(),
+                  lastUpdated: new Date().toISOString()
+                });
+              }
+            }}
+            onToggleVisibility={(id: string) => {
+              const listing = appData.propertyListings.find(l => l.id === id);
+              if (listing) {
+                handleCreateListing({
+                  ...listing,
+                  isPublic: !listing.isPublic,
+                  updatedAt: new Date().toISOString(),
+                  lastUpdated: new Date().toISOString()
+                });
+              }
+            }}
             onBack={() => handleBackTo('home')}
           />
         );

@@ -318,15 +318,17 @@ export interface PaymentIncident {
  */
 export interface BaseTenant extends User {
     /** Building ID where tenant resides */
-    building: string | undefined;
+    building: string;
     /** Unit number tenant occupies */
-    unit: string | undefined;
+    unit: string;
     /** Tenant's current rent payment status */
     rentStatus: RentStatus;
     /** Progress through current lease term (0-100) */
     leaseProgress: number;
     /** Tenant rating based on payment history and property care */
     rating: TenantRating;
+    /** Number of service requests submitted by this tenant */
+    requests: number;
     /** History of payment incidents */
     paymentIncidents: PaymentIncident[];
     /** Start date of current lease */
@@ -341,9 +343,16 @@ export interface BaseTenant extends User {
     hasPets?: boolean;
     /** Number of residents in unit */
     occupants?: number;
+    /** URL to tenant's avatar image */
+    avatar: string;
+    /** Historical reviews of tenant's behavior and payments */
+    reviewHistory: TenantReview[];
 }
 
-export interface Tenant extends BaseTenant {}
+export interface Tenant extends BaseTenant {
+    /** Date when tenant joined */
+    joinDate?: string;
+}
 
 /**
  * Detailed information about a rental unit

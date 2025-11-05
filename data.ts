@@ -15,25 +15,26 @@
  */
 
 import {
-  AppData,
-  User,
+  type AppData,
+  type User,
   UserRole,
-  BuildingDetail,
-  UnitDetail,
-  Tenant,
-  ServiceRequest,
-  RentalApplication,
-  Document,
+  type BuildingDetail,
+  type UnitDetail,
+  type Tenant,
+  type ServiceRequest,
+  type RentalApplication,
+  type Document,
   BuildingCategory,
   UnitStatus,
   RentStatus,
   RequestStatus,
   DocumentType,
   ApplicationStatus,
-  PropertyGroup,
-  Contractor,
-  ActivityLogItem,
+  type PropertyGroup,
+  type Contractor,
+  type ActivityLogItem,
   ActivityLogType,
+  type TenantRating,
 } from './types';
 import { PropertyListing } from './types/listing';
 
@@ -221,14 +222,18 @@ const generateInitialData = (): AppData => {
         return {
             id: `T-${i+1}`,
             name: t.name,
+            avatarUrl: `https://i.pravatar.cc/40?u=${t.name}`,
             avatar: `https://i.pravatar.cc/40?u=${t.name}`, // Unique avatar per tenant
+            email: tenantUser.email,
+            role: UserRole.Tenant,
             building: '', // Will be populated when assigning units
             unit: '', // Will be populated when assigning units
             leaseProgress: Math.floor(Math.random() * 80) + 10, // 10-90% through lease
             rentStatus: i % 10 === 0 ? RentStatus.Overdue : RentStatus.Paid, // 10% overdue rate
             requests: 0, // Will be incremented when creating service requests
-            rating: parseFloat((Math.random() * 1.5 + 3.5).toFixed(1)), // 3.5-5.0 star rating
+            rating: (Math.floor(Math.random() * 5) + 1) as TenantRating, // 1-5 star rating
             reviewHistory: [],
+            paymentIncidents: [],
             joinDate: new Date(new Date().setMonth(new Date().getMonth() - (i+1))).toISOString().split('T')[0],
         };
     });

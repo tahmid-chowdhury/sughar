@@ -1,16 +1,3 @@
-/**
- * Application Constants and Static Data
- * 
- * This file contains constant values, static data, and configuration settings
- * used throughout the SuGhar application. These are primarily used for:
- * - Dashboard statistics and charts
- * - UI element configurations
- * - Sample/demo data for various pages
- * - Settings and preferences
- * 
- * Note: Some of these constants would be replaced by API calls in a production environment.
- */
-
 import React from 'react';
 import {
   DollarSign, HomeIcon, FileText, CheckCircle2, TrendingUp,
@@ -19,10 +6,31 @@ import {
 } from './components/icons';
 // FIX: Changed import to relative path.
 import {
-  FinancialStat, ExpenseData, RevenueData,
-  DocumentDashboardStat, ActionCenterItem,
-  AccountDetails, BillingPlan, PaymentMethod, Invoice, TeamMember, NotificationSetting, SettingsData,
-  InvoiceStatus, Theme, CategorizedDocument, Document, DocumentType, Application, TenantDashboardStat, VacantUnit, RentStatusData, QuickViewAction, CurrentTenant, RentStatus
+  DocumentType,
+  type Document,
+  type FinancialStat,
+  type ExpenseData,
+  type RevenueData,
+  type DocumentDashboardStat,
+  type ActionCenterItem,
+  type AccountDetails,
+  type BillingPlan,
+  type PaymentMethod,
+  type Invoice,
+  type TeamMember,
+  type NotificationSetting,
+  type SettingsData,
+  InvoiceStatus,
+  Theme,
+  type CategorizedDocument,
+  UserRole,
+  type Application,
+  type TenantDashboardStat,
+  type VacantUnit,
+  type RentStatusData,
+  type QuickViewAction,
+  type CurrentTenant,
+  RentStatus
 } from './types';
 
 
@@ -59,12 +67,14 @@ export const MONTHLY_REVENUE_DATA: RevenueData[] = [
 // FIX: Added all missing constants to resolve import errors.
 export const RECENT_EXPENSE_DOCS: Document[] = [
   { id: 'DOC-E1', name: 'Water Bill - Sept', type: DocumentType.Utilities, uploadDate: '2024-09-28', building: 'B-LC', unit: 'N/A', amount: 5000, category: 'Expense' },
-  { id: 'DOC-E2', name: 'Elevator Maintenance', type: DocumentType.Service, uploadDate: '2024-09-25', building: 'B-BH', unit: 'N/A', amount: 15000, category: 'Expense' },
+    { id: 'DOC-E2', name: 'Elevator Maintenance.pdf', type: DocumentType.Service, uploadDate: '2024-09-25', building: 'B-BH', unit: 'N/A' } as Document,
+  { id: 'DOC-E3', name: 'Plumbing Repair.pdf', type: DocumentType.Service, uploadDate: '2024-09-18', building: 'B-LC', unit: '3B' } as Document,
+  { id: 'DOC-E4', name: 'Cleaning Service.pdf', type: DocumentType.Service, uploadDate: '2024-09-15', building: 'B-BH', unit: 'N/A' } as Document,,
 ];
 
 export const RECENT_INCOME_DOCS: Document[] = [
-  { id: 'DOC-I1', name: 'Rent - Unit 1A', type: DocumentType.Lease, uploadDate: '2024-09-05', building: 'B-LC', unit: '1A', amount: 25000, category: 'Income' },
-  { id: 'DOC-I2', name: 'Rent - Unit 2A', type: DocumentType.Lease, uploadDate: '2024-09-03', building: 'B-BH', unit: '2A', amount: 45000, category: 'Income' },
+  { id: 'DOC-I1', name: 'Rent - Unit 1A.pdf', type: DocumentType.Lease, uploadDate: '2024-09-05', building: 'B-LC', unit: '1A' },
+  { id: 'DOC-I2', name: 'Rent - Unit 2A.pdf', type: DocumentType.Lease, uploadDate: '2024-09-03', building: 'B-BH', unit: '2A' },
 ];
 
 export const APPLICATIONS_PAGE_DATA: Application[] = [
@@ -101,20 +111,20 @@ export const QUICK_VIEW_ACTIONS: QuickViewAction[] = [
 
 export const CURRENT_TENANTS_DATA: CurrentTenant[] = [
     // FIX: Add missing joinDate property
-    { id: 'T-1', name: 'Farzana Akhter', avatar: 'https://i.pravatar.cc/40?u=T-1', building: 'Lalmatia Court', unit: '1A', leaseProgress: 80, rentStatus: RentStatus.Paid, requests: 0, rating: 4.8, reviewHistory: [], joinDate: '2023-01-15' },
+    { id: 'T-1', name: 'Farzana Akhter', email: 'farzana@example.com', avatar: 'https://i.pravatar.cc/40?u=T-1', avatarUrl: 'https://i.pravatar.cc/40?u=T-1', role: UserRole.Tenant, building: 'Lalmatia Court', unit: '1A', leaseProgress: 80, rentStatus: RentStatus.Paid, requests: 0, rating: 5, reviewHistory: [], joinDate: '2023-01-15', paymentIncidents: [] },
     // FIX: Add missing joinDate property
-    { id: 'T-2', name: 'Amrul Hoque', avatar: 'https://i.pravatar.cc/40?u=T-2', building: 'Lalmatia Court', unit: '2A', leaseProgress: 95, rentStatus: RentStatus.Paid, requests: 1, rating: 4.5, reviewHistory: [], joinDate: '2022-08-20' },
+    { id: 'T-2', name: 'Amrul Hoque', email: 'amrul@example.com', avatar: 'https://i.pravatar.cc/40?u=T-2', avatarUrl: 'https://i.pravatar.cc/40?u=T-2', role: UserRole.Tenant, building: 'Lalmatia Court', unit: '2A', leaseProgress: 95, rentStatus: RentStatus.Paid, requests: 1, rating: 4, reviewHistory: [], joinDate: '2022-08-20', paymentIncidents: [] },
     // FIX: Add missing joinDate property
-    { id: 'T-3', name: 'Shahriar Karim', avatar: 'https://i.pravatar.cc/40?u=T-3', building: 'Lalmatia Court', unit: '3A', leaseProgress: 20, rentStatus: RentStatus.Overdue, requests: 0, rating: 3.9, reviewHistory: [], joinDate: '2024-05-10' },
+    { id: 'T-3', name: 'Shahriar Karim', email: 'shahriar@example.com', avatar: 'https://i.pravatar.cc/40?u=T-3', avatarUrl: 'https://i.pravatar.cc/40?u=T-3', role: UserRole.Tenant, building: 'Lalmatia Court', unit: '3A', leaseProgress: 20, rentStatus: RentStatus.Overdue, requests: 0, rating: 3, reviewHistory: [], joinDate: '2024-05-10', paymentIncidents: [] },
 ];
 
 export const MOST_RECENT_DOCUMENTS: Document[] = [
     { id: 'DOC-101', name: 'Lease - U1A, B-LC.pdf', type: DocumentType.Lease, uploadDate: '2024-09-28', building: 'B-LC', unit: '1A' },
-    { id: 'DOC-102', name: 'Invoice_Sept_Maintenance.pdf', type: DocumentType.Service, uploadDate: '2024-09-27', building: 'B-BH', unit: 'N/A' },
+    { id: 'DOC-102', name: 'Invoice_Sept_Maintenance.pdf', type: DocumentType.Service, uploadDate: '2024-09-27', building: 'B-BH', unit: 'N/A' }
 ];
 
 export const STARRED_DOCUMENTS: Document[] = [
-    { id: 'DOC-201', name: 'Building Permit B-BH.pdf', type: DocumentType.Certifications, uploadDate: '2022-01-10', building: 'B-BH', unit: 'N/A', isStarred: true },
+    { id: 'DOC-201', name: 'Building Permit B-BH.pdf', type: DocumentType.Certifications, uploadDate: '2022-01-10', building: 'B-BH', unit: 'N/A' },
 ];
 
 
