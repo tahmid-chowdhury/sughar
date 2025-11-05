@@ -1,0 +1,11 @@
+/**
+ * Search filters for document sharing
+ */
+export interface SearchFilters {
+    /** Building ID to filter by */
+    building: string;
+    /** Minimum tenant rating (1-5) */
+    minRating: TenantRating | 0;
+    /** Whether to only show tenants with insurance */
+    hasInsurance: boolean;
+}

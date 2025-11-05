@@ -120,7 +120,7 @@ export interface AdvancedSearch {
 /**
  * Extended filter configuration
  */
-export interface AdvancedFilters extends SearchFilters {
+export interface AdvancedFilters {
   leaseMinDuration: number;
   paymentHistoryMonths: number;
   activeServiceRequests: boolean;
@@ -316,11 +316,11 @@ export interface PaymentIncident {
 /**
  * Extended tenant interface with detailed tenant information
  */
-export interface Tenant extends User {
+export interface BaseTenant extends User {
     /** Building ID where tenant resides */
-    building?: string;
+    building: string | undefined;
     /** Unit number tenant occupies */
-    unit?: string;
+    unit: string | undefined;
     /** Tenant's current rent payment status */
     rentStatus: RentStatus;
     /** Progress through current lease term (0-100) */
@@ -342,6 +342,8 @@ export interface Tenant extends User {
     /** Number of residents in unit */
     occupants?: number;
 }
+
+export interface Tenant extends BaseTenant {}
 
 /**
  * Detailed information about a rental unit
@@ -423,39 +425,15 @@ export interface TenantReview {
 /**
  * Complete tenant profile and status information
  */
-export interface Tenant {
-    /** Unique tenant identifier */
-    id: string;
-    /** Tenant's full name */
-    name: string;
+export interface TenantProfile extends BaseTenant {
     /** URL to tenant's avatar image */
     avatar: string;
-    /** Name of the building where tenant resides */
-    building: string;
-    /** Unit number occupied by tenant */
-    unit: string;
-    /** Lease progress percentage (0-100) indicating how far through their lease */
-    leaseProgress: number;
-    /** Current rent payment status */
-    rentStatus: RentStatus;
     /** Number of service requests submitted by this tenant */
     requests: number;
-    /** Overall tenant rating (1-5) based on reviews */
-    rating: TenantRating;
-    /** History of payment incidents */
-    paymentIncidents: PaymentIncident[];
     /** Historical reviews of the tenant's behavior and payments */
     reviewHistory: TenantReview[];
     /** Date when tenant joined (YYYY-MM-DD format) */
     joinDate: string;
-    /** Monthly rent amount */
-    rentAmount?: number;
-    /** Start date of current lease */
-    leaseStart?: string;
-    /** End date of current lease */
-    leaseEnd?: string;
-    /** Whether tenant has active insurance */
-    hasInsurance?: boolean;
 }
 
 /**

@@ -1,5 +1,5 @@
 import React, { useState, KeyboardEvent, useRef, useEffect, useMemo } from 'react';
-import { Document, Tenant, AppData, RentStatus, TenantRating } from '../types';
+import { Document, Tenant, AppData, RentStatus, TenantRating, TenantProfile } from '../types';
 import { Card } from './Card';
 import { X, Check, Search, Filter, ChevronDown, Star, AlertCircle } from './icons';
 import { useDocumentSharing } from '../hooks/useDocumentSharing';
@@ -463,9 +463,9 @@ export const DocumentSharingModal: React.FC<DocumentSharingModalProps> = ({
                                                         {isSelected && <Check className="w-3 h-3 text-white" />}
                                                     </div>
 
-                                                    {tenant.avatar && (
+                                                    {(tenant as TenantProfile).avatar && (
                                                         <img 
-                                                            src={tenant.avatar} 
+                                                            src={(tenant as TenantProfile).avatar} 
                                                             alt=""
                                                             className="w-10 h-10 rounded-full object-cover"
                                                         />
